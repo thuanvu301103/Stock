@@ -21,9 +21,10 @@ docker compose up -d
 2. **fact_market_sentiment (Capital Flow)**: Tracks institutional and foreign movement to gauge market sentiment.
 
 #### Analytics Layer (Automated Calculations)
-1. **mv_advanced_indicators (Technical Indicators)**: This layer calculates complex indicators automatically as data flows into the system. A Materialized View that pre-calculates SMA, EMA, and Chaikin Money Flow (CMF). You query this view to get instant results without having to write complex math in your final reports.
+1. **analytics_indicators**: Stores pre-computed technical indicators so downstream queries are fast, simple, and predictable.
+2. **mv_advanced_indicators**: This layer calculates complex indicators automatically as data flows into the system. A Materialized View that pre-calculates SMA, EMA, and Chaikin Money Flow (CMF). You query this view to get instant results without having to write complex math in your final reports.
 
-#### Create Tables
+### Create Tables
 - Run all the scripts inside folder `clickhouse_query\create_table` and `clickhouse_query\create_analytics_layer`
 - Create tables in order: dim tables, fact tables, analytics layer.
 

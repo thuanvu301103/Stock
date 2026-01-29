@@ -5,6 +5,7 @@ CREATE TABLE n8n_olap.analytics_indicators (
     sma_20 Float32,
     ema_20 Float32,
     cmf_20 Float32,
+    vol_20 UInt64,
     updated_at DateTime DEFAULT now()
 )
 ENGINE = MergeTree()
