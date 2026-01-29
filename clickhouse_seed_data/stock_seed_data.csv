@@ -1,0 +1,699 @@
+stock_key,company_name,sector,industry,exchange,market_cap_group,listing_date,is_vn30
+AAA,CTCP Nhựa An Phát Xanh,Materials,Plastics,HOSE,Midcap,2010-07-15,0
+AAM,CTCP Thủy sản MeKong,Consumer Staples,Seafood,HOSE,Penny,2009-12-11,0
+AAT,CTCP Tiên Sơn Thanh Hóa,Consumer Discretionary,Textiles,HOSE,Penny,2021-03-24,0
+AAV,CTCP Việt Tiên Sơn Địa ốc,Real Estate,Real Estate,HNX,Penny,2018-06-21,0
+ABR,CTCP Đầu tư Nhãn hiệu Việt,Financials,Financial Services,HOSE,Penny,2020-05-15,0
+ABS,CTCP Dịch vụ Nông nghiệp Bình Thuận,Materials,Agriculture Chemicals,HOSE,Penny,2020-03-18,0
+ABT,CTCP Xuất nhập khẩu Thủy sản Bến Tre,Consumer Staples,Seafood,HOSE,Penny,2004-12-28,0
+ACB,Ngân hàng TMCP Á Châu,Financials,Banks,HOSE,Bluechip,2006-10-31,1
+ACC,CTCP Đầu tư và Xây dựng Bình Dương ACC,Industrials,Construction,HOSE,Penny,2008-01-22,0
+ACG,CTCP Gỗ An Cường,Materials,Home Furnishings,HOSE,Midcap,2022-10-10,0
+ACL,CTCP Thủy sản Cửu Long An Giang,Consumer Staples,Seafood,HOSE,Penny,2007-09-05,0
+ADC,CTCP Ánh Dương Việt Nam,Consumer Discretionary,Travel & Leisure,HOSE,Penny,2008-01-01,0
+ADG,CTCP Clever Group,Technology,Marketing Services,HOSE,Penny,2021-02-22,0
+ADP,CTCP Sơn Á Đông,Materials,Chemicals,HOSE,Penny,2010-09-15,0
+ADS,CTCP Damsan,Consumer Discretionary,Textiles,HOSE,Penny,2015-07-01,0
+AFX,CTCP XNK Nông sản Thực phẩm An Giang,Consumer Staples,Agriculture,UPCOM,Penny,2020-12-01,0
+AGG,CTCP Đầu tư và Phát triển Bất động sản An Gia,Real Estate,Real Estate,HOSE,Midcap,2020-01-09,0
+AGR,CTCP Chứng khoán Agribank,Financials,Securities,HOSE,Midcap,2009-12-10,0
+ALT,CTCP Văn hóa Tân Bình,Industrials,Printing,HNX,Penny,2002-01-01,0
+AMC,CTCP Khoáng sản Á Châu,Materials,Mining,HNX,Penny,2002-01-01,0
+AME,CTCP Alphanam E&C,Industrials,Electrical Equipment,HNX,Penny,2010-01-01,0
+AMV,CTCP SXKD Dược và Thiết bị Y tế Việt Mỹ,Health Care,Medical Equipment,HNX,Penny,2010-01-01,0
+ANT,CTCP Rau quả Thực phẩm An Giang,Consumer Staples,Agriculture,UPCOM,Penny,2020-01-01,0
+ANV,CTCP Nam Việt,Consumer Staples,Seafood,HOSE,Midcap,2007-12-07,0
+APG,CTCP Chứng khoán APG,Financials,Securities,HOSE,Penny,2010-01-01,0
+APH,CTCP Tập đoàn An Phát Holdings,Materials,Plastics,HOSE,Midcap,2020-07-28,0
+API,CTCP Đầu tư Châu Á - Thái Bình Dương,Real Estate,Real Estate,HNX,Penny,2010-01-01,0
+APS,CTCP Chứng khoán Châu Á - Thái Bình Dương,Financials,Securities,HNX,Penny,2010-01-01,0
+ARM,CTCP Xuất nhập khẩu Hàng không,Industrials,Logistics,UPCOM,Penny,2015-01-01,0
+ASG,CTCP Tập đoàn ASG,Industrials,Logistics,HOSE,Midcap,2020-10-20,0
+ASM,CTCP Tập đoàn Sao Mai,Real Estate,Real Estate,HOSE,Midcap,2010-01-18,0
+ASP,CTCP Dầu khí An Dương,Utilities,Gas Utilities,HOSE,Penny,2008-01-01,0
+AST,CTCP Dịch vụ Hàng không Taseco,Consumer Discretionary,Retail,HOSE,Midcap,2018-01-04,0
+ATS,CTCP Suất ăn Công nghiệp Atesco,Consumer Discretionary,Food Services,UPCOM,Penny,2017-01-01,0
+BAB,Ngân hàng TMCP Bắc Á,Financials,Banks,HNX,Midcap,2017-12-28,0
+BAF,CTCP Nông nghiệp BAF Việt Nam,Consumer Staples,Agriculture,HOSE,Midcap,2021-12-03,0
+BAX,CTCP Thống Nhất,Real Estate,Industrial Parks,HNX,Penny,2017-01-01,0
+BBS,CTCP Vicem Bao bì Bút Sơn,Materials,Packaging,HNX,Penny,2008-01-01,0
+BCC,CTCP Xi măng Vicem Bút Sơn,Materials,Cement,HNX,Penny,2006-12-05,0
+BCE,CTCP Xây dựng và Giao thông Bình Dương,Industrials,Construction,HOSE,Penny,2010-01-01,0
+BCF,CTCP Thực phẩm Bích Chi,Consumer Staples,Food Products,HNX,Penny,2020-01-01,0
+BCG,CTCP Tập đoàn Bamboo Capital,Financials,Investment,HOSE,Midcap,2015-07-16,0
+BCM,Tổng Công ty Đầu tư và Phát triển Công nghiệp,Real Estate,Industrial Parks,HOSE,Bluechip,2018-08-31,1
+BED,CTCP Sách và Thiết bị Trường học Đà Nẵng,Consumer Discretionary,Publishing,HNX,Penny,2008-01-01,0
+BFC,CTCP Phân bón Bình Điền,Materials,Fertilizers,HOSE,Midcap,2015-10-07,0
+BHN,Tổng CTCP Bia - Rượu - Nước giải khát Hà Nội,Consumer Staples,Beverages,HOSE,Bluechip,2017-01-19,0
+BIC,Tổng CTCP Bảo hiểm Ngân hàng BIDV,Financials,Insurance,HOSE,Midcap,2011-01-01,0
+BID,Ngân hàng TMCP Đầu tư và Phát triển Việt Nam,Financials,Banks,HOSE,Bluechip,2014-01-24,1
+BKC,CTCP Khoáng sản Bắc Kạn,Materials,Mining,HNX,Penny,2009-01-01,0
+BKG,CTCP Đầu tư BKG Việt Nam,Materials,Home Furnishings,HOSE,Penny,2021-01-01,0
+BMC,CTCP Khoáng sản Bình Định,Materials,Mining,HOSE,Penny,2006-01-01,0
+BMI,Tổng CTCP Bảo Minh,Financials,Insurance,HOSE,Midcap,2006-11-28,0
+BMP,CTCP Nhựa Bình Minh,Materials,Plastics,HOSE,Midcap,2006-02-08,0
+BNA,CTCP Đầu tư Sản xuất Bảo Ngọc,Consumer Staples,Food Products,HNX,Penny,2020-10-12,0
+BPC,CTCP Vicem Bao bì Bỉm Sơn,Materials,Packaging,HNX,Penny,2002-01-01,0
+BRC,CTCP Cao su Bến Thành,Materials,Rubber Products,HOSE,Penny,2007-01-01,0
+BSI,CTCP Chứng khoán BIDV,Financials,Securities,HOSE,Midcap,2010-07-19,0
+BSR,CTCP Lọc hóa dầu Bình Sơn,Energy,Oil & Gas,UPCOM,Bluechip,2018-03-01,0
+BTP,CTCP Nhiệt điện Bà Rịa,Utilities,Electric Utilities,HOSE,Penny,2007-01-01,0
+BTS,CTCP Xi măng Vicem Hoàng Thạch,Materials,Cement,HNX,Penny,2008-01-01,0
+BTT,CTCP Thương mại Dịch vụ Bến Thành,Consumer Discretionary,Retail,HOSE,Penny,2004-01-01,0
+BTW,CTCP Cấp nước Bến Thành,Utilities,Water Utilities,UPCOM,Penny,2010-01-01,0
+BVH,Tập đoàn Bảo Việt,Financials,Insurance,HOSE,Bluechip,2009-06-25,1
+BVS,CTCP Chứng khoán Bảo Việt,Financials,Securities,HNX,Midcap,2006-12-18,0
+BWE,CTCP Nước - Môi trường Bình Dương,Utilities,Water Utilities,HOSE,Midcap,2017-07-20,0
+BXH,CTCP Vicem Bao bì Hải Phòng,Materials,Packaging,HNX,Penny,2002-01-01,0
+C32,CTCP Đầu tư Xây dựng 3-2,Materials,Building Materials,HOSE,Penny,2012-01-01,0
+C47,CTCP Xây dựng 47,Industrials,Construction,HOSE,Penny,2011-01-01,0
+C69,CTCP Xây dựng 1369,Industrials,Construction,HNX,Penny,2017-01-01,0
+CAG,CTCP Cảng An Giang,Industrials,Logistics,HOSE,Penny,2018-01-01,0
+CAN,CTCP Đồ hộp Hạ Long,Consumer Staples,Food Products,HOSE,Penny,2001-01-01,0
+CAP,CTCP Lâm Nông sản Thực phẩm Yên Bái,Materials,Paper,HNX,Midcap,2008-01-01,0
+CAR,CTCP Tập đoàn Giáo dục Trí Việt,Consumer Discretionary,Education,UPCOM,Penny,2020-01-01,0
+CCC,CTCP Xây lắp và Thiết bị Công nghiệp,Industrials,Construction,UPCOM,Penny,2015-01-01,0
+CCI,CTCP Đầu tư Phát triển Công nghiệp Củ Chi,Real Estate,Industrial Parks,HOSE,Penny,2010-01-01,0
+CCL,CTCP Đầu tư và Phát triển Đô thị Dầu khí Cửu Long,Real Estate,Real Estate,HOSE,Penny,2011-01-01,0
+CDC,CTCP Chương Dương,Industrials,Construction,HOSE,Penny,2006-01-01,0
+CEO,CTCP Tập đoàn C.E.O,Real Estate,Real Estate,HNX,Midcap,2014-09-29,0
+CET,CTCP Tech - Vina,Materials,Chemicals,HNX,Penny,2017-01-01,0
+CHP,CTCP Thủy điện Miền Trung,Utilities,Electric Utilities,HOSE,Midcap,2014-01-01,0
+CIA,CTCP Dịch vụ Sân bay Quốc tế Cam Ranh,Industrials,Logistics,HNX,Penny,2017-01-01,0
+CIG,CTCP COMA 18,Industrials,Construction,HOSE,Penny,2011-01-01,0
+CII,CTCP Đầu tư Hạ tầng Kỹ thuật TP.HCM,Industrials,Infrastructure,HOSE,Midcap,2006-05-18,0
+CJC,CTCP Cơ điện Miền Trung,Industrials,Electrical Equipment,HNX,Penny,2004-01-01,0
+CKG,CTCP Tập đoàn Tư vấn Đầu tư Xây dựng Kiên Giang,Real Estate,Real Estate,HOSE,Midcap,2020-07-29,0
+CKV,CTCP Cáp Điện và Hệ thống Viễn thông,Industrials,Electrical Equipment,HNX,Penny,2010-01-01,0
+CLC,CTCP Cát Lợi,Consumer Staples,Tobacco,HOSE,Penny,2006-01-01,0
+CLH,CTCP Xi măng La Hiên VVMI,Materials,Cement,HNX,Penny,2015-01-01,0
+CLL,CTCP Cảng Cát Lái,Industrials,Logistics,HOSE,Penny,2014-01-01,0
+CLM,CTCP Xuất nhập khẩu Than - Vinacomin,Energy,Coal,HNX,Penny,2015-01-01,0
+CLW,CTCP Cấp nước Chợ Lớn,Utilities,Water Utilities,HOSE,Penny,2010-01-01,0
+CMC,CTCP Đầu tư và Xây dựng Công trình Trung ương,Industrials,Construction,HOSE,Penny,2009-01-01,0
+CMG,CTCP Tập đoàn Công nghệ CMC,Technology,IT Services,HOSE,Midcap,2010-01-22,0
+CMS,CTCP Xây dựng và Nhân lực Việt Nam,Industrials,Construction,HNX,Penny,2010-01-01,0
+CMV,CTCP Thương nghiệp Cà Mau,Consumer Discretionary,Retail,HOSE,Penny,2010-01-01,0
+CMX,CTCP Camimex Group,Consumer Staples,Seafood,HOSE,Midcap,2010-01-01,0
+CNG,CTCP CNG Việt Nam,Utilities,Gas Utilities,HOSE,Midcap,2011-01-01,0
+COM,CTCP Vật tư Xăng dầu,Energy,Oil & Gas,HOSE,Penny,2000-01-01,0
+CPC,CTCP Thuốc sát trùng Cần Thơ,Materials,Chemicals,HNX,Penny,2004-01-01,0
+CRC,CTCP Giải pháp Solar-BK,Utilities,Renewable Energy,HOSE,Penny,2018-01-01,0
+CRE,CTCP Bất động sản Thế Kỷ (CenLand),Real Estate,Real Estate Services,HOSE,Midcap,2018-09-05,0
+CRV,CTCP Tập đoàn Bất động sản CRV,Real Estate,Real Estate,UPCOM,Midcap,2022-01-01,0
+CSC,CTCP Tập đoàn COTANA,Industrials,Construction,HNX,Penny,2010-01-01,0
+CSM,CTCP Công nghiệp Cao su Miền Nam,Industrials,Tires,HOSE,Midcap,2009-01-01,0
+CST,CTCP Than Cao Sơn - TKV,Energy,Coal,HNX,Midcap,2020-01-01,0
+CSV,CTCP Hóa chất Cơ bản Miền Nam,Materials,Chemicals,HOSE,Midcap,2015-01-01,0
+CTB,CTCP Chế tạo Bơm Hải Dương,Industrials,Machinery,HNX,Penny,2010-01-01,0
+CTD,CTCP Xây dựng Coteccons,Industrials,Construction,HOSE,Midcap,2010-01-20,0
+CTF,CTCP City Auto,Consumer Discretionary,Retail,HOSE,Midcap,2017-01-01,0
+CTG,Ngân hàng TMCP Công Thương Việt Nam,Financials,Banks,HOSE,Bluechip,2009-07-16,1
+CTI,CTCP Đầu tư Phát triển Cường Thuận IDICO,Industrials,Construction,HOSE,Midcap,2010-01-01,0
+CTP,CTCP Minh Khang Capital Trading Public,Materials,Coffee,HNX,Penny,2016-01-01,0
+CTR,Tổng CTCP Công trình Viettel,Industrials,Telecommunications,HOSE,Midcap,2022-02-23,0
+CTS,CTCP Chứng khoán Ngân hàng Công thương VN,Financials,Securities,HOSE,Midcap,2017-01-01,0
+CTT,CTCP Chế tạo Máy và Thiết bị điện TBD,Industrials,Electrical Equipment,HNX,Penny,2008-01-01,0
+CVT,CTCP CMC,Materials,Building Materials,HOSE,Midcap,2006-01-01,0
+CX8,CTCP Đầu tư và Xây lắp 8,Industrials,Construction,HNX,Penny,2010-01-01,0
+D11,CTCP Địa ốc 11,Real Estate,Real Estate,HNX,Penny,2010-01-01,0
+D2D,CTCP Phát triển Đô thị Công nghiệp Số 2,Real Estate,Industrial Parks,HOSE,Midcap,2009-01-01,0
+DAD,CTCP Đầu tư và Phát triển Giáo dục Đà Nẵng,Consumer Discretionary,Education,HNX,Penny,2008-01-01,0
+DAE,CTCP Giáo dục Đào tạo và Sách Đại học Dạy nghề,Consumer Discretionary,Education,HNX,Penny,2006-01-01,0
+DAH,CTCP Tập đoàn Khách sạn Đông Á,Consumer Discretionary,Hotels,HOSE,Penny,2016-01-01,0
+DAT,CTCP Đầu tư Du lịch và Phát triển Thủy sản,Consumer Staples,Seafood,HOSE,Penny,2010-01-01,0
+DBC,CTCP Tập đoàn Dabaco Việt Nam,Consumer Staples,Agriculture,HOSE,Midcap,2008-01-01,0
+DBD,CTCP Dược - Trang thiết bị Y tế Bình Định,Health Care,Pharmaceuticals,HOSE,Midcap,2018-01-01,0
+DBT,CTCP Dược phẩm Bến Tre,Health Care,Pharmaceuticals,HOSE,Penny,2009-01-01,0
+DC2,CTCP Đầu tư Phát triển - Xây dựng (DIC) số 2,Industrials,Construction,HOSE,Penny,2010-01-01,0
+DC4,CTCP Xây dựng DIC Holdings,Industrials,Construction,HOSE,Penny,2010-01-01,0
+DCL,CTCP Dược phẩm Cửu Long,Health Care,Pharmaceuticals,HOSE,Midcap,2008-01-01,0
+DCM,CTCP Phân bón Dầu khí Cà Mau,Materials,Fertilizers,HOSE,Midcap,2015-03-31,0
+DDG,CTCP Đầu tư Công nghiệp Xuất nhập khẩu Đông Dương,Industrials,Energy Services,HNX,Penny,2018-01-01,0
+DGC,CTCP Tập đoàn Hóa chất Đức Giang,Materials,Chemicals,HOSE,Midcap,2014-08-04,0
+DGW,CTCP Thế Giới Số,Consumer Discretionary,Electronics Retail,HOSE,Midcap,2015-07-24,0
+DHA,CTCP Hóa An,Materials,Building Materials,HOSE,Penny,2004-01-01,0
+DHC,CTCP Đông Hải Bến Tre,Materials,Paper & Packaging,HOSE,Midcap,2009-01-01,0
+DHG,CTCP Dược Hậu Giang,Health Care,Pharmaceuticals,HOSE,Bluechip,2006-12-21,0
+DHM,CTCP Thương mại và Khai thác Khoáng sản Dương Hiếu,Materials,Mining,HOSE,Penny,2012-01-01,0
+DHP,CTCP Điện cơ Hải Phòng,Industrials,Electrical Equipment,HNX,Penny,2007-01-01,0
+DHT,CTCP Dược phẩm Hà Tây,Health Care,Pharmaceuticals,HNX,Penny,2008-01-01,0
+DIG,Tổng CTCP Đầu tư Phát triển Xây dựng,Real Estate,Real Estate,HOSE,Midcap,2009-08-19,0
+DIH,CTCP Đầu tư Phát triển Xây dựng Hội An,Real Estate,Real Estate,HNX,Penny,2009-01-01,0
+DL1,CTCP Tập đoàn Alpha Seven,Industrials,Investment,HNX,Penny,2010-01-01,0
+DLG,CTCP Tập đoàn Đức Long Gia Lai,Industrials,Multi-sector,HOSE,Penny,2010-01-01,0
+DMC,CTCP Xuất nhập khẩu Y tế Domesco,Health Care,Pharmaceuticals,HOSE,Midcap,2006-01-01,0
+DNC,CTCP Điện nước Lắp máy Hải Phòng,Utilities,Utilities,HNX,Penny,2010-01-01,0
+DNP,CTCP Nhựa Đồng Nai,Materials,Plastics,HNX,Midcap,2006-01-01,0
+DP3,CTCP Dược phẩm Trung ương 3,Health Care,Pharmaceuticals,HNX,Penny,2015-01-01,0
+DPG,CTCP Tập đoàn Đạt Phương,Industrials,Construction,HOSE,Midcap,2018-01-01,0
+DPM,Tổng CTCP Phân bón và Hóa chất Dầu khí,Materials,Fertilizers,HOSE,Midcap,2007-11-05,0
+DPR,CTCP Cao su Đồng Phú,Materials,Rubber,HOSE,Midcap,2007-01-01,0
+DQC,CTCP Bóng đèn Điện Quang,Consumer Discretionary,Household Goods,HOSE,Penny,2008-01-01,0
+DRC,CTCP Cao su Đà Nẵng,Industrials,Tires,HOSE,Midcap,2006-01-01,0
+DRH,CTCP DRH Holdings,Real Estate,Real Estate,HOSE,Penny,2010-01-01,0
+DRL,CTCP Thủy điện - Điện lực Đắk Lắk,Utilities,Electric Utilities,HOSE,Penny,2009-01-01,0
+DS3,CTCP Quản lý và Xây dựng Đường bộ I Lào Cai,Industrials,Construction,HNX,Penny,2015-01-01,0
+DSC,CTCP Chứng khoán DSC,Financials,Securities,HOSE,Midcap,2018-01-01,0
+DSE,CTCP Chứng khoán DNSE,Financials,Securities,HOSE,Midcap,2024-07-01,0
+DSN,CTCP Công viên nước Đầm Sen,Consumer Discretionary,Travel & Leisure,HOSE,Penny,2010-01-01,0
+DST,CTCP Đầu tư Sao Thăng Long,Financials,Investment,HNX,Penny,2007-01-01,0
+DTA,CTCP Đệ Tam,Real Estate,Real Estate,HOSE,Penny,2010-01-01,0
+DTD,CTCP Đầu tư Phát triển Thành Đạt,Industrials,Construction,HNX,Penny,2017-01-01,0
+DTG,CTCP Dược phẩm Tipharco,Health Care,Pharmaceuticals,HNX,Penny,2023-01-01,0
+DTL,CTCP Đại Thiên Lộc,Materials,Steel,HOSE,Penny,2010-01-01,0
+DTT,CTCP Kỹ nghệ Đô Thành,Materials,Plastics,HOSE,Penny,2003-01-01,0
+DVM,CTCP Dược liệu Việt Nam,Health Care,Pharmaceuticals,HNX,Penny,2022-01-01,0
+DVP,CTCP Đầu tư và Phát triển Cảng Đình Vũ,Industrials,Logistics,HOSE,Midcap,2009-01-01,0
+DXG,CTCP Tập đoàn Đất Xanh,Real Estate,Real Estate,HOSE,Midcap,2009-12-22,0
+DXP,CTCP Cảng Đoạn Xá,Industrials,Logistics,HNX,Penny,2002-01-01,0
+DXS,CTCP Dịch vụ Bất động sản Đất Xanh,Real Estate,Real Estate Services,HOSE,Midcap,2021-07-01,0
+DXV,CTCP Vicem Vật liệu Xây dựng Đà Nẵng,Materials,Building Materials,HOSE,Penny,2001-01-01,0
+EBS,CTCP Sách Giáo khoa tại TP. Hà Nội,Consumer Discretionary,Publishing,HNX,Penny,2008-01-01,0
+ECI,CTCP Bản đồ và Tranh ảnh Giáo dục,Consumer Discretionary,Publishing,HNX,Penny,2006-01-01,0
+EIB,Ngân hàng TMCP Xuất Nhập khẩu Việt Nam,Financials,Banks,HOSE,Bluechip,2009-10-27,0
+EID,CTCP Đầu tư và Phát triển Giáo dục Hà Nội,Consumer Discretionary,Education,HNX,Penny,2008-01-01,0
+ELC,CTCP Công nghệ - Viễn thông Elcom,Technology,IT Services,HOSE,Midcap,2010-01-01,0
+EVE,CTCP Everpia,Consumer Discretionary,Home Furnishings,HOSE,Penny,2010-01-01,0
+EVF,CTCP Tài chính Điện lực,Financials,Financial Services,HOSE,Midcap,2022-01-01,0
+EVG,CTCP Tập đoàn Everland,Real Estate,Real Estate,HOSE,Penny,2017-01-01,0
+EVS,CTCP Chứng khoán Everest,Financials,Securities,HNX,Penny,2019-01-01,0
+FCM,CTCP Khoáng sản Fecon,Materials,Building Materials,HOSE,Penny,2013-01-01,0
+FCN,CTCP FECON,Industrials,Construction,HOSE,Midcap,2012-01-01,0
+FDC,CTCP Ngoại thương và Phát triển Đầu tư TP.HCM,Real Estate,Real Estate,HOSE,Penny,2001-01-01,0
+FID,CTCP Đầu tư và Phát triển Doanh nghiệp Việt Nam,Financials,Investment,HNX,Penny,2015-01-01,0
+FIR,CTCP Địa ốc First Real,Real Estate,Real Estate,HOSE,Penny,2018-01-01,0
+FIT,CTCP Tập đoàn F.I.T,Financials,Investment,HOSE,Penny,2013-01-01,0
+FMC,CTCP Thực phẩm Sao Ta,Consumer Staples,Seafood,HOSE,Midcap,2006-01-01,0
+FPT,Tập đoàn FPT,Technology,Software & Services,HOSE,Bluechip,2006-12-13,1
+FRT,CTCP Bán lẻ Kỹ thuật số FPT,Consumer Discretionary,Retail,HOSE,Midcap,2018-04-26,0
+FTS,CTCP Chứng khoán FPT,Financials,Securities,HOSE,Midcap,2017-01-01,0
+GAS,Tổng Công ty Khí Việt Nam,Utilities,Gas Utilities,HOSE,Bluechip,2012-05-21,1
+GDT,CTCP Gỗ Đức Thành,Consumer Discretionary,Home Furnishings,HOSE,Penny,2009-01-01,0
+GDW,CTCP Cấp nước Gia Định,Utilities,Water Utilities,UPCOM,Penny,2010-01-01,0
+GEE,CTCP Điện Cơ Thống Nhất,Industrials,Electrical Equipment,UPCOM,Penny,2015-01-01,0
+GEG,CTCP Điện Gia Lai,Utilities,Renewable Energy,HOSE,Midcap,2019-01-01,0
+GEX,CTCP Tập đoàn GELEX,Industrials,Electrical Equipment,HOSE,Midcap,2015-10-01,0
+GIC,CTCP Đầu tư và Dịch vụ Cảng Xanh VIP,Industrials,Logistics,UPCOM,Penny,2016-01-01,0
+GIL,CTCP Sản xuất Kinh doanh Xuất nhập khẩu Bình Thạnh,Consumer Discretionary,Textiles,HOSE,Midcap,2002-01-01,0
+GKM,CTCP Khang Minh Group,Materials,Building Materials,HNX,Penny,2017-01-01,0
+GLT,CTCP Viễn thông - Tin học Bưu điện,Technology,IT Services,HOSE,Penny,2005-01-01,0
+GMA,CTCP GKM Holdings,Materials,Building Materials,HNX,Penny,2017-01-01,0
+GMD,CTCP Gemadept,Industrials,Logistics,HOSE,Midcap,2002-04-22,0
+GMH,CTCP Minh Hưng Quảng Trị,Materials,Building Materials,HOSE,Penny,2021-01-01,0
+GMX,CTCP Gạch ngói Nhị Hiệp,Materials,Building Materials,HNX,Penny,2010-01-01,0
+GSP,CTCP Vận tải Sản phẩm khí Quốc tế,Industrials,Logistics,HOSE,Penny,2012-01-01,0
+GTA,CTCP Gỗ Thuận An,Consumer Discretionary,Home Furnishings,HOSE,Penny,2007-01-01,0
+GVR,Tập đoàn Công nghiệp Cao su Việt Nam,Industrials,Rubber,HOSE,Bluechip,2018-03-21,1
+HAD,CTCP Bia Hà Nội - Hải Dương,Consumer Staples,Beverages,HNX,Penny,2008-01-01,0
+HAG,CTCP Hoàng Anh Gia Lai,Consumer Staples,Agriculture,HOSE,Midcap,2008-12-15,0
+HAH,CTCP Vận tải và Xếp dỡ Hải An,Industrials,Logistics,HOSE,Midcap,2014-03-11,0
+HAP,CTCP Tập đoàn Hapaco,Industrials,Multi-sector,HOSE,Penny,2000-01-01,0
+HAR,CTCP Bất động sản An Dương Thảo Điền,Real Estate,Real Estate,HOSE,Penny,2013-01-01,0
+HAS,CTCP Hacasco,Consumer Discretionary,Textiles,HOSE,Penny,2002-01-01,0
+HAT,CTCP Thương mại Bia Hà Nội,Consumer Staples,Beverages,HNX,Penny,2008-01-01,0
+HAX,CTCP Dịch vụ Ô tô Hàng Xanh,Consumer Discretionary,Retail,HOSE,Midcap,2006-01-01,0
+HBS,CTCP Chứng khoán Hòa Bình,Financials,Securities,HNX,Penny,2010-01-01,0
+HCC,CTCP Bê tông Hòa Cầm - Intimex,Materials,Building Materials,HNX,Penny,2008-01-01,0
+HCD,CTCP Đầu tư Sản xuất và Thương mại HCD,Materials,Plastics,HOSE,Penny,2016-01-01,0
+HCM,CTCP Chứng khoán TP.Hồ Chí Minh,Financials,Securities,HOSE,Midcap,2009-05-19,0
+HCT,CTCP Thương mại Dịch vụ Vận tải Xi măng Hải Phòng,Industrials,Logistics,HNX,Penny,2008-01-01,0
+HDA,CTCP Hãng sơn Đông Á,Materials,Chemicals,HNX,Penny,2015-01-01,0
+HDB,Ngân hàng TMCP Phát triển TP.HCM,Financials,Banks,HOSE,Bluechip,2018-01-05,1
+HDC,CTCP Phát triển Nhà Bà Rịa - Vũng Tàu,Real Estate,Real Estate,HOSE,Midcap,2009-01-01,0
+HDG,CTCP Tập đoàn Hà Đô,Real Estate,Real Estate,HOSE,Midcap,2010-02-02,0
+HEV,CTCP Sách Đại học - Dạy nghề,Consumer Discretionary,Publishing,HNX,Penny,2007-01-01,0
+HGM,CTCP Cơ khí và Khoáng sản Hà Giang,Materials,Mining,HNX,Penny,2009-01-01,0
+HHC,CTCP Bánh kẹo Hải Hà,Consumer Staples,Food Products,HNX,Penny,2007-01-01,0
+HHP,CTCP Giấy Hoàng Hà Hải Phòng,Materials,Paper,HOSE,Penny,2021-01-01,0
+HHS,CTCP Đầu tư Dịch vụ Hoàng Huy,Consumer Discretionary,Retail,HOSE,Midcap,2012-01-01,0
+HHV,CTCP Đầu tư Hạ tầng Giao thông Đèo Cả,Industrials,Infrastructure,HOSE,Midcap,2022-01-20,0
+HID,CTCP Halcom Việt Nam,Industrials,Infrastructure,HOSE,Penny,2016-01-01,0
+HII,CTCP An Tiến Industries,Materials,Chemicals,HOSE,Penny,2017-01-01,0
+HJS,CTCP Thủy điện Nậm Mu,Utilities,Electric Utilities,HNX,Penny,2005-01-01,0
+HKT,CTCP Chè Hiệp Khánh,Consumer Staples,Agriculture,HNX,Penny,2010-01-01,0
+HLC,CTCP Than Hà Lầm - TKV,Energy,Coal,HNX,Penny,2006-01-01,0
+HLD,CTCP Đầu tư và Phát triển Bất động sản HUDLAND,Real Estate,Real Estate,HNX,Penny,2011-01-01,0
+HMC,CTCP Kim khí TP.Hồ Chí Minh,Materials,Steel,HOSE,Penny,2006-01-01,0
+HMH,CTCP Hải Minh,Industrials,Logistics,HNX,Penny,2007-01-01,0
+HMR,CTCP Đá Hoàng Mai,Materials,Building Materials,HNX,Penny,2021-01-01,0
+HNA,CTCP Thủy điện Hứa Na,Utilities,Electric Utilities,HOSE,Penny,2024-01-01,0
+HOM,CTCP Xi măng Vicem Hoàng Mai,Materials,Cement,UPCOM,Penny,2002-01-01,0
+HPG,Tập đoàn Hòa Phát,Materials,Steel,HOSE,Bluechip,2007-11-15,1
+HPX,CTCP Đầu tư Hải Phát,Real Estate,Real Estate,HOSE,Midcap,2018-01-01,0
+HQC,CTCP TV-TM-DV Địa ốc Hoàng Quân,Real Estate,Real Estate,HOSE,Penny,2010-12-15,0
+HRC,CTCP Cao su Hòa Bình,Materials,Rubber,HOSE,Penny,2006-01-01,0
+HSG,CTCP Tập đoàn Hoa Sen,Materials,Steel,HOSE,Midcap,2008-11-05,0
+HSL,CTCP Đầu tư Phát triển Thực phẩm Hồng Hà,Consumer Staples,Food Products,HOSE,Penny,2018-01-01,0
+HT1,CTCP Xi măng Vicem Hà Tiên,Materials,Cement,HOSE,Midcap,2007-01-01,0
+HTC,CTCP Thương mại Hóc Môn,Consumer Discretionary,Retail,HNX,Penny,2002-01-01,0
+HTG,CTCP Dệt may Hòa Thọ,Consumer Discretionary,Textiles,HOSE,Penny,2023-01-01,0
+HTI,CTCP Đầu tư Phát triển Hạ tầng IDICO,Industrials,Infrastructure,HOSE,Penny,2010-01-01,0
+HTL,CTCP Kỹ thuật và Ô tô Trường Long,Consumer Discretionary,Retail,HOSE,Penny,2007-01-01,0
+HTN,CTCP Hưng Thịnh Incons,Industrials,Construction,HOSE,Midcap,2018-11-09,0
+HTV,CTCP Logistics Vicem,Industrials,Logistics,HOSE,Penny,2008-01-01,0
+HU1,CTCP Đầu tư và Xây dựng HUD1,Industrials,Construction,HOSE,Penny,2011-01-01,0
+HUB,CTCP Xây lắp Thừa Thiên Huế,Industrials,Construction,HOSE,Penny,2017-01-01,0
+HUT,CTCP Tasco,Industrials,Infrastructure,HNX,Midcap,2008-01-01,0
+HVH,CTCP Đầu tư và Công nghệ HVC,Industrials,Construction,HOSE,Penny,2018-01-01,0
+HVN,Tổng CTCP Hàng không Việt Nam,Industrials,Airlines,HOSE,Bluechip,2019-05-07,0
+HVT,CTCP Hóa chất Việt Trì,Materials,Chemicals,HNX,Penny,2009-01-01,0
+HVX,CTCP Xi măng Vicem Hải Vân,Materials,Cement,HOSE,Penny,2010-01-01,0
+ICG,CTCP Xây dựng và Đầu tư Việt Nam,Real Estate,Real Estate,HNX,Penny,2009-01-01,0
+ICT,CTCP Viễn thông - Tin học Bưu điện,Technology,IT Services,HOSE,Penny,2020-01-01,0
+IDC,Tổng CTCP IDICO,Real Estate,Industrial Parks,HNX,Midcap,2017-11-24,0
+IDI,CTCP Đầu tư và Phát triển Đa quốc gia I.D.I,Consumer Staples,Seafood,HOSE,Midcap,2011-01-01,0
+IDJ,CTCP Đầu tư IDJ Việt Nam,Financials,Investment,HNX,Penny,2010-01-01,0
+IDV,CTCP Phát triển Hạ tầng Vĩnh Phúc,Real Estate,Industrial Parks,HNX,Penny,2010-01-01,0
+IJC,CTCP Phát triển Hạ tầng Kỹ thuật,Real Estate,Real Estate,HOSE,Midcap,2010-01-01,0
+ILB,CTCP Tân Cảng - Long Bình,Industrials,Logistics,HOSE,Penny,2019-01-01,0
+IMP,CTCP Dược phẩm Imexpharm,Health Care,Pharmaceuticals,HOSE,Midcap,2006-01-01,0
+INC,CTCP Tư vấn Thiết kế Dầu khí,Industrials,Energy Services,HNX,Penny,2006-01-01,0
+INN,CTCP Bao bì và In Nông nghiệp,Materials,Packaging,HNX,Penny,2011-01-01,0
+IPA,CTCP Tập đoàn Đầu tư I.P.A,Financials,Investment,HNX,Midcap,2021-01-01,0
+ITC,CTCP Đầu tư và Kinh doanh Nhà,Real Estate,Real Estate,HOSE,Penny,2010-01-01,0
+ITD,CTCP Công nghệ Tiên Phong,Technology,IT Services,HOSE,Penny,2007-01-01,0
+ITQ,CTCP Tập đoàn Thiên Quang,Materials,Steel,HNX,Penny,2010-01-01,0
+IVS,CTCP Chứng khoán Guotai Junan (Việt Nam),Financials,Securities,HNX,Penny,2011-01-01,0
+JVC,CTCP Thiết bị Y tế Việt Nhật,Health Care,Medical Equipment,HOSE,Penny,2011-01-01,0
+KBC,Tổng CTCP Phát triển Đô thị Kinh Bắc,Real Estate,Industrial Parks,HOSE,Midcap,2007-12-18,0
+KDC,CTCP Tập đoàn KIDO,Consumer Staples,Food Products,HOSE,Midcap,2005-01-01,0
+KDH,CTCP Đầu tư và Kinh doanh Nhà Khang Điền,Real Estate,Real Estate,HOSE,Midcap,2010-02-01,0
+KDM,CTCP Tập đoàn GDC,Industrials,Construction,HNX,Penny,2016-01-01,0
+KHG,CTCP Tập đoàn Khải Hoàn Land,Real Estate,Real Estate Services,HOSE,Midcap,2021-01-01,0
+KHP,CTCP Điện lực Khánh Hòa,Utilities,Electric Utilities,HOSE,Penny,2006-01-01,0
+KHS,CTCP Kiên Hùng,Consumer Staples,Seafood,HNX,Penny,2017-01-01,0
+KKC,CTCP Kim khí Tập đoàn Việt Nam,Materials,Steel,HNX,Penny,2007-01-01,0
+KLB,Ngân hàng TMCP Kiên Long,Financials,Banks,UPCOM,Midcap,2017-01-01,0
+KMR,CTCP Mirae,Consumer Discretionary,Textiles,HOSE,Penny,2007-01-01,0
+KMT,CTCP Kim khí Miền Trung,Materials,Steel,HNX,Penny,2010-01-01,0
+KOS,CTCP KOSY,Real Estate,Real Estate,HOSE,Midcap,2017-01-01,0
+KSB,CTCP Khoáng sản và Xây dựng Bình Dương,Materials,Building Materials,HOSE,Midcap,2010-01-01,0
+KSD,CTCP Đầu tư DNA,Industrials,Electrical Equipment,HNX,Penny,2007-01-01,0
+KSF,CTCP Tập đoàn Real Gate,Real Estate,Real Estate,HNX,Midcap,2021-01-01,0
+KST,CTCP KST Group,Industrials,Electrical Equipment,HNX,Penny,2005-01-01,0
+KTS,CTCP Đường Kon Tum,Consumer Staples,Food Products,HNX,Penny,2011-01-01,0
+L10,CTCP Lắp máy 10,Industrials,Construction,HOSE,Penny,2010-01-01,0
+L14,CTCP LICOGI 14,Real Estate,Real Estate,HNX,Penny,2011-01-01,0
+L18,CTCP Đầu tư và Xây dựng số 18,Industrials,Construction,HNX,Penny,2008-01-01,0
+L40,CTCP Đầu tư và Xây dựng 40,Industrials,Construction,HNX,Penny,2009-01-01,0
+LAF,CTCP Chế biến Hàng xuất khẩu Long An,Consumer Staples,Food Products,HOSE,Penny,2000-01-01,0
+LAS,CTCP Supe Phốt phát và Hóa chất Lâm Thao,Materials,Fertilizers,HNX,Midcap,2012-01-01,0
+LBE,CTCP Sách và Thiết bị Trường học Long An,Consumer Discretionary,Publishing,HNX,Penny,2007-01-01,0
+LBM,CTCP Khoáng sản và Vật liệu Xây dựng Lâm Đồng,Materials,Building Materials,HOSE,Penny,2007-01-01,0
+LCG,CTCP LIZEN,Industrials,Construction,HOSE,Midcap,2008-01-01,0
+LDG,CTCP Đầu tư LDG,Real Estate,Real Estate,HOSE,Penny,2015-01-01,0
+LDP,CTCP Dược Lâm Đồng,Health Care,Pharmaceuticals,HNX,Penny,2010-01-01,0
+LGC,CTCP Đầu tư Cầu đường CII,Industrials,Infrastructure,HOSE,Midcap,2011-01-01,0
+LGL,CTCP Đầu tư và Phát triển Đô thị Long Giang,Real Estate,Real Estate,HOSE,Penny,2009-01-01,0
+LHC,CTCP Thủy lợi Lâm Đồng,Industrials,Construction,HNX,Penny,2008-01-01,0
+LHG,CTCP Long Hậu,Real Estate,Industrial Parks,HOSE,Midcap,2009-01-01,0
+LIG,CTCP LICOGI 13,Industrials,Construction,HNX,Penny,2010-01-01,0
+LIX,CTCP Bột giặt Lix,Consumer Staples,Household Products,HOSE,Midcap,2009-01-01,0
+LM8,CTCP Lilama 18,Industrials,Construction,HOSE,Penny,2010-01-01,0
+LPB,Ngân hàng TMCP Lộc Phát Việt Nam,Financials,Banks,HOSE,Bluechip,2017-10-05,0
+LSS,CTCP Mía đường Lam Sơn,Consumer Staples,Food Products,HOSE,Penny,2008-01-01,0
+MAC,CTCP Cung ứng và Dịch vụ Kỹ thuật Hàng hải,Industrials,Logistics,HNX,Penny,2005-01-01,0
+MAS,CTCP Dịch vụ Hàng không Sân bay Đà Nẵng,Industrials,Logistics,HNX,Penny,2006-01-01,0
+MBB,Ngân hàng TMCP Quân đội,Financials,Banks,HOSE,Bluechip,2011-11-01,1
+MBG,CTCP Tập đoàn MBG,Industrials,Multi-sector,HNX,Penny,2015-01-01,0
+MBS,CTCP Chứng khoán MB,Financials,Securities,HNX,Midcap,2016-03-28,0
+MCC,CTCP Gạch ngói Cao cấp,Materials,Building Materials,HNX,Penny,2008-01-01,0
+MCF,CTCP Xây lắp Cơ khí và Lương thực Thực phẩm,Industrials,Machinery,HNX,Penny,2010-01-01,0
+MCH,CTCP Hàng tiêu dùng Masan,Consumer Staples,Food & Beverage,UPCOM,Bluechip,2017-01-01,0
+MCM,CTCP Giống bò sữa Mộc Châu,Consumer Staples,Food Products,HOSE,Midcap,2020-01-01,0
+MCO,CTCP Đầu tư và Xây dựng Công trình 1,Industrials,Construction,HNX,Penny,2005-01-01,0
+MCP,CTCP Bản đồ và Tranh ảnh Giáo dục,Consumer Discretionary,Publishing,HOSE,Penny,2006-01-01,0
+MDC,CTCP Than Mông Dương - TKV,Energy,Coal,HNX,Penny,2006-01-01,0
+MDG,CTCP Miền Đông,Industrials,Construction,HOSE,Penny,2010-01-01,0
+MED,CTCP Dược Trung ương MEDIPLANTEX,Health Care,Pharmaceuticals,UPCOM,Penny,2017-01-01,0
+MEL,CTCP Thép Mê Lin,Materials,Steel,HNX,Penny,2016-01-01,0
+MHC,CTCP MHC,Industrials,Logistics,HOSE,Penny,2005-01-01,0
+MIC,CTCP Kỹ nghệ Khoáng sản Quảng Nam,Materials,Mining,HOSE,Penny,2006-01-01,0
+MIG,Tổng CTCP Bảo hiểm Quân đội,Financials,Insurance,HOSE,Midcap,2017-01-01,0
+MKV,CTCP Hóa dược Việt Nam,Health Care,Pharmaceuticals,HNX,Penny,2008-01-01,0
+MSB,Ngân hàng TMCP Hàng Hải Việt Nam,Financials,Banks,HOSE,Bluechip,2020-12-23,0
+MSH,CTCP May Sông Hồng,Consumer Discretionary,Textiles,HOSE,Midcap,2018-01-01,0
+MSN,Tập đoàn Masan,Consumer Staples,Food & Beverage,HOSE,Bluechip,2009-11-05,1
+MST,CTCP Đầu tư MST,Industrials,Construction,HNX,Penny,2016-01-01,0
+MWG,CTCP Đầu tư Thế giới Di động,Consumer Discretionary,Retailing,HOSE,Bluechip,2014-07-14,1
+NAB,Ngân hàng TMCP Nam Á,Financials,Banks,HOSE,Midcap,2024-03-01,0
+NAF,CTCP Nafoods Group,Consumer Staples,Food Products,HOSE,Penny,2015-01-01,0
+NAG,CTCP Tập đoàn Nagakawa,Consumer Discretionary,Household Goods,HNX,Penny,2009-01-01,0
+NAP,CTCP Cảng Nghệ Tĩnh,Industrials,Logistics,HNX,Penny,2015-01-01,0
+NAV,CTCP Nam Việt,Materials,Building Materials,HOSE,Penny,2006-01-01,0
+NBB,CTCP Đầu tư Năm Bảy Bảy,Real Estate,Real Estate,HOSE,Midcap,2009-01-01,0
+NBC,CTCP Than Núi Béo - TKV,Energy,Coal,HNX,Penny,2006-01-01,0
+NBP,CTCP Nhiệt điện Ninh Bình,Utilities,Electric Utilities,HNX,Penny,2008-01-01,0
+NBW,CTCP Cấp nước Nhà Bè,Utilities,Water Utilities,UPCOM,Penny,2010-01-01,0
+NCT,CTCP Dịch vụ Hàng hóa Nội Bài,Industrials,Logistics,HOSE,Midcap,2015-01-01,0
+NDN,CTCP Đầu tư Phát triển Nhà Đà Nẵng,Real Estate,Real Estate,HNX,Penny,2011-01-01,0
+NDX,CTCP Xây lắp Phát triển Nhà Đà Nẵng,Real Estate,Real Estate,HNX,Penny,2010-01-01,0
+NET,CTCP Bột giặt NET,Consumer Staples,Household Products,HNX,Midcap,2010-01-01,0
+NFC,CTCP Ninh Bình Phosphate,Materials,Fertilizers,HNX,Penny,2010-01-01,0
+NHA,CTCP Đầu tư Phát triển Nhà và Đô thị Nam Hà Nội,Real Estate,Real Estate,HOSE,Penny,2010-01-01,0
+NHC,CTCP Gạch ngói Nhị Hiệp,Materials,Building Materials,HNX,Penny,2010-01-01,0
+NHH,CTCP Nhựa Hà Nội,Materials,Plastics,HOSE,Penny,2019-01-01,0
+NHT,CTCP Sản xuất Kinh doanh Nhựa Hà Tĩnh,Materials,Plastics,HNX,Penny,2010-01-01,0
+NKG,CTCP Thép Nam Kim,Materials,Steel,HOSE,Midcap,2011-01-14,0
+NLG,CTCP Đầu tư Nam Long,Real Estate,Real Estate,HOSE,Midcap,2013-04-08,0
+NNC,CTCP Đá Núi Nhỏ,Materials,Building Materials,HOSE,Penny,2010-01-01,0
+NO1,CTCP Tập đoàn 911,Industrials,Machinery,HOSE,Penny,2022-01-01,0
+NRC,CTCP Tập đoàn Danh Khôi,Real Estate,Real Estate Services,HNX,Penny,2017-01-01,0
+NSC,CTCP Tập đoàn Giống cây trồng Việt Nam,Consumer Staples,Agriculture,HOSE,Midcap,2006-01-01,0
+NSH,CTCP Nhôm Sông Hồng,Materials,Steel,HNX,Penny,2010-01-01,0
+NST,CTCP Ngân Sơn,Consumer Staples,Tobacco,HNX,Penny,2006-01-01,0
+NT2,CTCP Điện lực Dầu khí Nhơn Trạch 2,Utilities,Electric Utilities,HOSE,Midcap,2015-06-12,0
+NTC,CTCP Khu Công nghiệp Nam Tân Uyên,Real Estate,Industrial Parks,UPCOM,Midcap,2016-01-01,0
+NTH,CTCP Thủy điện Nước Trong,Utilities,Electric Utilities,HNX,Penny,2010-01-01,0
+NTL,CTCP Phát triển Đô thị Từ Liêm,Real Estate,Real Estate,HOSE,Midcap,2007-01-01,0
+NTP,CTCP Nhựa Thiếu niên Tiền Phong,Materials,Plastics,HNX,Midcap,2006-01-01,0
+NVB,Ngân hàng TMCP Quốc Dân,Financials,Banks,HNX,Midcap,2010-09-01,0
+NVL,CTCP Tập đoàn Đầu tư Địa ốc No Va,Real Estate,Real Estate,HOSE,Bluechip,2016-12-28,0
+NVT,CTCP Bất động sản Du lịch Ninh Vân Bay,Consumer Discretionary,Travel & Leisure,HOSE,Penny,2010-01-01,0
+OCB,Ngân hàng TMCP Phương Đông,Financials,Banks,HOSE,Bluechip,2021-01-28,0
+OCH,CTCP Khách sạn và Dịch vụ Đại Dương,Consumer Discretionary,Hotels,HNX,Penny,2010-01-01,0
+OGC,CTCP Tập đoàn Đại Dương,Financials,Investment,HOSE,Penny,2010-01-01,0
+ONE,CTCP Truyền thông số 1,Technology,IT Services,HNX,Penny,2008-01-01,0
+OPC,CTCP Dược phẩm OPC,Health Care,Pharmaceuticals,HOSE,Midcap,2008-01-01,0
+ORS,CTCP Chứng khoán Tiên Phong,Financials,Securities,HOSE,Midcap,2019-01-01,0
+PAC,CTCP Pin Ắc quy Miền Nam,Industrials,Electrical Equipment,HOSE,Midcap,2006-01-01,0
+PAN,CTCP Tập đoàn PAN,Consumer Staples,Agriculture,HOSE,Midcap,2006-11-01,0
+PBP,CTCP Bao bì Dầu khí Việt Nam,Materials,Packaging,HNX,Penny,2011-01-01,0
+PC1,CTCP Tập đoàn PC1,Industrials,Construction,HOSE,Midcap,2016-11-16,0
+PCE,CTCP Phân bón và Hóa chất Dầu khí Miền Trung,Materials,Fertilizers,HNX,Penny,2011-01-01,0
+PCH,CTCP Nhựa Picomat,Materials,Plastics,HNX,Penny,2022-01-01,0
+PCT,CTCP Dịch vụ Vận tải Dầu khí Cửu Long,Industrials,Logistics,HNX,Penny,2011-01-01,0
+PDB,CTCP Phục Hưng Holdings,Industrials,Construction,HNX,Penny,2009-01-01,0
+PDN,CTCP Cảng Đồng Nai,Industrials,Logistics,HOSE,Midcap,2011-01-01,0
+PDR,CTCP Phát triển Bất động sản Phát Đạt,Real Estate,Real Estate,HOSE,Bluechip,2010-07-30,0
+PDV,CTCP Vận tải Dầu khí Việt Nam,Industrials,Logistics,UPCOM,Penny,2011-01-01,0
+PEN,CTCP Xây lắp Điện Ninh Thuận,Industrials,Construction,HNX,Penny,2010-01-01,0
+PET,Tổng CTCP Dịch vụ Tổng hợp Dầu khí,Consumer Discretionary,Retail,HOSE,Midcap,2007-09-12,0
+PGC,CTCP Gas Petrolimex,Utilities,Gas Utilities,HOSE,Midcap,2006-01-01,0
+PGD,CTCP Phân phối Khí thấp áp Dầu khí Việt Nam,Utilities,Gas Utilities,HOSE,Midcap,2009-01-01,0
+PGI,Tổng CTCP Bảo hiểm Petrolimex,Financials,Insurance,HOSE,Midcap,2009-01-01,0
+PGN,CTCP Phụ gia Nhựa,Materials,Chemicals,HNX,Penny,2021-01-01,0
+PGS,CTCP Kinh doanh Khí Miền Nam,Utilities,Gas Utilities,HNX,Midcap,2007-01-01,0
+PGT,CTCP PGT Holdings,Financials,Investment,HNX,Penny,2009-01-01,0
+PGV,Tổng CTCP Phát điện 3,Utilities,Electric Utilities,HOSE,Bluechip,2018-01-01,0
+PHC,CTCP Phục Hưng Holdings,Industrials,Construction,HOSE,Penny,2009-01-01,0
+PHN,CTCP Pin Hà Nội,Industrials,Electrical Equipment,HNX,Penny,2019-01-01,0
+PHR,CTCP Cao su Phước Hòa,Materials,Rubber,HOSE,Midcap,2009-01-01,0
+PIA,CTCP Tin học Viễn thông Petrolimex,Technology,IT Services,UPCOM,Penny,2014-01-01,0
+PIC,CTCP Đầu tư Điện Tây Nguyên,Utilities,Electric Utilities,HNX,Penny,2011-01-01,0
+PIT,CTCP Xuất nhập khẩu Petrolimex,Consumer Staples,Agriculture,HOSE,Penny,2007-01-01,0
+PJC,CTCP Thương mại Xe tải Dầu khí,Industrials,Logistics,HNX,Penny,2008-01-01,0
+PJT,CTCP Vận tải Xăng dầu Đường thủy Petrolimex,Industrials,Logistics,HOSE,Penny,2007-01-01,0
+PLC,CTCP Hóa dầu Petrolimex,Materials,Chemicals,HNX,Midcap,2006-01-01,0
+PLP,CTCP Công nghệ Nhựa Pha Lê,Materials,Plastics,HOSE,Penny,2017-01-01,0
+PLX,Tập đoàn Xăng dầu Việt Nam,Energy,Oil & Gas,HOSE,Bluechip,2017-04-21,1
+PMB,CTCP Phân bón và Hóa chất Dầu khí Miền Bắc,Materials,Fertilizers,HNX,Penny,2015-01-01,0
+PMC,CTCP Dược phẩm Dược liệu Pharmedic,Health Care,Pharmaceuticals,HNX,Penny,2009-01-01,0
+PMG,CTCP Đầu tư và Sản xuất Petro Miền Trung,Utilities,Gas Utilities,HOSE,Penny,2018-01-01,0
+PMP,CTCP Bao bì Đạm Phú Mỹ,Materials,Packaging,HNX,Penny,2015-01-01,0
+PMS,CTCP Cơ khí Xăng dầu,Industrials,Machinery,HNX,Penny,2007-01-01,0
+PNC,CTCP Văn hóa Phương Nam,Consumer Discretionary,Retail,HOSE,Penny,2005-01-01,0
+PNJ,CTCP Vàng bạc Đá quý Phú Nhuận,Consumer Discretionary,Retail,HOSE,Bluechip,2009-03-23,0
+POT,CTCP Thiết bị Bưu điện,Industrials,Electrical Equipment,HNX,Penny,2005-01-01,0
+POW,Tổng CTCP Điện lực Dầu khí Việt Nam,Utilities,Electric Utilities,HOSE,Bluechip,2018-03-06,1
+PPC,CTCP Nhiệt điện Phả Lại,Utilities,Electric Utilities,HOSE,Midcap,2007-01-26,0
+PPE,CTCP Tư vấn Đầu tư Tài chính Dầu khí Việt Nam,Financials,Financial Services,HNX,Penny,2010-01-01,0
+PPP,CTCP Dược phẩm Phong Phú,Health Care,Pharmaceuticals,HNX,Penny,2015-01-01,0
+PPS,CTCP Dịch vụ Kỹ thuật Điện lực Dầu khí Việt Nam,Utilities,Electric Utilities,HNX,Penny,2010-01-01,0
+PPT,CTCP Bán lẻ Dầu khí Việt Nam,Consumer Discretionary,Retail,UPCOM,Penny,2020-01-01,0
+PPY,CTCP Xăng dầu Dầu khí Phú Yên,Energy,Oil & Gas,HNX,Penny,2011-01-01,0
+PRC,CTCP Logistics Portserco,Industrials,Logistics,HNX,Penny,2010-01-01,0
+PRE,CTCP Tái Bảo hiểm PVI,Financials,Insurance,HNX,Penny,2011-01-01,0
+PSC,CTCP Vận tải và Dịch vụ Petrolimex Sài Gòn,Industrials,Logistics,HNX,Penny,2009-01-01,0
+PSD,CTCP Dịch vụ Phân phối Tổng hợp Dầu khí,Consumer Discretionary,Retail,HNX,Penny,2013-01-01,0
+PSE,CTCP Phân bón và Hóa chất Dầu khí Tây Nam Bộ,Materials,Fertilizers,HNX,Penny,2014-01-01,0
+PSI,CTCP Chứng khoán Dầu khí,Financials,Securities,HNX,Penny,2010-01-01,0
+PSW,CTCP Phân bón và Hóa chất Dầu khí Tây Nam Bộ,Materials,Fertilizers,HNX,Penny,2015-01-01,0
+PTB,CTCP Phú Tài,Industrials,Multi-sector,HOSE,Midcap,2011-01-01,0
+PTC,CTCP Đầu tư và Xây dựng Bưu điện,Industrials,Construction,HOSE,Penny,2008-01-01,0
+PTD,CTCP Thiết kế - Xây dựng - Thương mại Phúc Thịnh,Industrials,Construction,UPCOM,Penny,2011-01-01,0
+PTI,Tổng CTCP Bảo hiểm Bưu điện,Financials,Insurance,HNX,Midcap,2011-01-01,0
+PTL,CTCP Đầu tư hạ tầng và Đô thị Dầu khí PVC,Real Estate,Real Estate,HOSE,Penny,2010-01-01,0
+PTS,CTCP Vận tải và Dịch vụ Petrolimex Thừa Thiên Huế,Industrials,Logistics,HNX,Penny,2008-01-01,0
+PTX,CTCP Vận tải và Dịch vụ Petrolimex Nghệ An,Industrials,Logistics,UPCOM,Penny,2010-01-01,0
+PV2,CTCP Đầu tư PV2,Financials,Investment,HNX,Penny,2010-01-01,0
+PVB,CTCP Bọc ống Dầu khí Việt Nam,Energy,Energy Services,HNX,Penny,2012-01-01,0
+PVC,Tổng CTCP Hóa chất và Dịch vụ Dầu khí,Energy,Energy Services,HNX,Penny,2007-01-01,0
+PVD,Tổng CTCP Khoan và Dịch vụ Khoan Dầu khí,Energy,Oil & Gas,HOSE,Midcap,2006-12-05,0
+PVG,CTCP Kinh doanh Khí miền Bắc,Utilities,Gas Utilities,HNX,Penny,2009-01-01,0
+PVI,CTCP PVI,Financials,Insurance,HNX,Midcap,2007-01-01,0
+PVP,CTCP Vận tải Dầu khí Thái Bình Dương,Industrials,Logistics,HOSE,Midcap,2023-01-01,0
+PVS,Tổng CTCP Dịch vụ Kỹ thuật Dầu khí Việt Nam,Energy,Oil & Gas,HNX,Midcap,2007-09-20,0
+PVT,Tổng CTCP Vận tải Dầu khí,Industrials,Logistics,HOSE,Midcap,2007-12-10,0
+QCG,CTCP Quốc Cường Gia Lai,Real Estate,Real Estate,HOSE,Penny,2010-01-01,0
+QHD,CTCP Que hàn Điện Việt Đức,Industrials,Machinery,HNX,Penny,2010-01-01,0
+QNP,CTCP Cảng Quy Nhơn,Industrials,Logistics,HOSE,Midcap,2024-01-01,0
+QST,CTCP Sách và Thiết bị Trường học Quảng Ninh,Consumer Discretionary,Publishing,HNX,Penny,2011-01-01,0
+QTC,CTCP Công trình Giao thông Quảng Nam,Industrials,Construction,HNX,Penny,2011-01-01,0
+RAL,CTCP Bóng đèn Phích nước Rạng Đông,Consumer Discretionary,Household Goods,HOSE,Midcap,2006-01-01,0
+RCL,CTCP Địa ốc Chợ Lớn,Real Estate,Real Estate,HNX,Penny,2007-01-01,0
+REE,CTCP Cơ Điện Lạnh,Industrials,Multi-sector,HOSE,Bluechip,2000-07-28,0
+RYG,CTCP Rạng Đông Holding,Industrials,Multi-sector,HOSE,Penny,2002-01-01,0
+S4A,CTCP Thủy điện Sê San 4A,Utilities,Electric Utilities,HOSE,Penny,2011-01-01,0
+S55,CTCP Sông Đà 505,Industrials,Construction,HNX,Penny,2006-01-01,0
+S99,CTCP SCI Holdings,Industrials,Construction,HNX,Penny,2006-01-01,0
+SAB,Tổng CTCP Bia - Rượu - Nước giải khát Sài Gòn,Consumer Staples,Beverages,HOSE,Bluechip,2016-12-06,1
+SAF,CTCP Lương thực Thực phẩm Safoco,Consumer Staples,Food Products,HNX,Penny,2006-01-01,0
+SAM,CTCP Tập đoàn SAM Holdings,Industrials,Multi-sector,HOSE,Midcap,2000-01-01,0
+SAV,CTCP Hợp tác Kinh tế và Xuất nhập khẩu Savimex,Consumer Discretionary,Home Furnishings,HOSE,Penny,2002-01-01,0
+SBA,CTCP Sông Ba,Utilities,Electric Utilities,HOSE,Penny,2010-01-01,0
+SBG,CTCP Tập đoàn Cơ khí Công nghệ cao Siba,Industrials,Machinery,HOSE,Penny,2023-01-01,0
+SBT,CTCP Thành Thành Công - Biên Hòa,Consumer Staples,Food Products,HOSE,Midcap,2008-01-01,0
+SBV,CTCP Siam Brothers Việt Nam,Consumer Discretionary,Textiles,HOSE,Penny,2017-01-01,0
+SC5,CTCP Xây dựng Số 5,Industrials,Construction,HOSE,Penny,2003-01-01,0
+SCG,CTCP Tập đoàn Xây dựng SCG,Industrials,Construction,UPCOM,Penny,2021-01-01,0
+SCI,CTCP SCI,Industrials,Construction,HNX,Penny,2010-01-01,0
+SCR,CTCP Địa ốc Sài Gòn Thương Tín,Real Estate,Real Estate,HOSE,Midcap,2010-01-01,0
+SCS,CTCP Dịch vụ Hàng hóa Sài Gòn,Industrials,Logistics,HOSE,Midcap,2017-01-01,0
+SD5,CTCP Sông Đà 5,Industrials,Construction,HNX,Penny,2006-01-01,0
+SD9,CTCP Sông Đà 9,Industrials,Construction,HNX,Penny,2006-01-01,0
+SDA,CTCP Simco Sông Đà,Industrials,Multi-sector,HNX,Penny,2006-01-01,0
+SDC,CTCP Tư vấn Sông Đà,Industrials,Construction,HNX,Penny,2007-01-01,0
+SDG,CTCP Sadico Cần Thơ,Materials,Packaging,HNX,Penny,2009-01-01,0
+SDN,CTCP Sơn Đà Nẵng,Materials,Chemicals,HNX,Penny,2010-01-01,0
+SDU,CTCP Đầu tư Xây dựng và Phát triển Đô thị Sông Đà,Real Estate,Real Estate,HNX,Penny,2009-01-01,0
+SEB,CTCP Đầu tư và Phát triển Điện Miền Trung,Utilities,Electric Utilities,HNX,Penny,2010-01-01,0
+SED,CTCP Đầu tư và Phát triển Giáo dục Phương Nam,Consumer Discretionary,Education,HNX,Penny,2008-01-01,0
+SFC,CTCP Nhiên liệu Sài Gòn,Energy,Oil & Gas,HOSE,Penny,2002-01-01,0
+SFG,CTCP Phân bón Miền Nam,Materials,Fertilizers,HOSE,Penny,2015-01-01,0
+SFI,CTCP Đại lý Vận tải SAFI,Industrials,Logistics,HOSE,Penny,2006-01-01,0
+SFN,CTCP Dệt lưới Sài Gòn,Consumer Discretionary,Textiles,HNX,Penny,2008-01-01,0
+SGC,CTCP Xuất nhập khẩu Sa Giang,Consumer Staples,Food Products,HNX,Penny,2006-01-01,0
+SGD,CTCP Sách Giáo khoa tại TP. Hồ Chí Minh,Consumer Discretionary,Publishing,HNX,Penny,2008-01-01,0
+SGH,CTCP Khách sạn Sài Gòn,Consumer Discretionary,Hotels,HOSE,Penny,2001-01-01,0
+SGN,CTCP Phục vụ Mặt đất Sài Gòn,Industrials,Logistics,HOSE,Midcap,2018-01-01,0
+SGR,CTCP Địa ốc Sài Gòn,Real Estate,Real Estate,HOSE,Penny,2017-01-01,0
+SGT,CTCP Công nghệ Viễn thông Sài Gòn,Technology,IT Services,HOSE,Midcap,2008-01-01,0
+SHA,CTCP Sơn Hà Sài Gòn,Consumer Discretionary,Household Goods,HOSE,Penny,2012-01-01,0
+SHB,Ngân hàng TMCP Sài Gòn - Hà Nội,Financials,Banks,HOSE,Bluechip,2009-09-04,1
+SHE,CTCP Phát triển Năng lượng Sơn Hà,Utilities,Renewable Energy,HNX,Penny,2017-01-01,0
+SHI,CTCP Quốc tế Sơn Hà,Consumer Discretionary,Household Goods,HOSE,Midcap,2009-01-01,0
+SHN,CTCP Đầu tư Tổng hợp Hà Nội,Financials,Investment,HNX,Penny,2009-01-01,0
+SHP,CTCP Thủy điện Miền Nam,Utilities,Electric Utilities,HOSE,Penny,2014-01-01,0
+SHS,CTCP Chứng khoán Sài Gòn - Hà Nội,Financials,Securities,HNX,Midcap,2009-06-25,0
+SIP,CTCP Đầu tư Sài Gòn VRG,Real Estate,Industrial Parks,HOSE,Midcap,2019-01-01,0
+SJ1,CTCP Thủy sản Số 1,Consumer Staples,Seafood,HNX,Penny,2011-01-01,0
+SJD,CTCP Thủy điện Cần Đơn,Utilities,Electric Utilities,HOSE,Penny,2004-01-01,0
+SJE,CTCP Sông Đà 11,Industrials,Construction,HNX,Penny,2006-01-01,0
+SJS,CTCP Đầu tư Phát triển Đô thị và Khu Công nghiệp Sông Đà,Real Estate,Real Estate,HOSE,Midcap,2006-01-01,0
+SKG,CTCP Tàu cao tốc Superdong - Kiên Giang,Consumer Discretionary,Travel & Leisure,HOSE,Penny,2014-01-01,0
+SLS,CTCP Mía đường Sơn La,Consumer Staples,Food Products,HNX,Midcap,2012-01-01,0
+SMA,CTCP Thiết bị Phụ tùng Sài Gòn,Industrials,Machinery,HOSE,Penny,2010-01-01,0
+SMB,CTCP Bia Sài Gòn - Miền Trung,Consumer Staples,Beverages,HOSE,Midcap,2018-01-01,0
+SMC,CTCP Đầu tư Thương mại SMC,Materials,Steel,HOSE,Penny,2006-01-01,0
+SMN,CTCP Sách và Thiết bị Giáo dục Miền Nam,Consumer Discretionary,Publishing,HNX,Penny,2008-01-01,0
+SMT,CTCP Vật tư Thiết bị Giao thông,Industrials,Machinery,HNX,Penny,2010-01-01,0
+SPC,CTCP Bảo vệ Thực vật Sài Gòn,Materials,Agriculture Chemicals,HNX,Penny,2005-01-01,0
+SPM,CTCP SPM,Health Care,Pharmaceuticals,HOSE,Penny,2010-01-01,0
+SRA,CTCP Sara Việt Nam,Health Care,Medical Equipment,HNX,Penny,2008-01-01,0
+SRC,CTCP Cao su Sao Vàng,Industrials,Tires,HOSE,Penny,2009-01-01,0
+SRF,CTCP Searefico,Industrials,Construction,HOSE,Penny,2009-01-01,0
+SSB,Ngân hàng TMCP Đông Nam Á,Financials,Banks,HOSE,Bluechip,2021-03-24,1
+SSC,CTCP Giống cây trồng Miền Nam,Consumer Staples,Agriculture,HOSE,Penny,2005-01-01,0
+SSI,CTCP Chứng khoán SSI,Financials,Securities,HOSE,Bluechip,2006-12-15,1
+SSM,CTCP Chế tạo Kết cấu Thép VNECO,Industrials,Machinery,HNX,Penny,2009-01-01,0
+ST8,CTCP Siêu Thanh,Consumer Discretionary,Retail,HOSE,Penny,2007-01-01,0
+STB,Ngân hàng TMCP Sài Gòn Thương Tín,Financials,Banks,HOSE,Bluechip,2006-07-12,1
+STC,CTCP Sách và Thiết bị Trường học TP.HCM,Consumer Discretionary,Publishing,HNX,Penny,2005-01-01,0
+STG,CTCP Kho vận Miền Nam,Industrials,Logistics,HOSE,Midcap,2010-01-01,0
+STK,CTCP Sợi Thế Kỷ,Consumer Discretionary,Textiles,HOSE,Midcap,2015-01-01,0
+STP,CTCP Công nghiệp Thương mại Sông Đà,Materials,Packaging,HNX,Penny,2006-01-01,0
+SVC,CTCP Dịch vụ Tổng hợp Sài Gòn,Consumer Discretionary,Retail,HOSE,Midcap,2006-01-01,0
+SVD,CTCP Đầu tư và Thương mại Vũ Đăng,Consumer Discretionary,Textiles,HOSE,Penny,2021-01-01,0
+SVI,CTCP Bao bì Biên Hòa,Materials,Packaging,HOSE,Midcap,2002-01-01,0
+SVN,CTCP Tập đoàn Vexilla Việt Nam,Industrials,Multi-sector,HNX,Penny,2014-01-01,0
+SVT,CTCP Công nghệ Sài Gòn Viễn Đông,Technology,IT Services,HOSE,Penny,2003-01-01,0
+SZB,CTCP Sonadezi Long Bình,Real Estate,Industrial Parks,HNX,Penny,2017-01-01,0
+SZC,CTCP Sonadezi Châu Đức,Real Estate,Industrial Parks,HOSE,Midcap,2019-01-01,0
+SZL,CTCP Sonadezi Long Thành,Real Estate,Industrial Parks,HOSE,Midcap,2008-01-01,0
+TA9,CTCP Xây lắp Thành An 96,Industrials,Construction,HNX,Penny,2011-01-01,0
+TAL,CTCP Đầu tư và Thương mại TNG,Consumer Discretionary,Textiles,HNX,Midcap,2007-01-01,0
+TBC,CTCP Thủy điện Thác Bà,Utilities,Electric Utilities,HOSE,Penny,2006-01-01,0
+TCB,Ngân hàng TMCP Kỹ thương Việt Nam,Financials,Banks,HOSE,Bluechip,2018-06-04,1
+TCD,CTCP Đầu tư Phát triển Công nghiệp và Vận tải,Industrials,Multi-sector,HOSE,Midcap,2016-01-01,0
+TCH,CTCP Đầu tư Dịch vụ Tài chính Hoàng Huy,Real Estate,Real Estate,HOSE,Midcap,2016-10-05,0
+TCI,CTCP Chứng khoán Thành Công,Financials,Securities,HOSE,Penny,2018-01-01,0
+TCL,CTCP Đại lý Giao nhận Vận tải Xếp dỡ Tân Cảng,Industrials,Logistics,HOSE,Midcap,2009-01-01,0
+TCM,CTCP Dệt may - Đầu tư - Thương mại Thành Công,Consumer Discretionary,Textiles,HOSE,Midcap,2007-01-01,0
+TCO,CTCP Vận tải Đa phương thức Duyên Hải,Industrials,Logistics,HOSE,Penny,2008-01-01,0
+TCR,CTCP Gốm sứ Taicera,Materials,Building Materials,HOSE,Penny,2006-01-01,0
+TCT,CTCP Cáp treo Núi Bà Tây Ninh,Consumer Discretionary,Travel & Leisure,HOSE,Penny,2001-01-01,0
+TCX,CTCP Xây lắp và Sản xuất Công nghiệp,Industrials,Construction,UPCOM,Penny,2015-01-01,0
+TD6,CTCP Đầu tư Xây dựng Công trình 610,Industrials,Construction,UPCOM,Penny,2015-01-01,0
+TDC,CTCP Kinh doanh và Phát triển Bình Dương,Real Estate,Real Estate,HOSE,Penny,2010-01-01,0
+TDG,CTCP Đầu tư TDG Global,Utilities,Gas Utilities,HOSE,Penny,2017-01-01,0
+TDH,CTCP Phát triển Nhà Thủ Đức,Real Estate,Real Estate,HOSE,Penny,2007-01-01,0
+TDM,CTCP Nước Thủ Dầu Một,Utilities,Water Utilities,HOSE,Midcap,2019-01-01,0
+TDP,CTCP Thuận Đức,Materials,Packaging,HOSE,Penny,2020-01-01,0
+TDT,CTCP Đầu tư và Phát triển TDT,Consumer Discretionary,Textiles,HNX,Penny,2018-01-01,0
+TDW,CTCP Cấp nước Thủ Đức,Utilities,Water Utilities,HOSE,Penny,2007-01-01,0
+TEG,CTCP Năng lượng và Bất động sản Trường Thành,Industrials,Multi-sector,HOSE,Penny,2015-01-01,0
+TET,CTCP Vải sợi May mặc miền Bắc,Consumer Discretionary,Textiles,HNX,Penny,2010-01-01,0
+TFC,CTCP Trang,Consumer Staples,Food Products,HNX,Penny,2015-01-01,0
+THB,CTCP Bia Hà Nội - Thanh Hóa,Consumer Staples,Beverages,HNX,Penny,2008-01-01,0
+THD,CTCP Thaiholdings,Financials,Investment,HNX,Bluechip,2020-01-01,0
+THG,CTCP Đầu tư và Xây dựng Tiền Giang,Industrials,Construction,HOSE,Penny,2011-01-01,0
+THS,CTCP Sách Giáo khoa tại TP. Thanh Hóa,Consumer Discretionary,Publishing,HNX,Penny,2008-01-01,0
+THT,CTCP Than Hà Tu - TKV,Energy,Coal,HNX,Penny,2006-01-01,0
+TIG,CTCP Tập đoàn Đầu tư Thăng Long,Real Estate,Real Estate,HNX,Penny,2010-01-01,0
+TIP,CTCP Phát triển Khu Công nghiệp Tín Nghĩa,Real Estate,Industrial Parks,HOSE,Midcap,2007-01-01,0
+TIX,CTCP Sản xuất Kinh doanh Xuất nhập khẩu Dịch vụ và Đầu tư Tân Bình,Real Estate,Industrial Parks,HOSE,Penny,2006-01-01,0
+TJC,CTCP Vận tải và Xếp dỡ Quảng Ninh,Industrials,Logistics,HNX,Penny,2007-01-01,0
+TKU,CTCP Công nghiệp Tung Kuang,Materials,Steel,HNX,Penny,2006-01-01,0
+TLD,CTCP Đầu tư Xây dựng và Phát triển Đô thị Thăng Long,Real Estate,Real Estate,HOSE,Penny,2017-01-01,0
+TLG,CTCP Tập đoàn Thiên Long,Consumer Discretionary,Household Goods,HOSE,Midcap,2010-01-01,0
+TLH,CTCP Tập đoàn Thép Tiến Lên,Materials,Steel,HOSE,Midcap,2010-01-01,0
+TMB,CTCP Kinh doanh Than miền Bắc - TKV,Energy,Coal,HNX,Penny,2006-01-01,0
+TMC,CTCP Thương mại Xuất nhập khẩu Thủ Đức,Consumer Discretionary,Retail,HNX,Penny,2006-01-01,0
+TMP,CTCP Thủy điện Thác Mơ,Utilities,Electric Utilities,HOSE,Penny,2011-01-01,0
+TMS,CTCP Transimex,Industrials,Logistics,HOSE,Midcap,2000-01-01,0
+TMT,CTCP Ô tô TMT,Consumer Discretionary,Retail,HOSE,Penny,2010-01-01,0
+TMX,CTCP Vicem Thương mại Xi măng,Industrials,Logistics,HNX,Penny,2002-01-01,0
+TN1,CTCP Thương mại Dịch vụ TNS Holdings,Real Estate,Real Estate Services,HOSE,Penny,2020-01-01,0
+TNC,CTCP Cao su Thống Nhất,Materials,Rubber,HOSE,Penny,2006-01-01,0
+TNG,CTCP Đầu tư và Thương mại TNG,Consumer Discretionary,Textiles,HNX,Midcap,2007-11-22,0
+TNH,CTCP Bệnh viện Quốc tế Thái Nguyên,Health Care,Medical Equipment,HOSE,Midcap,2021-01-25,0
+TNI,CTCP Tập đoàn Thành Nam,Materials,Steel,HOSE,Penny,2017-01-01,0
+TNT,CTCP Tập đoàn TNT,Real Estate,Real Estate,HOSE,Penny,2010-01-01,0
+TOT,CTCP Vận tải Thủy Tân Cảng,Industrials,Logistics,UPCOM,Penny,2015-01-01,0
+TPB,Ngân hàng TMCP Tiên Phong,Financials,Banks,HOSE,Bluechip,2018-04-19,1
+TPC,CTCP Nhựa Tân Đại Hưng,Materials,Plastics,HOSE,Penny,2007-01-01,0
+TPP,CTCP Nhựa Tân Phú,Materials,Plastics,HNX,Penny,2008-01-01,0
+TRA,CTCP Traphaco,Health Care,Pharmaceuticals,HOSE,Midcap,2008-01-01,0
+TRC,CTCP Cao su Tây Ninh,Materials,Rubber,HOSE,Penny,2007-01-01,0
+TSA,CTCP Thiết bị Viễn thông Tinh Vân,Technology,IT Services,UPCOM,Penny,2010-01-01,0
+TSB,CTCP Ắc quy Tia Sáng,Industrials,Electrical Equipment,HNX,Penny,2011-01-01,0
+TSC,CTCP Vật tư Kỹ thuật Nông nghiệp Cần Thơ,Materials,Agriculture Chemicals,HOSE,Penny,2003-01-01,0
+TTA,CTCP Đầu tư và Phát triển Đa quốc gia,Utilities,Renewable Energy,HOSE,Penny,2020-01-01,0
+TTC,CTCP Gạch Men Thanh Thanh,Materials,Building Materials,HNX,Penny,2007-01-01,0
+TTE,CTCP Đầu tư Năng lượng Trường Thịnh,Utilities,Electric Utilities,HOSE,Penny,2017-01-01,0
+TTF,CTCP Tập đoàn Kỹ nghệ Gỗ Trường Thành,Consumer Discretionary,Home Furnishings,HOSE,Midcap,2008-01-01,0
+TTH,CTCP Thương mại và Dịch vụ Tiến Thành,Consumer Discretionary,Textiles,HNX,Penny,2016-01-01,0
+TTL,Tổng CTCP Thủy sản Việt Nam,Consumer Staples,Seafood,UPCOM,Penny,2017-01-01,0
+TTT,CTCP Du lịch - Thương mại Tây Ninh,Consumer Discretionary,Travel & Leisure,HNX,Penny,2010-01-01,0
+TV2,CTCP Tư vấn Xây dựng Điện 2,Industrials,Construction,HOSE,Midcap,2009-01-01,0
+TV3,CTCP Tư vấn Xây dựng Điện 3,Industrials,Construction,HNX,Penny,2010-01-01,0
+TV4,CTCP Tư vấn Xây dựng Điện 4,Industrials,Construction,HNX,Penny,2010-01-01,0
+TVB,CTCP Chứng khoán Trí Việt,Financials,Securities,HOSE,Penny,2018-01-01,0
+TVC,CTCP Tập đoàn Quản lý Tài sản Trí Việt,Financials,Investment,HNX,Penny,2014-01-01,0
+TVD,CTCP Than Vàng Danh - TKV,Energy,Coal,HNX,Penny,2006-01-01,0
+TVS,CTCP Chứng khoán Thiên Việt,Financials,Securities,HOSE,Midcap,2015-01-01,0
+TVT,CTCP Tổng Công ty May Việt Tiến,Consumer Discretionary,Textiles,UPCOM,Midcap,2016-01-01,0
+TXM,CTCP Vicem Thạch cao Xi măng,Industrials,Logistics,HNX,Penny,2007-01-01,0
+TYA,CTCP Dây và Cáp điện Taya Việt Nam,Industrials,Electrical Equipment,HOSE,Penny,2005-01-01,0
+UIC,CTCP Đầu tư Phát triển Nhà và Đô thị IDICO,Real Estate,Real Estate,HOSE,Penny,2010-01-01,0
+UNI,CTCP Viễn thông Vinasat,Technology,IT Services,HNX,Penny,2006-01-01,0
+V12,CTCP Xây dựng Số 12,Industrials,Construction,HNX,Penny,2007-01-01,0
+V21,CTCP Vinaconex 21,Industrials,Construction,HNX,Penny,2008-01-01,0
+VAB,Ngân hàng TMCP Việt Á,Financials,Banks,UPCOM,Midcap,2021-01-01,0
+VAF,CTCP Phân bón và Hóa chất Vật tư Nông nghiệp,Materials,Fertilizers,HOSE,Penny,2015-01-01,0
+VBC,CTCP Nhựa Bao bì Vinh,Materials,Packaging,HNX,Penny,2010-01-01,0
+VC1,CTCP Vinaconex 1,Industrials,Construction,HNX,Penny,2008-01-01,0
+VC2,CTCP Đầu tư và Xây dựng VINA2,Industrials,Construction,HNX,Penny,2007-01-01,0
+VC3,CTCP Tập đoàn Nam Mê Kông,Real Estate,Real Estate,HNX,Penny,2007-01-01,0
+VC6,CTCP Vinaconex 6,Industrials,Construction,HNX,Penny,2008-01-01,0
+VC7,CTCP Tập đoàn BGI,Real Estate,Real Estate,HNX,Penny,2007-01-01,0
+VC9,CTCP Xây dựng Số 9,Industrials,Construction,HNX,Penny,2008-01-01,0
+VCA,CTCP Thép Vicasa - VNSTEEL,Materials,Steel,HOSE,Penny,2020-01-01,0
+VCB,Ngân hàng TMCP Ngoại thương Việt Nam,Financials,Banks,HOSE,Bluechip,2009-06-30,1
+VCC,CTCP Vinaconex 25,Industrials,Construction,HNX,Penny,2009-01-01,0
+VCF,CTCP Vinacafé Biên Hòa,Consumer Staples,Food & Beverage,HOSE,Bluechip,2011-01-01,0
+VCG,Tổng CTCP Xuất nhập khẩu và Xây dựng Việt Nam,Industrials,Construction,HOSE,Midcap,2008-12-01,0
+VCI,CTCP Chứng khoán Vietcap,Financials,Securities,HOSE,Bluechip,2017-07-07,0
+VCK,CTCP Cáp nhựa Vĩnh Khánh,Industrials,Electrical Equipment,HNX,Penny,2010-01-01,0
+VCM,CTCP Nhân lực và Thương mại Vinaconex,Industrials,Construction,HNX,Penny,2010-01-01,0
+VCS,CTCP Vicostone,Materials,Building Materials,HNX,Midcap,2007-01-01,0
+VDL,CTCP Thực phẩm Lâm Đồng,Consumer Staples,Food Products,HNX,Penny,2006-01-01,0
+VDP,CTCP Dược phẩm Trung ương Vidipha,Health Care,Pharmaceuticals,HOSE,Penny,2017-01-01,0
+VDS,CTCP Chứng khoán Rồng Việt,Financials,Securities,HOSE,Midcap,2010-01-01,0
+VE1,CTCP Xây lắp Điện 1,Industrials,Construction,HNX,Penny,2008-01-01,0
+VE3,CTCP Xây lắp Điện 3,Industrials,Construction,HNX,Penny,2009-01-01,0
+VE4,CTCP Xây lắp Điện 4,Industrials,Construction,HNX,Penny,2009-01-01,0
+VFG,CTCP Khử trùng Việt Nam,Materials,Agriculture Chemicals,HOSE,Midcap,2009-01-01,0
+VFS,CTCP Chứng khoán Nhất Việt,Financials,Securities,HOSE,Penny,2023-01-01,0
+VGC,Tổng CTCP Viglacera,Materials,Building Materials,HOSE,Midcap,2015-12-22,0
+VGP,CTCP Cảng Rau Quả,Industrials,Logistics,HNX,Penny,2006-01-01,0
+VGS,CTCP Ống thép Việt Đức VG PIPE,Materials,Steel,HNX,Penny,2008-01-01,0
+VHC,CTCP Vĩnh Hoàn,Consumer Staples,Seafood,HOSE,Midcap,2007-12-24,0
+VHE,CTCP Dược liệu và Thực phẩm Hải Đăng,Health Care,Pharmaceuticals,HNX,Penny,2018-01-01,0
+VHL,CTCP Viglacera Hạ Long,Materials,Building Materials,HNX,Penny,2006-01-01,0
+VHM,CTCP Vinhomes,Real Estate,Real Estate,HOSE,Bluechip,2018-05-17,1
+VIB,Ngân hàng TMCP Quốc tế Việt Nam,Financials,Banks,HOSE,Bluechip,2020-10-30,1
+VIC,Tập đoàn Vingroup,Real Estate,Real Estate,HOSE,Bluechip,2007-09-19,1
+VID,CTCP Đầu tư Phát triển Thương mại Viễn Đông,Materials,Paper,HOSE,Penny,2006-01-01,0
+VIF,Tổng CTCP Lâm nghiệp Việt Nam,Consumer Staples,Agriculture,UPCOM,Midcap,2017-01-01,0
+VIG,CTCP Chứng khoán Đầu tư Tài chính Việt Nam,Financials,Securities,HNX,Penny,2009-01-01,0
+VIP,CTCP Vận tải Xăng dầu VIPCO,Industrials,Logistics,HOSE,Penny,2006-01-01,0
+VIT,CTCP Viglacera Tiên Sơn,Materials,Building Materials,HNX,Penny,2011-01-01,0
+VIX,CTCP Chứng khoán VIX,Financials,Securities,HOSE,Midcap,2014-01-01,0
+VJC,CTCP Hàng không Vietjet,Industrials,Airlines,HOSE,Bluechip,2017-02-28,1
+VLA,CTCP Đầu tư và Phát triển Công nghệ Văn Lang,Consumer Discretionary,Education,HNX,Penny,2010-01-01,0
+VMC,CTCP Vimeco,Industrials,Construction,HNX,Penny,2006-01-01,0
+VMD,CTCP Y dược phẩm Vimedimex,Health Care,Pharmaceuticals,HOSE,Penny,2010-01-01,0
+VMS,CTCP Phát triển Hàng hải,Industrials,Logistics,HNX,Penny,2009-01-01,0
+VNC,CTCP Vinacontrol,Industrials,Professional Services,HNX,Penny,2006-01-01,0
+VND,CTCP Chứng khoán VNDIRECT,Financials,Securities,HOSE,Midcap,2010-03-30,0
+VNE,Tổng CTCP Xây lắp Điện Việt Nam,Industrials,Construction,HOSE,Penny,2007-01-01,0
+VNF,CTCP Vinafreight,Industrials,Logistics,HNX,Penny,2002-01-01,0
+VNG,CTCP Du lịch Thành Thành Công,Consumer Discretionary,Travel & Leisure,HOSE,Penny,2010-01-01,0
+VNL,CTCP Logistics Vinalink,Industrials,Logistics,HOSE,Penny,2009-01-01,0
+VNM,CTCP Sữa Việt Nam,Consumer Staples,Food & Beverage,HOSE,Bluechip,2006-01-19,1
+VNR,Tổng CTCP Tái bảo hiểm Quốc gia Việt Nam,Financials,Insurance,HNX,Midcap,2006-01-01,0
+VNS,CTCP Ánh Dương Việt Nam (Vinasun),Consumer Discretionary,Travel & Leisure,HOSE,Penny,2008-01-01,0
+VNT,CTCP Giao nhận Vận tải Ngoại thương,Industrials,Logistics,HNX,Penny,2010-01-01,0
+VOS,CTCP Vận tải Biển Việt Nam,Industrials,Logistics,HOSE,Midcap,2008-01-01,0
+VPB,Ngân hàng TMCP Việt Nam Thịnh Vượng,Financials,Banks,HOSE,Bluechip,2017-08-17,1
+VPD,CTCP Phát triển Điện lực Việt Nam,Utilities,Electric Utilities,HOSE,Penny,2018-01-01,0
+VPG,CTCP Đầu tư Thương mại Việt Phát,Materials,Steel,HOSE,Midcap,2018-01-01,0
+VPH,CTCP Vạn Phát Hưng,Real Estate,Real Estate,HOSE,Penny,2009-01-01,0
+VPI,CTCP Đầu tư Văn Phú - Invest,Real Estate,Real Estate,HOSE,Midcap,2017-11-28,0
+VPL,CTCP Vinpearl,Consumer Discretionary,Travel & Leisure,HOSE,Midcap,2008-01-01,0
+VPS,CTCP Thuốc sát trùng Việt Nam,Materials,Agriculture Chemicals,HOSE,Penny,2015-01-01,0
+VPX,CTCP Bao bì và In Nông nghiệp,Materials,Packaging,UPCOM,Penny,2010-01-01,0
+VRC,CTCP Bất động sản và Đầu tư VRC,Real Estate,Real Estate,HOSE,Penny,2010-01-01,0
+VRE,CTCP Vincom Retail,Real Estate,Real Estate,HOSE,Bluechip,2017-11-06,1
+VSA,CTCP Đại lý Hàng hải Việt Nam,Industrials,Logistics,HNX,Penny,2006-01-01,0
+VSC,CTCP Container Việt Nam,Industrials,Logistics,HOSE,Midcap,2008-01-01,0
+VSH,CTCP Thủy điện Vĩnh Sơn - Sông Hinh,Utilities,Electric Utilities,HOSE,Midcap,2006-01-01,0
+VSI,CTCP Đầu tư và Xây dựng Cấp thoát nước,Industrials,Construction,HOSE,Penny,2010-01-01,0
+VSM,CTCP Container miền Trung,Industrials,Logistics,HNX,Penny,2011-01-01,0
+VTB,CTCP Viettronics Tân Bình,Consumer Discretionary,Electronics,HOSE,Penny,2004-01-01,0
+VTC,CTCP Viễn thông VTC,Technology,IT Services,HNX,Penny,2008-01-01,0
+VTH,CTCP Dây và Cáp điện Việt Thái,Industrials,Electrical Equipment,HNX,Penny,2010-01-01,0
+VTJ,CTCP Thương mại và Đầu tư Viễn Đông,Real Estate,Real Estate,HNX,Penny,2010-01-01,0
+VTO,CTCP Vận tải Xăng dầu Vitaco,Industrials,Logistics,HOSE,Penny,2007-01-01,0
+VTP,Tổng CTCP Bưu chính Viettel,Industrials,Logistics,HOSE,Midcap,2024-03-12,0
+VTV,CTCP Năng lượng và Môi trường Vicem,Industrials,Energy Services,HNX,Penny,2010-01-01,0
+VTZ,CTCP Sản xuất và Thương mại Việt Thành,Materials,Plastics,HNX,Penny,2020-01-01,0
+VVS,CTCP Đầu tư Phát triển và Xây dựng Việt Nam,Industrials,Construction,UPCOM,Penny,2015-01-01,0
+WCS,CTCP Bến xe Miền Tây,Industrials,Logistics,HNX,Penny,2010-01-01,0
+WSS,CTCP Chứng khoán Phố Wall,Financials,Securities,HNX,Penny,2010-01-01,0
+X20,CTCP 20,Consumer Discretionary,Textiles,UPCOM,Penny,2016-01-01,0
+YBM,CTCP Khoáng sản Công nghiệp Yên Bái,Materials,Mining,HOSE,Penny,2018-01-01,0
+YEG,CTCP Tập đoàn Yeah1,Technology,Marketing Services,HOSE,Penny,2018-06-26,0
