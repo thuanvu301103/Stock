@@ -1,0 +1,6 @@
+.venv
+local-files
+n8n_data
+postgres_data
+python_scripts
+redis_data
