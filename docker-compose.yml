@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
-    container_name: n8n-postgres
+    container_name: postgres
     restart: always
     environment:
       POSTGRES_USER: n8n
@@ -16,7 +16,7 @@ services:
 
   redis:
     image: redis:7
-    container_name: n8n-redis
+    container_name: redis
     restart: always
     ports:
       - "6379:6379"
@@ -28,6 +28,7 @@ services:
     image: n8n-python-custom
     container_name: n8n-python
     restart: always
+    user: root
     environment:
       # Timezone
       GENERIC_TIMEZONE: ${TIMEZONE}
@@ -64,9 +65,28 @@ services:
       - "5678:5678"
     volumes:
       - ./n8n_data:/home/node/.n8n
-      - ./local-files:/data/files
+      - ./local_files:/data/files
       - ./python_scripts:/data/py_scripts
       - ./requirements.txt:/data/requirements.txt
     depends_on:
       - postgres
       - redis
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    restart: always
+    ports:
+      - "8123:8123" # HTTP (for n8n & UI)
+      - "9000:9000" # Native (for Python/DBeaver)
+    environment:
+      - CLICKHOUSE_USER=n8n
+      - CLICKHOUSE_PASSWORD=n8n_pass
+      - CLICKHOUSE_DB=n8n_olap
+    volumes:
+      - ./clickhouse_data:/var/lib/clickhouse
+      - ./clickhouse_logs:/var/log/clickhouse-server
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144

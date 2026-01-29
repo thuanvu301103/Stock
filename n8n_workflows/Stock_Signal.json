@@ -1,0 +1,51 @@
+{
+  "name": "Stock Signal",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "b13d005f-bebe-4bee-ad88-d825035e8a03",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        440,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "import sys\nimport os\nsys.stdin.reconfigure(encoding='utf-8')\nsys.stdout.reconfigure(encoding='utf-8')\nsys.stderr.reconfigure(encoding='utf-8')\ninput_group = [\"HNX\", \"HOSE\", \"VN30\"]\nclass SuppressOutput:\n    def __enter__(self):\n        self._original_stdout = sys.stdout\n        self._original_stderr = sys.stderr\n        self._devnull = open(os.devnull, 'w', encoding='utf-8')\n        sys.stdout = self._devnull\n        sys.stderr = self._devnull\n        \n    def __exit__(self, exc_type, exc_val, exc_tb):\n        sys.stdout = self._original_stdout\n        sys.stderr = self._original_stderr\n        self._devnull.close()\n        \nwith SuppressOutput():\n    from vnstock import Listing\n    listing = Listing()\n    all_symbols = set()\n    for group in input_group:\n        all_symbols.update(listing.symbols_by_group(group).to_list())\n    \nreturn [{\"symbol\": s} for s in sorted(all_symbols)]"
+      },
+      "id": "c3af8e54-beec-4e69-b777-af0bbb5efd23",
+      "name": "Get Symbol",
+      "type": "n8n-nodes-python.pythonFunction",
+      "typeVersion": 1,
+      "position": [
+        660,
+        320
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Get Symbol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "d24c872e-0e4c-4eaf-8529-dcab58c1c02e",
+  "id": "1",
+  "meta": {
+    "instanceId": "1c8ce618904476be555d0e508717ea5af1f4e919c849739ed52207d74bfe9717"
+  },
+  "tags": []
+}

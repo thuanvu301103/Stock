@@ -1,6 +1,8 @@
 .venv
-local-files
+local_files
 n8n_data
 postgres_data
 python_scripts
 redis_data
+clickhouse_data
+clickhouse_logs
