@@ -50,7 +50,7 @@
       "typeVersion": 1,
       "position": [
         1140,
-        620
+        640
       ],
       "webhookId": "328c3dde-ccec-482a-81d2-1cd8e0964380"
     },
@@ -98,21 +98,6 @@
       "position": [
         1920,
         440
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.analytics_indicators FINAL",
-        "options": {}
-      },
-      "id": "3f53ad8b-6e8e-4211-8b03-f18dca9845c9",
-      "name": "Remove duplication1",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        1500,
-        660
       ]
     },
     {
@@ -173,13 +158,7 @@
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Remove duplication1",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Format": {
@@ -229,7 +208,7 @@
   },
   "active": false,
   "settings": {},
-  "versionId": "642e5305-006a-40d4-8715-62bdb5d40373",
+  "versionId": "10195226-1a37-4013-9358-b0db36cddc8e",
   "id": "2",
   "meta": {
     "instanceId": "9d25c3da4af5fb88d80daecff018d8f76f803a766d741d363ffa10b480519421"

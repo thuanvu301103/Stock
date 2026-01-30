@@ -111,3 +111,12 @@ sys.stdin.reconfigure(encoding='utf-8')
 ### Seed data
 1. **dim_stock**: Import data from `clickhouse_seed_data\stock_seed_data.csv` to clickhouse
 2. **dim_date**: Run n8n workflow `n8n_workflows\Stock__Seed_Dim_Date.json`
+3. **fact_stock_prices**: Run n8n workflwo `n8n_workflows\Stock__Seed_Price_Data.json`
+
+### Get data
+Run the following query:
+```SQL
+SELECT * FROM n8n_olap.v_indicators_base 
+WHERE symbol = 'BTC/USDT'
+ORDER BY trade_date DESC;
+```
