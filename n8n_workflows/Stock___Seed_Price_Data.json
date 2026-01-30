@@ -14,15 +14,72 @@
     },
     {
       "parameters": {
+        "batchSize": 20,
+        "options": {}
+      },
+      "id": "c9316944-6cd0-4735-912a-982b5c21a57d",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "import sys\nimport os\nsys.stdin.reconfigure(encoding='utf-8')\nsys.stdout.reconfigure(encoding='utf-8')\nsys.stderr.reconfigure(encoding='utf-8')\ninput_group = [\"VN30\"]\nclass SuppressOutput:\n    def __enter__(self):\n        self._original_stdout = sys.stdout\n        self._original_stderr = sys.stderr\n        self._devnull = open(os.devnull, 'w', encoding='utf-8')\n        sys.stdout = self._devnull\n        sys.stderr = self._devnull\n        \n    def __exit__(self, exc_type, exc_val, exc_tb):\n        sys.stdout = self._original_stdout\n        sys.stderr = self._original_stderr\n        self._devnull.close()\n        \nwith SuppressOutput():\n    from vnstock import Listing\n    listing = Listing()\n    all_symbols = set()\n    for group in input_group:\n        all_symbols.update(listing.symbols_by_group(group).to_list())\n    \nreturn [{\"vn30_symbols\": [s for s in sorted(all_symbols)]}]"
+      },
+      "id": "4cb7d1d5-012d-49ad-90d1-a28ca2c6608f",
+      "name": "Get VN30 Symbols",
+      "type": "n8n-nodes-python.pythonFunction",
+      "typeVersion": 1,
+      "position": [
+        840,
+        60
+      ]
+    },
+    {
+      "parameters": {
         "functionCode": "import sys\nimport os\nsys.stdin.reconfigure(encoding='utf-8')\nsys.stdout.reconfigure(encoding='utf-8')\nsys.stderr.reconfigure(encoding='utf-8')\ninput_group = [\"HNX\", \"HOSE\", \"VN30\"]\nclass SuppressOutput:\n    def __enter__(self):\n        self._original_stdout = sys.stdout\n        self._original_stderr = sys.stderr\n        self._devnull = open(os.devnull, 'w', encoding='utf-8')\n        sys.stdout = self._devnull\n        sys.stderr = self._devnull\n        \n    def __exit__(self, exc_type, exc_val, exc_tb):\n        sys.stdout = self._original_stdout\n        sys.stderr = self._original_stderr\n        self._devnull.close()\n        \nwith SuppressOutput():\n    from vnstock import Listing\n    listing = Listing()\n    all_symbols = set()\n    for group in input_group:\n        all_symbols.update(listing.symbols_by_group(group).to_list())\n    \nreturn [{\"symbol\": s} for s in sorted(all_symbols)]"
       },
       "id": "9c0bb861-1bb3-4f39-a43a-8ecc707ce9ee",
-      "name": "Get Symbol",
+      "name": "Get Symbols",
       "type": "n8n-nodes-python.pythonFunction",
       "typeVersion": 1,
       "position": [
         680,
         460
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "7a178f8c-380a-4280-bb3b-32f5ff81463c",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        220
+      ],
+      "webhookId": "328c3dde-ccec-482a-81d2-1cd8e0964380"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "bd19dcc5-8695-4254-8980-0b7621c135e4",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1300,
+        220
       ]
     }
   ],
@@ -32,9 +89,58 @@
       "main": [
         [
           {
-            "node": "Get Symbol",
+            "node": "Get Symbols",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Get VN30 Symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Symbols": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get VN30 Symbols": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
           }
         ]
       ]
@@ -42,7 +148,7 @@
   },
   "active": false,
   "settings": {},
-  "versionId": "156933fa-3ed0-469d-bfc4-b9ba8e28ac3d",
+  "versionId": "b2790487-fc3c-4803-bde7-b59ed9e93880",
   "id": "2",
   "meta": {
     "instanceId": "9d25c3da4af5fb88d80daecff018d8f76f803a766d741d363ffa10b480519421"
