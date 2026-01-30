@@ -1,0 +1,216 @@
+{
+  "name": "Stock - Mine Price Data",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "cd48ee72-ab1c-45a4-86af-d60a0cce0d99",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        580,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "cfa72568-8100-4979-8354-5818e63af83b",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "import sys\nimport os\nsys.stdin.reconfigure(encoding='utf-8')\nsys.stdout.reconfigure(encoding='utf-8')\nsys.stderr.reconfigure(encoding='utf-8')\ninput_group = [\"HNX\", \"HOSE\", \"VN30\"]\nclass SuppressOutput:\n    def __enter__(self):\n        self._original_stdout = sys.stdout\n        self._original_stderr = sys.stderr\n        self._devnull = open(os.devnull, 'w', encoding='utf-8')\n        sys.stdout = self._devnull\n        sys.stderr = self._devnull\n        \n    def __exit__(self, exc_type, exc_val, exc_tb):\n        sys.stdout = self._original_stdout\n        sys.stderr = self._original_stderr\n        self._devnull.close()\n        \nwith SuppressOutput():\n    from vnstock import Listing\n    listing = Listing()\n    all_symbols = set()\n    for group in input_group:\n        all_symbols.update(listing.symbols_by_group(group).to_list())\n    \nreturn [{\"symbol\": s} for s in sorted(all_symbols)]"
+      },
+      "id": "067db0d3-874e-4554-9719-01089b139d8d",
+      "name": "Get Symbols",
+      "type": "n8n-nodes-python.pythonFunction",
+      "typeVersion": 1,
+      "position": [
+        800,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "5f8849f1-2d03-4e60-89a5-a4c63b76ed84",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        640
+      ],
+      "webhookId": "515eaa48-dd27-43a1-ad1e-2a0b2747e229"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
+      },
+      "id": "32be8f95-39f7-4e2c-a68f-c34ad48195a6",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT INTO n8n_olap.fact_stock_prices FORMAT JSONEachRow",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "58bdd99b-35a7-4f8e-a940-2e4c159c8f92",
+      "name": "Insert Date data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1720,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.fact_stock_prices FINAL",
+        "options": {}
+      },
+      "id": "62bc35d5-4545-4d86-8db6-cbbb23f0d950",
+      "name": "Remove duplication",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1920,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "from datetime import datetime, timedelta\nimport sys\nimport os\n\nsys.stdin.reconfigure(encoding='utf-8')\nsys.stdout.reconfigure(encoding='utf-8')\nsys.stderr.reconfigure(encoding='utf-8')\n\nclass SuppressOutput:\n    def __enter__(self):\n        self._original_stdout = sys.stdout\n        self._original_stderr = sys.stderr\n        self._devnull = open(os.devnull, 'w', encoding='utf-8')\n        sys.stdout = self._devnull\n        sys.stderr = self._devnull\n        \n    def __exit__(self, exc_type, exc_val, exc_tb):\n        sys.stdout = self._original_stdout\n        sys.stderr = self._original_stderr\n        self._devnull.close()\n\nprocessed_items = []\n\nwith SuppressOutput():\n    from vnstock import Quote\n    \n    end_date = datetime.today().strftime(\"%Y-%m-%d\")\n    start_date = end_date\n\n    for item in items:\n        try:\n            symbol = item[\"symbol\"]\n            quote = Quote(symbol=symbol, source=\"VCI\")\n            df = quote.history(start=start_date, end=end_date)\n\n            if df.empty:\n                continue\n\n            for _, row in df.iterrows():\n                close_price = float(row[\"close\"])\n                volume = int(row[\"volume\"])\n\n                processed_items.append({\n                    \"symbol\": symbol,\n                    \"trade_date\": row[\"time\"].strftime(\"%Y-%m-%d\"),\n                    \"open\": float(row[\"open\"]),\n                    \"high\": float(row[\"high\"]),\n                    \"low\": float(row[\"low\"]),\n                    \"close\": close_price,\n                    \"adj_close\": close_price,\n                    \"volume\": volume,\n                    \"trading_value\": close_price * volume\n                })\n\n        except Exception:\n            continue\n\nreturn processed_items\n"
+      },
+      "id": "ae15a9e7-d042-48d2-815a-7dedd4f76c0b",
+      "name": "Get Price Data",
+      "type": "n8n-nodes-python.pythonFunction",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        440
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Get Symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Symbols": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Get Price Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format": {
+      "main": [
+        [
+          {
+            "node": "Insert Date data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Date data": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove duplication": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Price Data": {
+      "main": [
+        [
+          {
+            "node": "Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "a8b89e17-acb3-49cc-b295-3e0d45534449",
+  "id": "3",
+  "meta": {
+    "instanceId": "9d25c3da4af5fb88d80daecff018d8f76f803a766d741d363ffa10b480519421"
+  },
+  "tags": []
+}
