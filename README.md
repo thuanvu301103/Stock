@@ -8,6 +8,67 @@ docker compose build --no-cache
 docker compose up -d
 ```
 
+## Architecture
+```Mermaid
+graph TD
+    %% External Sources
+    subgraph External_Sources [Data Sources]
+        VNS[vnstock Library / Market APIs]
+    end
+
+    %% Ingestion Layer
+    subgraph Ingestion_Layer [Ingestion & Orchestration - n8n/Docker]
+        direction TB
+        N8N[n8n Workflow Engine]
+        
+        subgraph Python_Node [Python Processing Node]
+            VENV[.venv Environment]
+            CLEANER[SuppressOutput Context Manager]
+            VNS_CORE[vnstock Logic]
+            
+            CLEANER --> VNS_CORE
+        end
+
+        N8N -->|Trigger/Schedule| Python_Node
+        Python_Node -->|Clean JSON Data| N8N
+    end
+
+    %% Storage & Analytics
+    subgraph Storage_Layer [OLAP & Analytics - ClickHouse]
+        direction TB
+        CH_DB[(ClickHouse Engine)]
+        
+        subgraph Tables [Schema Design]
+            DIM[Dimension Tables: dim_date, dim_stock]
+            FACT[Fact Tables: fact_prices, fact_sentiment]
+            VIEWS[Analytics Layer: v_advanced_indicators]
+            
+            DIM -.->|Join| VIEWS
+            FACT -.->|Transform/Window| VIEWS
+        end
+        
+        CH_DB --- Tables
+    end
+
+    %% Visualization
+    subgraph BI_Layer [Visualization & Reporting]
+        PBI_GW[Power BI Gateway]
+        PBI_DASH[Power BI Dashboard]
+    end
+
+    %% Data Flow Connections
+    VNS_CORE -.->|Extract| VNS
+    N8N -->|Batch Insert/SQL| CH_DB
+    CH_DB -.->|DirectQuery / ODBC| PBI_GW
+    PBI_GW --> PBI_DASH
+
+    %% Styling
+    style N8N fill:#ff6d5a,stroke:#333,stroke-width:2px,color:#fff
+    style CH_DB fill:#000,stroke:#f00,stroke-width:2px,color:#fff
+    style PBI_DASH fill:#f2c811,stroke:#333,stroke-width:2px,color:#000
+    style Python_Node fill:#3776ab,stroke:#fff,stroke-width:1px,color:#fff
+```
+
 ## Clickhouse Setup
 
 ### OLAP Tables Structure
