@@ -1,92 +1,103 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: postgres
     restart: always
     environment:
-      POSTGRES_USER: n8n
-      POSTGRES_PASSWORD: n8n_pass
-      POSTGRES_DB: n8n_db
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${DB_USER:-n8n}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-n8n_pass}
+      POSTGRES_DB: ${DB_NAME:-n8n_db}
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-n8n} -d ${DB_NAME:-n8n_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
-    image: redis:7
+    image: redis:7-alpine
     container_name: redis
     restart: always
-    ports:
-      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
     volumes:
-      - ./redis_data:/data
-
-  n8n-python:
-    build: .
-    image: n8n-python-custom
-    container_name: n8n-python
-    restart: always
-    user: root
-    environment:
-      # Timezone
-      GENERIC_TIMEZONE: ${TIMEZONE}
-      TZ: ${TIMEZONE}
-
-      # Database config
-      DB_TYPE: postgresdb
-      DB_POSTGRESDB_HOST: postgres
-      DB_POSTGRESDB_PORT: 5432
-      DB_POSTGRESDB_DATABASE: n8n_db
-      DB_POSTGRESDB_USER: n8n
-      DB_POSTGRESDB_PASSWORD: n8n_pass
-
-      # Execution process
-      EXECUTIONS_PROCESS: main
-      QUEUE_BULL_REDIS_HOST: redis
-      QUEUE_BULL_REDIS_PORT: 6379
-
-      # Production mode
-      NODE_ENV: production
-      N8N_BASIC_AUTH_ACTIVE: "true"
-      N8N_BASIC_AUTH_USER: "admin"
-      N8N_BASIC_AUTH_PASSWORD: "admin@123456"
-    
-      PUID: 1000
-      PGID: 1000
-
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    ports:
-      - "5678:5678"
-    volumes:
-      - ./n8n_data:/home/node/.n8n
-      - ./local_files:/data/files
-      - ./python_scripts:/data/py_scripts
-      - ./requirements.txt:/data/requirements.txt
-    depends_on:
-      - postgres
-      - redis
+      - redis_data:/data
 
   clickhouse:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:24.3
     container_name: clickhouse
     restart: always
     ports:
-      - "8123:8123" # HTTP (for n8n & UI)
-      - "9000:9000" # Native (for Python/DBeaver)
+      - "8123:8123"   # HTTP
+      - "9000:9000"   # Native
     environment:
-      - CLICKHOUSE_USER=n8n
-      - CLICKHOUSE_PASSWORD=n8n_pass
-      - CLICKHOUSE_DB=n8n_olap
+      CLICKHOUSE_DB: ${CH_DB:-n8n_olap}
+      CLICKHOUSE_USER: ${CH_USER:-n8n}
+      CLICKHOUSE_PASSWORD: ${CH_PASSWORD:-n8n_pass}
     volumes:
-      - ./clickhouse_data:/var/lib/clickhouse
-      - ./clickhouse_logs:/var/log/clickhouse-server
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
     ulimits:
       nofile:
         soft: 262144
         hard: 262144
+
+  n8n:
+    build: .
+    image: n8n-python-custom
+    container_name: n8n
+    user: root
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      GENERIC_TIMEZONE: ${TIMEZONE:-UTC}
+      TZ: ${TIMEZONE:-UTC}
+
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${DB_NAME:-n8n_db}
+      DB_POSTGRESDB_USER: ${DB_USER:-n8n}
+      DB_POSTGRESDB_PASSWORD: ${DB_PASSWORD:-n8n_pass}
+
+      EXECUTIONS_PROCESS: main
+
+      QUEUE_BULL_REDIS_HOST: redis
+      QUEUE_BULL_REDIS_PORT: 6379
+
+      NODE_ENV: production
+
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_USER:-admin}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_PASS:-admin@123456}
+
+      N8N_BLOCK_ENV_VARS_FROM_EXPRESSIONS: "false"
+
+      PUID: 1000
+      PGID: 1000
+
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+      - ./local_files:/data/files
+      - ./python_scripts:/data/py_scripts
+      - ./requirements.txt:/data/requirements.txt:ro
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      clickhouse:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  redis_data:
+  clickhouse_data:
+  clickhouse_logs:
+  n8n_data:
+  local_files:
+  python_scripts:

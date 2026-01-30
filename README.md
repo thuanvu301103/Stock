@@ -28,6 +28,9 @@ docker compose up -d
 - Run all the scripts inside folder `clickhouse_query\create_table` and `clickhouse_query\create_analytics_layer`
 - Create tables in order: dim tables, fact tables, analytics layer.
 
+### Import seed data
+- Import seed data for `dim_table` using `clickhouse_seed_data\stock_seed_data.csv`
+
 ## n8n Setup 
 
 ### Local Development & Testing
@@ -56,6 +59,9 @@ The `test_bench.py` script imports the logic from your main script and outputs t
 ```Bash
 python test_bench.py
 ```
+
+### Import workflows
+Import all workflows in folder `n8n_workflows`
 
 ### Preventing JSON Output Corruption in n8n Python Scripts
 
