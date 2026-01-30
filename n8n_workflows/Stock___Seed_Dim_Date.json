@@ -27,24 +27,6 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT%20INTO%20n8n_olap.dim_date%20(date_key,year,quarter,month,day_of_week,is_weekend,is_trading_day)%20FORMAT%20JSONEachRow",
-        "sendBody": true,
-        "contentType": "raw",
-        "body": "={{ $json.body }}",
-        "options": {}
-      },
-      "id": "7408d03b-e843-436b-9544-cd45abe0483b",
-      "name": "HTTP Request",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        1060,
-        460
-      ]
-    },
-    {
-      "parameters": {
         "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
       },
       "id": "0f8e91d0-9706-49bb-a7ed-c4d563d88918",
@@ -53,6 +35,39 @@
       "typeVersion": 1,
       "position": [
         880,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT INTO n8n_olap.dim_date (date_key,year,quarter,month,day_of_week,is_weekend,is_trading_day) FORMAT JSONEachRow",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "7408d03b-e843-436b-9544-cd45abe0483b",
+      "name": "Insert Date data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1100,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.dim_date FINAL",
+        "options": {}
+      },
+      "id": "a6abe7b1-4367-4489-8882-c5217bce97f9",
+      "name": "Remove duplication",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1320,
         460
       ]
     }
@@ -85,7 +100,18 @@
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "Insert Date data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Date data": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication",
             "type": "main",
             "index": 0
           }
@@ -95,7 +121,7 @@
   },
   "active": false,
   "settings": {},
-  "versionId": "b218a79f-6327-44e3-927e-b73c75d277dc",
+  "versionId": "e784f70a-2481-4ffe-b3a6-a7ff63f9f027",
   "id": "1",
   "meta": {
     "instanceId": "9d25c3da4af5fb88d80daecff018d8f76f803a766d741d363ffa10b480519421"

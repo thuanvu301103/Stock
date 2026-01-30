@@ -1,6 +1,3 @@
-import sys
-import os
-import pandas as pd
 import json
 
 items = [
@@ -8,6 +5,13 @@ items = [
     {"symbol": "VNM", "vn30_symbols": ["FPT", "VNM", "VIC"]},
     {"symbol": "AAA", "vn30_symbols": ["FPT", "VNM", "VIC"]}
 ]
+from datetime import datetime, timedelta
+import sys
+import os
+
+sys.stdin.reconfigure(encoding='utf-8')
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 
 class SuppressOutput:
     def __enter__(self):
@@ -22,56 +26,40 @@ class SuppressOutput:
         sys.stderr = self._original_stderr
         self._devnull.close()
 
-df_list = pd.DataFrame()
-df_price = pd.DataFrame()
-input_symbols = []
-vn30_list = set()
+processed_items = []
 
 with SuppressOutput():
-
-    from vnstock import Company
+    from vnstock import Quote
     
+    end_date = datetime.today().strftime("%Y-%m-%d")
+    start_date = (datetime.today() - timedelta(days=120)).strftime("%Y-%m-%d")
+
     for item in items:
-        sym = item.get("symbol")
-        v_list = item.get("vn30_symbols")
-        
-        c = Company(symbol = sym, source = 'VCI')
-        df_company = c.overview()
-       
-        #df_price = price_board(",".join(input_symbols))
+        try:
+            symbol = item["symbol"]
+            quote = Quote(symbol=symbol, source="VCI")
+            df = quote.history(start=start_date, end=end_date)
 
-print("Company: ", df_company)
-'''
-results = []
-if not df_coma.empty:
-    if 'ticker' in df_list.columns:
-        df_list = df_list.rename(columns={'ticker': 'symbol'})
+            if df.empty:
+                continue
 
-    df_filtered = df_list[df_list['symbol'].isin(input_symbols)]
+            for _, row in df.iterrows():
+                close_price = float(row["close"])
+                volume = int(row["volume"])
 
-    if df_price is not None and not df_price.empty:
-        if 'Mã CP' in df_price.columns:
-            df_price = df_price.rename(columns={'Mã CP': 'symbol', 'Vốn hóa (tỷ)': 'market_cap'})
-        df = pd.merge(df_filtered, df_price[['symbol', 'market_cap']], on='symbol', how='left')
-    else:
-        df = df_filtered
-        df['market_cap'] = 0
+                processed_items.append({
+                    "symbol": symbol,
+                    "trade_date": row["time"].strftime("%Y-%m-%d"),
+                    "open": float(row["open"]),
+                    "high": float(row["high"]),
+                    "low": float(row["low"]),
+                    "close": close_price,
+                    "adj_close": close_price,
+                    "volume": volume,
+                    "trading_value": close_price * volume
+                })
 
-    for _, row in df.iterrows():
-        mcap = row.get('market_cap', 0)
-        mcap_group = "Bluechip" if mcap >= 10000 else ("Midcap" if mcap >= 1000 else "Penny")
+        except Exception:
+            continue
 
-        results.append({
-            "stock_key": row['symbol'],
-            "company_name": row.get('organName', row.get('organ_name', 'N/A')),
-            "sector": row.get('icbName3', row.get('icb_name_l3', 'N/A')),
-            "industry": row.get('icbName4', row.get('icb_name_l4', 'N/A')),
-            "exchange": row.get('comGroupCode', row.get('com_group_code', 'N/A')),
-            "market_cap_group": mcap_group,
-            "listing_date": str(row.get('firstListingDate', '1970-01-01')),
-            "is_vn30": 1 if row['symbol'] in vn30_list else 0
-        })
-
-
-print(json.dumps(results, indent=4, ensure_ascii=False))
-'''
+print(json.dumps(processed_items, indent=4, ensure_ascii=False))

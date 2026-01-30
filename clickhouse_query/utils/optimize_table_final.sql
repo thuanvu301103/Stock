@@ -1,0 +1,1 @@
+OPTIMIZE TABLE n8n_olap.dim_date FINAL
