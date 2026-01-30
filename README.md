@@ -9,7 +9,7 @@ docker compose up -d
 ```
 
 ## Architecture
-```Mermaid
+```mermaid
 graph TD
     %% External Sources
     subgraph External_Sources [Data Sources]
@@ -167,14 +167,61 @@ sys.stdin.reconfigure(encoding='utf-8')
 - The list comprehension `[{"json": {"symbol": sym}} for sym in symbols_list]` transforms a flat list of stock tickers into an array of objects.
 - n8n Compatibility: This allows n8n to treat each stock symbol as an individual "item," enabling you to loop through them in subsequent nodes (like getting prices for each stock).
 
-## Workflow
+## Power BI
+
+## Connect to Clickhouse
+
+**Step 1: Install the Clickhouse ODBC Driver**
+1. Go to the ClickHouse ODBC Github Releases.
+2. Download the 64-bit MSI installer (e.g., clickhouse-odbc-1.1.10-win64.msi).
+3. Install it on the Windows machine where Power BI Desktop is located.
+
+**Step 2: Configure the Windows DSN** - This step tells Windows exactly where your ClickHouse server lives.
+1. Open ODBC Data Source Administrator (64-bit) on your PC.
+2. Go to the *System DSN* tab and click *Add*.
+3. Select *ClickHouse Unicode* and click *Finish*.
+4. Fill in the configuration:
+    - Name: `ClickHouse_Stock`
+    - Host: `localhost` (if using Docker locally) or your Server IP.
+    - Port: `8123` (Standard HTTP port for ClickHouse).
+    - Database: `n8n_olap`.
+    - User: `default` (unless you changed it).
+5. Click *Test* to ensure it says "Success."
+
+**Step 3: Connect Power BI to the DSN** - Now, open Power BI Desktop to pull the data.
+1. Click *Get Data* > *More...* > Search for ODBC.
+2. In the Data source name (DSN) dropdown, select `ClickHouse_Stock`.
+3. Storage Mode (Critical Decision):
+    - Import: Use this for `dim_stock` and `dim_date`. It loads the data into RAM for lightning-fast filtering.
+    - DirectQuery: Use this for your `v_indicators_base` View. Power BI will send the SQL queries directly to ClickHouse so your PC doesn't have to calculate the SMA/RSI math.
+5. Select your tables and click Load.
+
+### Other configuration
+
+**Disabling Column Aggregation (Set Summarization to “Do not summarize”)**
+1. Change to *Table View*
+2. Select a column (e.g. close, sma_20, ema_20)
+3. Go to *Column tools* -> Find *Summarization* -> Choose *Do not summarize*
+
+**Create Relationship Between Dim Tables and Fact Tables - Which Clikhouse does not have**
+1. Change to *Model View*
+2. On menu, click *Manage relationships*
+
+### Core Visualizations & Layout
+1. **Technical Trend Analysis (The Main Chart)**:
+    - Visual: Line and Column Chart or a specialized Candlestick custom visual.
+    - X-axis: `trade_date`
+    - Y-axis: `close`, `ema`, `sma`, `rsi`, `cmf`, `volume`...
+2. **Filter Analysis**: Use Slicer to analyse which stock should be buy 
+
+## Workflows
 
 ### Seed data
 1. **dim_stock**: Import data from `clickhouse_seed_data\stock_seed_data.csv` to clickhouse
 2. **dim_date**: Run n8n workflow `n8n_workflows\Stock__Seed_Dim_Date.json`
 3. **fact_stock_prices**: Run n8n workflwo `n8n_workflows\Stock__Seed_Price_Data.json`
 
-### Get data
+### Get data - Visualize using Power BI
 Run the following query:
 ```SQL
 SELECT * FROM n8n_olap.v_indicators_base 
