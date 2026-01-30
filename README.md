@@ -106,3 +106,9 @@ sys.stdin.reconfigure(encoding='utf-8')
 #### Efficient Data Mapping
 - The list comprehension `[{"json": {"symbol": sym}} for sym in symbols_list]` transforms a flat list of stock tickers into an array of objects.
 - n8n Compatibility: This allows n8n to treat each stock symbol as an individual "item," enabling you to loop through them in subsequent nodes (like getting prices for each stock).
+
+## Workflow
+
+### Seed data
+1. **dim_stock**: Import data from `clickhouse_seed_data\stock_seed_data.csv` to clickhouse
+2. **dim_date**: Run n8n workflow `n8n_workflows\Stock__Seed_Dim_Date.json`
