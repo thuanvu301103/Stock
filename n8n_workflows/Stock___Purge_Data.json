@@ -1,0 +1,173 @@
+{
+  "name": "Stock - Purge Data",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "6220f4bc-d49e-4b00-88a4-1fdf749b7ab8",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        620,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "start_date",
+              "value": "2022-10-01"
+            },
+            {
+              "name": "end_date",
+              "value": "2025-10-05"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "633f34e0-214b-4f5e-bf9c-539e2941f082",
+      "name": "Set date range",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        840,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "=OPTIMIZE TABLE n8n_olap.dim_date FINAL",
+        "options": {}
+      },
+      "id": "ae5fda22-8677-4c62-af18-f20f76262963",
+      "name": "Remove duplication",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1300,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "=ALTER TABLE n8n_olap.fact_stock_prices DELETE WHERE trade_date >= '{{ $json.start_date }}' AND trade_date <= '{{ $json.end_date }}'",
+        "options": {}
+      },
+      "id": "10518586-0d15-40b9-8455-9d2b8fbfe452",
+      "name": "Purge fact-stock-prices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1060,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "=ALTER TABLE n8n_olap.dim_date DELETE WHERE date_key >= '{{ $json.start_date }}' AND date_key <= '{{ $json.end_date }}'",
+        "options": {}
+      },
+      "id": "429b7436-d36b-447f-90b4-3f88f2deb48f",
+      "name": "Purge dim-date",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1060,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "=OPTIMIZE TABLE n8n_olap.fact_stock_prices FINAL",
+        "options": {}
+      },
+      "id": "577efaff-1f0c-4f31-8ae9-dd77fe07689e",
+      "name": "Remove duplication1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1300,
+        400
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Set date range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set date range": {
+      "main": [
+        [
+          {
+            "node": "Purge dim-date",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Purge fact-stock-prices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Purge dim-date": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Purge fact-stock-prices": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "80268b13-9a77-430b-9235-41cd64e43108",
+  "id": "5",
+  "meta": {
+    "instanceId": "a4cd52132b15d81094fba04a26609c5dc9260cf78dde684446351294b816d4e8"
+  },
+  "tags": []
+}

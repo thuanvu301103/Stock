@@ -228,3 +228,7 @@ sys.stdin.reconfigure(encoding='utf-8')
 ### Visualize data
 1. Run PowerBI, then open file `power_bi_visual.pbix`
 2. At tab `Home` -> group `Queries` -> `Refresh`
+
+### Purge Cold data
+1. Run workflow in n8n `n8n_workflows\Stock__Purge_Data.json`
+2. Check data in `dim_date` and `fact_stock_prices` tables
