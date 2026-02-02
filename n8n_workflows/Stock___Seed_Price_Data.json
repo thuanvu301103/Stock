@@ -3,13 +3,13 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "948d0602-059c-4071-8fa8-eaa36e548350",
+      "id": "2dc356ac-e0b5-4db4-a564-e7c81f6f079f",
       "name": "When clicking \"Execute Workflow\"",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        580,
-        460
+        380,
+        380
       ]
     },
     {
@@ -17,26 +17,26 @@
         "batchSize": 5,
         "options": {}
       },
-      "id": "c9316944-6cd0-4735-912a-982b5c21a57d",
+      "id": "fcb523c4-b493-415a-82ef-50d1bd23366c",
       "name": "Split In Batches",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 2,
       "position": [
-        1020,
-        460
+        820,
+        380
       ]
     },
     {
       "parameters": {
         "functionCode": "import sys\nimport os\nsys.stdin.reconfigure(encoding='utf-8')\nsys.stdout.reconfigure(encoding='utf-8')\nsys.stderr.reconfigure(encoding='utf-8')\ninput_group = [\"HNX\", \"HOSE\", \"VN30\"]\nclass SuppressOutput:\n    def __enter__(self):\n        self._original_stdout = sys.stdout\n        self._original_stderr = sys.stderr\n        self._devnull = open(os.devnull, 'w', encoding='utf-8')\n        sys.stdout = self._devnull\n        sys.stderr = self._devnull\n        \n    def __exit__(self, exc_type, exc_val, exc_tb):\n        sys.stdout = self._original_stdout\n        sys.stderr = self._original_stderr\n        self._devnull.close()\n        \nwith SuppressOutput():\n    from vnstock import Listing\n    listing = Listing()\n    all_symbols = set()\n    for group in input_group:\n        all_symbols.update(listing.symbols_by_group(group).to_list())\n    \nreturn [{\"symbol\": s} for s in sorted(all_symbols)]"
       },
-      "id": "9c0bb861-1bb3-4f39-a43a-8ecc707ce9ee",
+      "id": "45c29018-2b69-46d4-81ac-68ed46c630ee",
       "name": "Get Symbols",
       "type": "n8n-nodes-python.pythonFunction",
       "typeVersion": 1,
       "position": [
-        800,
-        460
+        600,
+        380
       ]
     },
     {
@@ -44,13 +44,13 @@
         "amount": 5,
         "unit": "seconds"
       },
-      "id": "7a178f8c-380a-4280-bb3b-32f5ff81463c",
+      "id": "e0a00fdf-921a-4d77-9cd1-594a498ed5f2",
       "name": "Wait",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1,
       "position": [
-        1140,
-        640
+        940,
+        560
       ],
       "webhookId": "328c3dde-ccec-482a-81d2-1cd8e0964380"
     },
@@ -58,13 +58,13 @@
       "parameters": {
         "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
       },
-      "id": "951deea4-2175-4a1a-8c23-b0a3df9c8166",
+      "id": "528ad63e-0bd6-4113-98fb-c8779a440d9a",
       "name": "Format",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        1500,
-        440
+        1300,
+        360
       ]
     },
     {
@@ -76,13 +76,13 @@
         "body": "={{ $json.body }}",
         "options": {}
       },
-      "id": "5d35679b-184f-40f7-bcca-fd1bd5196cbb",
+      "id": "853cbc0c-287e-4679-998c-94bd9cc74b10",
       "name": "Insert Date data",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1720,
-        440
+        1520,
+        360
       ]
     },
     {
@@ -91,26 +91,85 @@
         "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.fact_stock_prices FINAL",
         "options": {}
       },
-      "id": "6638250f-e417-4eff-b69e-88c302a16572",
+      "id": "1a75ce64-3986-463a-b2b2-dd27ae5dac1d",
       "name": "Remove duplication",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1920,
-        440
+        1720,
+        360
       ]
     },
     {
       "parameters": {
         "functionCode": "from datetime import datetime, timedelta\nimport sys\nimport os\n\nsys.stdin.reconfigure(encoding='utf-8')\nsys.stdout.reconfigure(encoding='utf-8')\nsys.stderr.reconfigure(encoding='utf-8')\n\nclass SuppressOutput:\n    def __enter__(self):\n        self._original_stdout = sys.stdout\n        self._original_stderr = sys.stderr\n        self._devnull = open(os.devnull, 'w', encoding='utf-8')\n        sys.stdout = self._devnull\n        sys.stderr = self._devnull\n        \n    def __exit__(self, exc_type, exc_val, exc_tb):\n        sys.stdout = self._original_stdout\n        sys.stderr = self._original_stderr\n        self._devnull.close()\n\nprocessed_items = []\n\nwith SuppressOutput():\n    from vnstock import Quote\n    \n    end_date = datetime.today().strftime(\"%Y-%m-%d\")\n    start_date = (datetime.today() - timedelta(days=120)).strftime(\"%Y-%m-%d\")\n\n    for item in items:\n        try:\n            symbol = item[\"symbol\"]\n            quote = Quote(symbol=symbol, source=\"VCI\")\n            df = quote.history(start=start_date, end=end_date)\n\n            if df.empty:\n                continue\n\n            for _, row in df.iterrows():\n                close_price = float(row[\"close\"])\n                volume = int(row[\"volume\"])\n\n                processed_items.append({\n                    \"symbol\": symbol,\n                    \"trade_date\": row[\"time\"].strftime(\"%Y-%m-%d\"),\n                    \"open\": float(row[\"open\"]),\n                    \"high\": float(row[\"high\"]),\n                    \"low\": float(row[\"low\"]),\n                    \"close\": close_price,\n                    \"adj_close\": close_price,\n                    \"volume\": volume,\n                    \"trading_value\": close_price * volume\n                })\n\n        except Exception:\n            continue\n\nreturn processed_items\n"
       },
-      "id": "5b5abe94-8e7b-457c-8179-b9659c4ef2ef",
+      "id": "0faae82f-d8c2-4829-985b-c7b0c0649a9b",
       "name": "Get Price Data",
       "type": "n8n-nodes-python.pythonFunction",
       "typeVersion": 1,
       "position": [
-        1280,
-        440
+        1080,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const days = 7;\nconst results = [];\n\nconst today = new Date();\n\nfor (let i = 0; i < days; i++) {\n  const d = new Date(today);\n  d.setDate(today.getDate() - i);\n\n  const year = d.getFullYear();\n  const month = d.getMonth() + 1;\n  const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay(); // Monday=1\n  const quarter = Math.floor((month - 1) / 3) + 1;\n\n  const isWeekend = dayOfWeek === 6 || dayOfWeek === 7 ? 1 : 0;\n\n  results.push({\n    date_key: d.toISOString().slice(0, 10),\n    year,\n    quarter,\n    month,\n    day_of_week: dayOfWeek,\n    is_weekend: isWeekend,\n    is_trading_day: isWeekend ? 0 : 1\n  });\n}\n\nreturn results.map(r => ({ json: r }));"
+      },
+      "id": "168b1cec-8a89-43d8-995c-307f3551d198",
+      "name": "Generate dim_date rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        600,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
+      },
+      "id": "848e3e28-8a50-454a-a344-e15689a0b832",
+      "name": "Format1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        800,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT INTO n8n_olap.dim_date (date_key,year,quarter,month,day_of_week,is_weekend,is_trading_day) FORMAT JSONEachRow",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "37712a53-cd62-490d-b6c4-da9073c6fb4f",
+      "name": "Insert Date data1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1020,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.dim_date FINAL",
+        "options": {}
+      },
+      "id": "3c2ceb2f-c5d3-49ee-9baf-626444133f09",
+      "name": "Remove duplication1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1240,
+        160
       ]
     }
   ],
@@ -120,7 +179,7 @@
       "main": [
         [
           {
-            "node": "Get Symbols",
+            "node": "Generate dim_date rows",
             "type": "main",
             "index": 0
           }
@@ -157,8 +216,7 @@
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
     "Format": {
@@ -204,14 +262,62 @@
           }
         ]
       ]
+    },
+    "Generate dim_date rows": {
+      "main": [
+        [
+          {
+            "node": "Format1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format1": {
+      "main": [
+        [
+          {
+            "node": "Insert Date data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Date data1": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove duplication1": {
+      "main": [
+        [
+          {
+            "node": "Get Symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
-  "settings": {},
-  "versionId": "5a3f5ad5-419d-4261-9df1-527c86f2c5bb",
-  "id": "2",
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "43cdeefa-0345-490d-a036-1b3b19b20dd7",
+  "id": "3",
   "meta": {
-    "instanceId": "9d25c3da4af5fb88d80daecff018d8f76f803a766d741d363ffa10b480519421"
+    "instanceId": "a4cd52132b15d81094fba04a26609c5dc9260cf78dde684446351294b816d4e8"
   },
   "tags": []
 }

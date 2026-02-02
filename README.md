@@ -221,10 +221,10 @@ sys.stdin.reconfigure(encoding='utf-8')
 2. **dim_date**: Run n8n workflow `n8n_workflows\Stock__Seed_Dim_Date.json`
 3. **fact_stock_prices**: Run n8n workflwo `n8n_workflows\Stock__Seed_Price_Data.json`
 
-### Get data - Visualize using Power BI
-Run the following query:
-```SQL
-SELECT * FROM n8n_olap.v_indicators_base 
-WHERE symbol = 'BTC/USDT'
-ORDER BY trade_date DESC;
-```
+### Mine Stock data
+1. Run workflow in n8n: `n8n_workflows\Stock__Mine_Price_Data.json`
+2. If there is error, re-run the workflow with option `Retry with curently saved workflow (from node with error)`
+
+### Visualize data
+1. Run PowerBI, then open file `power_bi_visual.pbix`
+2. At tab `Home` -> group `Queries` -> `Refresh`
