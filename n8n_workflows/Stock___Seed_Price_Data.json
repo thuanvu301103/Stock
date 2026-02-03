@@ -112,65 +112,6 @@
         1080,
         360
       ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const days = 7;\nconst results = [];\n\nconst today = new Date();\n\nfor (let i = 0; i < days; i++) {\n  const d = new Date(today);\n  d.setDate(today.getDate() - i);\n\n  const year = d.getFullYear();\n  const month = d.getMonth() + 1;\n  const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay(); // Monday=1\n  const quarter = Math.floor((month - 1) / 3) + 1;\n\n  const isWeekend = dayOfWeek === 6 || dayOfWeek === 7 ? 1 : 0;\n\n  results.push({\n    date_key: d.toISOString().slice(0, 10),\n    year,\n    quarter,\n    month,\n    day_of_week: dayOfWeek,\n    is_weekend: isWeekend,\n    is_trading_day: isWeekend ? 0 : 1\n  });\n}\n\nreturn results.map(r => ({ json: r }));"
-      },
-      "id": "168b1cec-8a89-43d8-995c-307f3551d198",
-      "name": "Generate dim_date rows",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 1,
-      "position": [
-        600,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
-      },
-      "id": "848e3e28-8a50-454a-a344-e15689a0b832",
-      "name": "Format1",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 1,
-      "position": [
-        800,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT INTO n8n_olap.dim_date (date_key,year,quarter,month,day_of_week,is_weekend,is_trading_day) FORMAT JSONEachRow",
-        "sendBody": true,
-        "contentType": "raw",
-        "body": "={{ $json.body }}",
-        "options": {}
-      },
-      "id": "37712a53-cd62-490d-b6c4-da9073c6fb4f",
-      "name": "Insert Date data1",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        1020,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.dim_date FINAL",
-        "options": {}
-      },
-      "id": "3c2ceb2f-c5d3-49ee-9baf-626444133f09",
-      "name": "Remove duplication1",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        1240,
-        160
-      ]
     }
   ],
   "pinData": {},
@@ -179,7 +120,7 @@
       "main": [
         [
           {
-            "node": "Generate dim_date rows",
+            "node": "Get Symbols",
             "type": "main",
             "index": 0
           }
@@ -262,50 +203,6 @@
           }
         ]
       ]
-    },
-    "Generate dim_date rows": {
-      "main": [
-        [
-          {
-            "node": "Format1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Format1": {
-      "main": [
-        [
-          {
-            "node": "Insert Date data1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Insert Date data1": {
-      "main": [
-        [
-          {
-            "node": "Remove duplication1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Remove duplication1": {
-      "main": [
-        [
-          {
-            "node": "Get Symbols",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "active": false,
@@ -314,7 +211,7 @@
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "43cdeefa-0345-490d-a036-1b3b19b20dd7",
+  "versionId": "1fd94f82-db88-4d40-9ee1-5b5a263592e5",
   "id": "3",
   "meta": {
     "instanceId": "a4cd52132b15d81094fba04a26609c5dc9260cf78dde684446351294b816d4e8"
