@@ -19,10 +19,6 @@ indicator_parts AS (
         *,
         IF(delta > 0, delta, 0) AS gain,
         IF(delta < 0, abs(delta), 0) AS loss,
-        -- EMA constants (20 periods)
-        2 / (20 + 1) AS alpha,
-        pow(1 - alpha, rn) AS weight,
-        close * pow(1 - alpha, rn) AS weighted_close
     FROM numbered_data
 ),
 indicators AS (
@@ -33,8 +29,6 @@ indicators AS (
         rn,
         -- SMA 20: returns NULL if less than 20 periods available
         IF(rn + 1 < 20, NULL, avg(close) OVER w20) AS sma_20,
-        -- EMA 20: returns NULL if less than 20 periods available
-        IF(rn + 1 < 20, NULL, sum(weighted_close) OVER w_unbounded / sum(weight) OVER w_unbounded) AS ema_20,
         -- CMF 21: returns NULL if less than 21 periods available
         IF(rn + 1 < 21, NULL, sum(mfv) OVER w21 / sum(volume) OVER w21) AS cmf_21,
         -- RSI 14: comprehensive handling for insufficient data or zero volatility
@@ -56,7 +50,6 @@ SELECT
     -- Calculate daily acceleration (momentum)
     -- Using ifNull to handle the very first record of each symbol
     ifNull(sma_20 - any(sma_20) OVER (PARTITION BY symbol ORDER BY trade_date ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING), 0) AS sma_20_accel,
-    ifNull(ema_20 - any(ema_20) OVER (PARTITION BY symbol ORDER BY trade_date ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING), 0) AS ema_20_accel,
     ifNull(cmf_21 - any(cmf_21) OVER (PARTITION BY symbol ORDER BY trade_date ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING), 0) AS cmf_21_accel,
     ifNull(rsi_14 - any(rsi_14) OVER (PARTITION BY symbol ORDER BY trade_date ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING), 0) AS rsi_14_accel
 FROM indicators;
