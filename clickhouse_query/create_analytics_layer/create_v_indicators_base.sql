@@ -18,7 +18,7 @@ indicator_parts AS (
     SELECT
         *,
         IF(delta > 0, delta, 0) AS gain,
-        IF(delta < 0, abs(delta), 0) AS loss,
+        IF(delta < 0, abs(delta), 0) AS loss
     FROM numbered_data
 ),
 indicators AS (
