@@ -80,6 +80,7 @@ graph TD
 #### Fact Tables
 1. **fact_stock_prices (Market Price & Volume)**: The central repository for Daily OHLCV (Open, High, Low, Close, Volume) data. Physically sorted by symbol and trade_date to make calculating SMA, EMA, and CMF lightning-fast.
 2. **fact_market_sentiment (Capital Flow)**: Tracks institutional and foreign movement to gauge market sentiment.
+3. **fact_technical_indicators (Technical Indicators)**: Stores pre-calculated technical indicator values derived from historical price and volume data across standard timeframes.
 
 #### Analytics Layer (Automated Calculations)
 1. **v_advanced_indicators**: An abstraction layer that standardizes complex technical analysis. This view automates the calculation of rolling metrics such as Simple Moving Averages (SMA), Chaikin Money Flow (CMF)... By encapsulating intricate Window Functions, it provides a "plug-and-play" interface for BI tools and reports, ensuring consistent indicator logic across the entire ecosystem without the need for repetitive, manual computations.
@@ -87,6 +88,7 @@ graph TD
 ### Create Tables
 - Run all the scripts inside folder `clickhouse_query\create_table` and `clickhouse_query\create_analytics_layer`
 - Create tables in order: dim tables, fact tables, analytics layer.
+- Add new columns to the schema using the migration script `clickhouse_query/utils/add_new_column.sql`
 
 ### Import seed data
 - Import seed data for `dim_table` using `clickhouse_seed_data\stock_seed_data.csv`
