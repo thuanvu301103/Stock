@@ -1,0 +1,333 @@
+{
+  "name": "Stock___Track_Technical_Indicators",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c1d23f20-1d79-49b5-855a-c71f33044e9d",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "start_date",
+              "value": "2026-07-01"
+            },
+            {
+              "name": "end_date",
+              "value": "={{$now.toFormat('yyyy-MM-dd')}}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "1996b066-0ab5-4a71-b937-01ddf314f3ca",
+      "name": "Set time range",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        780,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "SELECT stock_key FROM n8n_olap.dim_stock ORDER BY stock_key FORMAT JSON",
+        "options": {}
+      },
+      "id": "a8f51cbe-b009-489c-ac97-a3e016246b45",
+      "name": "Get all Stock symbols",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        20,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 100,
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "e2d6e03d-ea1f-4fcd-83e2-494d6bfae617",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        380,
+        220
+      ],
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const stockArr = $input.first().json.data\nreturn stockArr;"
+      },
+      "id": "12b60973-45d8-4a5a-8a78-9ab7ebd6c9b7",
+      "name": "Format stocks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        200,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let stockArr = [];\nlet stockStr = \"\";\nfor (const item of $input.all()) {\n  stockArr.push(item.json[\"stock_key\"]);\n  stockStr = stockArr.map(x => \"'\" + x + \"'\").join(\",\");\n}\n\nreturn [{ \n  stock_keys: stockArr,\n  stock_keys_str: stockStr \n}];"
+      },
+      "id": "d66e846d-8963-463f-a374-7e32574f2398",
+      "name": "Combine Stock symbol",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        600,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT * FROM n8n_olap.v_pre_calculate_market_data\nWHERE has([{{$input.first().json.stock_keys_str}}], stock_key)\nAND trade_date BETWEEN '{{$input.first().json.start_date}}' AND '{{$input.first().json.end_date}}'\nFORMAT JSON",
+        "options": {}
+      },
+      "id": "2a2883a0-12fa-4924-8eeb-c7f550e33e1a",
+      "name": "Pre-calculate Market data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        960,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "smaArr = [];\nfor (const item of $input.first().json.data) {\n  calculatedItem = {\n    trade_date: item.trade_date,\n    symbol: item.stock_key,\n    sma_20: item.sum_close_20 / 20,\n    sma_50: item.sum_close_50 / 50,\n    sma_100: item.sum_close_100 / 100\n  }\n  smaArr.push(calculatedItem)\n}\n\nreturn smaArr;"
+      },
+      "id": "7e62ed2d-28de-4245-8b5c-4440ed436879",
+      "name": "SMA Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=INSERT INTO n8n_olap.fact_technical_indicators FORMAT JSONEachRow\n{{$input.first().json.formatted_data}}",
+        "options": {}
+      },
+      "id": "ee2ed3f7-524c-491d-a2bb-64adaccd923d",
+      "name": "Insert table",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1500,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const records = [];\n\nfor (const item of $input.all()) {\n  records.push(item.json);\n}\n\nconst jsonEachRowString = records.map(row => JSON.stringify(row)).join('\\n');\n\nreturn {\n  json: {\n    formatted_data: jsonEachRowString\n  }\n};"
+      },
+      "id": "97991a42-4256-4589-867a-42bb93ced86e",
+      "name": "Combine Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        200
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Get all Stock symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get all Stock symbols": {
+      "main": [
+        [
+          {
+            "node": "Format stocks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format stocks": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Combine Stock symbol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Stock symbol": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set time range": {
+      "main": [
+        [
+          {
+            "node": "Pre-calculate Market data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre-calculate Market data": {
+      "main": [
+        [
+          {
+            "node": "SMA Calculation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert table": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMA Calculation": {
+      "main": [
+        [
+          {
+            "node": "Combine Calculation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Calculation": {
+      "main": [
+        [
+          {
+            "node": "Insert table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "645a5724-a6c9-4933-85f6-bf896062adc3",
+  "id": "5",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}

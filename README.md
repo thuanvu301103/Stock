@@ -82,6 +82,9 @@ graph TD
 2. **fact_market_sentiment (Capital Flow)**: Tracks institutional and foreign movement to gauge market sentiment.
 3. **fact_technical_indicators (Technical Indicators)**: Stores pre-calculated technical indicator values derived from historical price and volume data across standard timeframes.
 
+#### Pre-calculate data Functions
+1. **v_pre_calculate_market_data**: Pre-calculate sum/average/... of close-price/volumn/... which are useful for technical indicators calculation later.
+
 #### Analytics Layer (Automated Calculations)
 1. **v_advanced_indicators**: An abstraction layer that standardizes complex technical analysis. This view automates the calculation of rolling metrics such as Simple Moving Averages (SMA), Chaikin Money Flow (CMF)... By encapsulating intricate Window Functions, it provides a "plug-and-play" interface for BI tools and reports, ensuring consistent indicator logic across the entire ecosystem without the need for repetitive, manual computations.
 

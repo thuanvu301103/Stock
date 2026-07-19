@@ -3,7 +3,7 @@ CREATE TABLE n8n_olap.fact_technical_indicators (
     trade_date Date,
     sma_20 Float32,
     sma_50 Float32,
-    sma_200 Float32,
+    sma_100 Float32,
     ema_20 Float32,
     ema_50 Float32,
     ema_200 Float32,
