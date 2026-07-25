@@ -18,11 +18,11 @@
           "string": [
             {
               "name": "start_date",
-              "value": "2026-07-01"
+              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-07-01\"}}"
             },
             {
               "name": "end_date",
-              "value": "={{$now.toFormat('yyyy-MM-dd')}}"
+              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-08-01\"}}"
             }
           ]
         },
@@ -35,8 +35,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        780,
-        200
+        620,
+        0
       ]
     },
     {
@@ -110,8 +110,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        600,
-        200
+        440,
+        0
       ]
     },
     {
@@ -134,7 +134,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/x-www-form-urlencoded",
-        "body": "=SELECT * FROM n8n_olap.v_pre_calculate_market_data\nWHERE has([{{$input.first().json.stock_keys_str}}], stock_key)\nAND trade_date BETWEEN '{{$input.first().json.start_date}}' AND '{{$input.first().json.end_date}}'\nFORMAT JSON",
+        "body": "=SELECT \n   *,\n   (trade_date < '{{$input.first().json.start_date}}') AS window_padding  \nFROM n8n_olap.v_pre_calculate_market_data\nWHERE has([{{$input.first().json.stock_keys_str}}], stock_key)\nAND trade_date BETWEEN '{{$input.first().json.data_start_date}}' AND '{{$input.first().json.end_date}}'\nFORMAT JSON",
         "options": {}
       },
       "id": "2a2883a0-12fa-4924-8eeb-c7f550e33e1a",
@@ -142,21 +142,21 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        960,
+        820,
         200
       ]
     },
     {
       "parameters": {
-        "jsCode": "smaArr = [];\nfor (const item of $input.first().json.data) {\n  calculatedItem = {\n    trade_date: item.trade_date,\n    symbol: item.stock_key,\n    sma_20: item.sum_close_20 / 20,\n    sma_50: item.sum_close_50 / 50,\n    sma_100: item.sum_close_100 / 100\n  }\n  smaArr.push(calculatedItem)\n}\n\nreturn smaArr;"
+        "jsCode": "smaArr = [];\nfor (const item of $input.first().json.data) {\n  if (item.window_padding == 1) continue;\n  calculatedItem = {\n    trade_date: item.trade_date,\n    symbol: item.stock_key,\n    sma_20: item.sum_close_20 / 20,\n    sma_50: item.sum_close_50 / 50,\n    sma_100: item.sum_close_100 / 100\n  }\n  smaArr.push(calculatedItem)\n}\n\nreturn smaArr;"
       },
       "id": "7e62ed2d-28de-4245-8b5c-4440ed436879",
       "name": "SMA Calculation",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        1140,
-        200
+        1040,
+        20
       ]
     },
     {
@@ -187,7 +187,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1500,
+        1640,
         200
       ]
     },
@@ -200,7 +200,59 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        1320,
+        1480,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "data = $input.first().json.data;\n\n// Distribute raw data rows into groups by stock_key\ngrouped = {};\nfor (const item of data) {\n  if (!grouped[item.stock_key]) grouped[item.stock_key] = [];\n  grouped[item.stock_key].push(item);\n}\n\nperiods = [7, 14, 21];\nrsiArr = [];\n\nfor (const symbol in grouped) {\n  rows = grouped[symbol].sort((a, b) => new Date(a.trade_date) - new Date(b.trade_date));\n\n  state = {};\n  for (const p of periods) {\n    state[p] = { ag: null, al: null, sumGain: 0, sumLoss: 0 };\n  }\n\n  rows.forEach((item, i) => {\n    rowsSeen = i + 1;\n    calculatedItem = {\n      trade_date: item.trade_date,\n      symbol: symbol\n    };\n\n    for (const p of periods) {\n      state[p].sumGain += item.gain;\n      state[p].sumLoss += item.loss;\n\n      if (rowsSeen < p) {\n        calculatedItem['rsi_' + p] = null;\n        continue;\n      }\n\n      if (rowsSeen === p) {\n        // Seed: initial average gain/loss over the first n periods\n        state[p].ag = state[p].sumGain / p;\n        state[p].al = state[p].sumLoss / p;\n      } else {\n        // Wilder's smoothing recursion\n        state[p].ag = (state[p].ag * (p - 1) + item.gain) / p;\n        state[p].al = (state[p].al * (p - 1) + item.loss) / p;\n      }\n\n      ag = state[p].ag;\n      al = state[p].al;\n      calculatedItem['rsi_' + p] = al === 0 ? (ag === 0 ? 50 : 100) : 100 - (100 / (1 + (ag / al)));\n    }\n    if (item.window_padding != 1) rsiArr.push(calculatedItem);\n  });\n}\n\nreturn rsiArr;"
+      },
+      "id": "8c85d750-c61e-47fb-a749-23dfd02b7f2e",
+      "name": "RSI Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "trade_date",
+              "field2": "trade_date"
+            },
+            {
+              "field1": "symbol",
+              "field2": "symbol"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "14a70f1c-9105-44ff-ae2f-f7578a76d0f5",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1260,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const daysToSubtract = 150;\n\nfor (const item of $input.all()) {\n  const originalDate = new Date(item.json.start_date);\n  originalDate.setDate(originalDate.getDate() - daysToSubtract);\n  item.json.data_start_date = originalDate.toISOString().split('T')[0];\n}\n\nreturn $input.all();"
+      },
+      "id": "988dbf54-8d56-4732-a366-6c89d80d9162",
+      "name": "Set data start time",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        620,
         200
       ]
     }
@@ -266,7 +318,7 @@
       "main": [
         [
           {
-            "node": "Pre-calculate Market data",
+            "node": "Set data start time",
             "type": "main",
             "index": 0
           }
@@ -276,6 +328,11 @@
     "Pre-calculate Market data": {
       "main": [
         [
+          {
+            "node": "RSI Calculation",
+            "type": "main",
+            "index": 0
+          },
           {
             "node": "SMA Calculation",
             "type": "main",
@@ -299,7 +356,7 @@
       "main": [
         [
           {
-            "node": "Combine Calculation",
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -316,6 +373,39 @@
           }
         ]
       ]
+    },
+    "RSI Calculation": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Combine Calculation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set data start time": {
+      "main": [
+        [
+          {
+            "node": "Pre-calculate Market data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -324,7 +414,7 @@
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "645a5724-a6c9-4933-85f6-bf896062adc3",
+  "versionId": "2c49fcf1-5425-4766-b9a9-857444d098e5",
   "id": "5",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
