@@ -1,0 +1,192 @@
+{
+  "name": "Stock___Mine_Corporate_Actions_SSI",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
+      },
+      "id": "c24fe3ff-37e0-4bef-b3aa-c1f5a60c64cc",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        360,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.fact_stock_prices FINAL",
+        "options": {}
+      },
+      "id": "dd617533-8103-4705-846d-b180867e800c",
+      "name": "Remove duplication",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        760,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT INTO n8n_olap.corporate_actions FORMAT JSONEachRow",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "7dc66188-ee78-453a-9b20-4511a2154a46",
+      "name": "Insert Price data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        560,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mine-corporate-actions-ssi",
+        "options": {
+          "binaryData": true
+        }
+      },
+      "id": "520360ea-0bc6-429d-bb66-d5de53959ec4",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        620
+      ],
+      "webhookId": "52fd3146-4022-4d40-82ec-39d49f7031c5"
+    },
+    {
+      "parameters": {
+        "options": {
+          "headerRow": false,
+          "rawData": false
+        }
+      },
+      "id": "e0b9d1e3-ed43-4c4f-ba6c-f17b4bf736fc",
+      "name": "Spreadsheet File",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst validItems = items.slice(3);\nreturn validItems;"
+      },
+      "id": "9020799c-731f-459b-887c-b1db261dfe19",
+      "name": "Remove uneccessary rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Extract headers from the first item\nconst rawHeaders = items[0].json.row || items[0].json;\n\n// Helper function to clean strings (removes line breaks, carriage returns, and extra spaces)\nfunction cleanString(str) {\n  if (!str) return \"\";\n  return String(str).replace(/[\\r\\n]+/g, \" \").replace(/\\s+/g, \" \").trim();\n}\n\n// Normalize all header strings\nconst headers = rawHeaders.map(header => cleanString(header));\n\n// Helper function to reformat 'DD/MM/YYYY' into 'YYYY-MM-DD' for ClickHouse\nfunction formatDate(dateStr) {\n  if (!dateStr) return null;\n  const cleanedStr = cleanString(dateStr);\n  const parts = cleanedStr.split(\"/\");\n  if (parts.length !== 3) return null;\n  const [day, month, year] = parts;\n  return `${year}-${month.padStart(2, \"0\")}-${day.padStart(2, \"0\")}`;\n}\n\n// Map remaining data rows directly into ClickHouse schema\nreturn items.slice(1).map(item => {\n  const rowData = item.json.row || item.json;\n  \n  // Build key-value map from headers and row values\n  const rawData = {};\n  headers.forEach((header, index) => {\n    rawData[header] = rowData[index];\n  });\n\n  return {\n    json: {\n      symbol: cleanString(rawData[\"Mã (Stock)\"]),\n      event_type: cleanString(rawData[\"Loại sự kiện (Event)\"]),\n      description: cleanString(rawData[\"Nội dung (Description)\"]),\n      ex_rights_date: formatDate(rawData[\"Ngày GDKHQ (Ex-right date)\"]),\n      record_date: formatDate(rawData[\"Ngày chốt (Closing date)\"]),\n      payment_date: formatDate(rawData[\"Ngày thực hiện (Excercise date)\"])\n    }\n  };\n});"
+      },
+      "id": "bf0e8905-23f9-43a3-898a-3b1f63651ce8",
+      "name": "Format object",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        160,
+        620
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Format": {
+      "main": [
+        [
+          {
+            "node": "Insert Price data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Price data": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Spreadsheet File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove uneccessary rows": {
+      "main": [
+        [
+          {
+            "node": "Format object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format object": {
+      "main": [
+        [
+          {
+            "node": "Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spreadsheet File": {
+      "main": [
+        [
+          {
+            "node": "Remove uneccessary rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "683f8d42-902a-4640-a76f-3e3b600b6976",
+  "id": "7",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}

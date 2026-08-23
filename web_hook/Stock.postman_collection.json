@@ -1,0 +1,60 @@
+{
+  "info": {
+    "_postman_id": "85b4bc10-8483-418f-82fd-13f27311ae5c",
+    "name": "Stock",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "45954627"
+  },
+  "item": [
+    {
+      "name": "Mine Corporate Actions SSI",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "file",
+          "file": {
+            "src": ""
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5678/webhook-test/mine-corporate-actions-ssi",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5678",
+          "path": [
+            "webhook-test",
+            "mine-corporate-actions-ssi"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Mine Market Data SSI",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "file",
+          "file": {}
+        },
+        "url": {
+          "raw": "http://localhost:5678/webhook-test/mine-market-data-ssi",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5678",
+          "path": [
+            "webhook-test",
+            "mine-market-data-ssi"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
