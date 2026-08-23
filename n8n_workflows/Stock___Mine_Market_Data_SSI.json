@@ -1,0 +1,261 @@
+{
+  "name": "Stock___Mine_Market_Data_SSI",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
+      },
+      "id": "05bdc46f-993f-4be6-9a4b-31eb81965721",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        560,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.fact_stock_prices FINAL",
+        "options": {}
+      },
+      "id": "fa3f4e54-f650-471f-968f-3ea56988692f",
+      "name": "Remove duplication",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        960,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT INTO n8n_olap.fact_stock_prices FORMAT JSONEachRow",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "2e11b976-3c75-44f7-b0f1-d2573d9f6795",
+      "name": "Insert Price data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        760,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mine-market--data-ssi",
+        "options": {
+          "binaryData": true
+        }
+      },
+      "id": "24fb82b2-e108-4c6a-8b27-114262a95979",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        620
+      ],
+      "webhookId": "19394170-070c-4bbb-854a-4ee3a2615bbc"
+    },
+    {
+      "parameters": {
+        "options": {
+          "headerRow": false,
+          "rawData": false
+        }
+      },
+      "id": "85543729-e1f9-4c6a-ae8f-cd2f1f82811d",
+      "name": "Spreadsheet File",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst validItems = items.slice(1);\nreturn validItems;"
+      },
+      "id": "e3366c36-1f6e-4bd5-b515-e4198d454558",
+      "name": "Remove uneccessary rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n// Extract headers from the first item\nconst headers = items[0].json.row;\n\n// Map remaining rows directly into ClickHouse table schema\nreturn items.slice(1).map(item => {\n  const rowData = item.json.row;\n  \n  // Create key-value object from headers and row data\n  const rawData = {};\n  headers.forEach((header, index) => {\n    rawData[header] = rowData[index];\n  });\n\n  return {\n    json: {\n      symbol: String(rawData[\"CK\"] || \"\"),\n      open: (parseFloat(rawData[\"Mở cửa\"]) / 1000) || 0.0,\n      high: (parseFloat(rawData[\"Cao\"]) / 1000) || 0.0,\n      low: (parseFloat(rawData[\"Thấp\"]) / 1000)|| 0.0,\n      close: (parseFloat(rawData[\"TC\"]) / 1000) || 0.0,\n      adj_close: (parseFloat(rawData[\"TC\"]) / 1000) || 0.0,\n      volume: parseInt(rawData[\"Tổng KL\"], 10) || 0,\n      trading_value: (parseFloat(rawData[\"Tổng GT\"]) / 1000000) || 0.0,\n    }\n  };\n});"
+      },
+      "id": "070b2219-34a8-447e-8488-aeb158b65346",
+      "name": "Format object",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        160,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "trade_date",
+              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-17\"*/}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bdf3a933-68e1-4e73-9773-3f41ba010104",
+      "name": "Set trade_date",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        160,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "aca25145-582e-4954-b6a4-a8b4f0d87054",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        360,
+        600
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Format": {
+      "main": [
+        [
+          {
+            "node": "Insert Price data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove duplication": {
+      "main": [
+        []
+      ]
+    },
+    "Insert Price data": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Spreadsheet File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set trade_date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spreadsheet File": {
+      "main": [
+        [
+          {
+            "node": "Remove uneccessary rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove uneccessary rows": {
+      "main": [
+        [
+          {
+            "node": "Format object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set trade_date": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format object": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "9ae19948-5c8e-4109-ba37-d73e9b93383b",
+  "id": "1",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}

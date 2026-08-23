@@ -18,11 +18,11 @@
           "string": [
             {
               "name": "start_date",
-              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-07-01\"}}"
+              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-08-21\"}}"
             },
             {
               "name": "end_date",
-              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-08-01\"}}"
+              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-08-21\"}}"
             }
           ]
         },
@@ -187,7 +187,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1640,
+        1760,
         200
       ]
     },
@@ -200,7 +200,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        1480,
+        1600,
         200
       ]
     },
@@ -254,6 +254,45 @@
       "position": [
         620,
         200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function getPercentile(arr, percentile) {\n  if (arr.length === 0) return 0;\n  if (arr.length === 1) return arr[0];\n\n  const sorted = [...arr].sort((a, b) => a - b);\n  const index = (sorted.length - 1) * percentile;\n  const lower = Math.floor(index);\n  const upper = Math.ceil(index);\n  const weight = index - lower;\n\n  if (upper >= sorted.length) return sorted[sorted.length - 1];\n  return sorted[lower] * (1 - weight) + sorted[upper] * weight;\n}\n\nconst windowSize = 20;\n\n// Extract rows array from ClickHouse JSON wrapper ($input.first().json.data)\nconst inputData = $input.first()?.json?.data || [];\n\n// Group items by stock_key\nconst groupedData = {};\nfor (const item of inputData) {\n  const stock = item.stock_key;\n  if (!groupedData[stock]) {\n    groupedData[stock] = [];\n  }\n  groupedData[stock].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock group\nfor (const stock in groupedData) {\n  const stockItems = groupedData[stock].sort(\n    (a, b) => new Date(a.trade_date) - new Date(b.trade_date)\n  );\n\n  for (let i = 0; i < stockItems.length; i++) {\n    const currentItem = stockItems[i];\n\n    if (Number(currentItem.window_padding) === 0) {\n      const startIndex = Math.max(0, i - windowSize + 1);\n      const windowVolumes = stockItems\n        .slice(startIndex, i + 1)\n        .map((d) => parseFloat(d.volume) || 0);\n\n      const p25 = getPercentile(windowVolumes, 0.25);\n      const p75 = getPercentile(windowVolumes, 0.75);\n      const iqr = p75 - p25;\n\n      outputItems.push({\n        json: {\n          trade_date: currentItem.trade_date,\n          symbol: currentItem.stock_key,\n          volume_iqr_p25: Number(p25.toFixed(4)),\n          volume_iqr_p75: Number(p75.toFixed(4)),\n          volume_rolling_iqr: Number(iqr.toFixed(4))\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
+      },
+      "id": "746c5c2d-e196-43d7-a902-9af7aba2537b",
+      "name": "Volume IQR Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "trade_date",
+              "field2": "trade_date"
+            },
+            {
+              "field1": "symbol",
+              "field2": "symbol"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3402dd5e-24b0-42e0-8d7d-609a1e95e2cc",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1420,
+        -60
       ]
     }
   ],
@@ -337,6 +376,11 @@
             "node": "SMA Calculation",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Volume IQR Calculation",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -389,9 +433,9 @@
       "main": [
         [
           {
-            "node": "Combine Calculation",
+            "node": "Merge1",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -406,6 +450,28 @@
           }
         ]
       ]
+    },
+    "Volume IQR Calculation": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Combine Calculation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -414,7 +480,7 @@
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "2c49fcf1-5425-4766-b9a9-857444d098e5",
+  "versionId": "5b84b379-fc26-4a54-9351-33660924783e",
   "id": "5",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

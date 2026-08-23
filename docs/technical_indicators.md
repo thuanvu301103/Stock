@@ -37,6 +37,44 @@ $$SMA_{100, t} = \frac{P_t + P_{t-1} + P_{t-2} + \dots + P_{t-99}}{100}$$
 
 > *Technical Constraint:* A minimum of **100 consecutive sessions** of historical data is required to compute the first valid $SMA_{100}$ value.
 
+### Derived Metrics
+
+Derived metrics are mathematical features and quantitative signals computed directly from the Simple Moving Average (SMA) values to measure momentum, direction, and state changes.
+
+#### SMA Slope
+
+Calculates the rate of change (steepness and direction) of the SMA over a lookback window of $k$ periods ($k \ge 1$).
+
+$$\text{Slope}_{n, t, k} = \frac{SMA_{n, t} - SMA_{n, t-k}}{k}$$
+
+Where:
+
+* $SMA_{n, t}$: The SMA value of period $n$ at the current session $t$.
+* $SMA_{n, t-k}$: The SMA value of period $n$ at $k$ sessions prior.
+* $k$: The lookback interval used to determine slope (typically $k = 1$ or $k = 5$).
+
+Directional Interpretation:
+
+* $\text{Slope}_{n, t, k} > 0$: The SMA line is sloping upward (uptrend momentum).
+* $\text{Slope}_{n, t, k} = 0$: The SMA line is flat (sideways market / neutral state).
+* $\text{Slope}_{n, t, k} < 0$: The SMA line is sloping downward (downtrend momentum).
+
+> *Technical Constraint:* Calculating $\text{Slope}_{n, t, k}$ requires a minimum of **$n + k$ consecutive sessions** of historical price data.
+
+#### Dual SMA Crossover Signal
+
+Identifies state changes and generates binary trading triggers when a short-term SMA ($n_{\text{short}}$) intersects a long-term SMA ($n_{\text{long}}$), where $n_{\text{short}} < n_{\text{long}}$ (e.g., $n_{\text{short}} = 20$, $n_{\text{long}} = 50$).
+
+Define the differential value at session $t$:
+
+$$\Delta SMA_t = SMA_{n_{\text{short}}, t} - SMA_{n_{\text{long}}, t}$$
+
+The quantitative crossover signal $\text{Signal}_t \in \{-1, 0, 1\}$ is evaluated as:
+
+$$\text{Signal}_t =  \begin{cases}  1 & \text{if } \Delta SMA_t > 0 \text{ and } \Delta SMA_{t-1} \le 0 \quad (\text{Golden Cross / Bullish Signal}) \\ -1 & \text{if } \Delta SMA_t < 0 \text{ and } \Delta SMA_{t-1} \ge 0 \quad (\text{Death Cross / Bearish Signal}) \\ 0 & \text{otherwise (No state change)} \end{cases}$$
+
+> *Technical Constraint:* Determining a valid crossover event at session $t$ requires a minimum of **$n_{\text{long}} + 1$ consecutive sessions** of historical data.
+
 ---
 
 ## Relative Strength Index (RSI)
@@ -106,3 +144,58 @@ Calculated using a 21-session lookback window for reduced noise.
 $$RSI_{21, t} = 100 - \left( \frac{100}{1 + \frac{AG_{21, t}}{AL_{21, t}}} \right)$$
 
 > *Technical Constraint:* A minimum of **22 consecutive sessions** of historical closing prices (21 price change intervals) is required to compute the first valid $RSI_{21}$ value.
+
+## Rolling Interquartile Range (Rolling IQR)
+
+### General Mathematical Formula
+
+$$IQR_{n, t} = Q_{3, n, t} - Q_{1, n, t}$$
+
+**Where:**
+
+* $n$: The calculation period (lookback window size, e.g., $n = 20$).
+* $t$: The current trading session being calculated.
+* $Q_{1, n, t}$: The 1st quartile ($25\text{th}$ percentile) of closing prices over $n$ sessions from $t-n+1$ to $t$.
+* $Q_{3, n, t}$: The 3rd quartile ($75\text{th}$ percentile) of closing prices over $n$ sessions from $t-n+1$ to $t$.
+
+### Quartile Calculation Methods
+
+Given an ordered sample $P_{(1)} \le P_{(2)} \le \dots \le P_{(n)}$ derived from closing prices within the window $\{P_t, P_{t-1}, \dots, P_{t-n+1}\}$:
+
+#### 1. First Quartile ($Q_1$)
+
+The $25\text{th}$ percentile value dividing the lowest $25\%$ of the data:
+
+$$Q_{1, n, t} = \text{Percentile}_{0.25}\left(\{P_{t-i}\}_{i=0}^{n-1}\right)$$
+
+#### 2. Third Quartile ($Q_3$)
+
+The $75\text{th}$ percentile value dividing the lowest $75\%$ of the data:
+
+$$Q_{3, n, t} = \text{Percentile}_{0.75}\left(\{P_{t-i}\}_{i=0}^{n-1}\right)$$
+
+### Specific Formulas for Standard Rolling Windows
+
+#### Rolling IQR 20 (Standard Short-term Volatility - 20 Periods)
+
+Calculated using a 20-session lookback window to measure dispersion and non-parametric volatility.
+
+$$IQR_{20, t} = Q_{3, 20, t} - Q_{1, 20, t}$$
+
+> *Technical Constraint:* A minimum of **20 consecutive sessions** of historical closing prices is required to compute the first valid $IQR_{20}$ value.
+
+### Derived Metrics
+
+#### IQR Upper and Lower Outer Bounds (Outlier Detection)
+
+Identifies extreme price anomalies or sudden volatility shifts using the standard $1.5 \times IQR$ threshold:
+
+$$\text{Upper Bound}_{n, t} = Q_{3, n, t} + 1.5 \times IQR_{n, t}$$
+
+$$\text{Lower Bound}_{n, t} = Q_{1, n, t} - 1.5 \times IQR_{n, t}$$
+
+#### Outlier Anomaly Signal
+
+The quantitative outlier indicator $\text{OutlierSignal}_t \in \{-1, 0, 1\}$ at session $t$ is defined as:
+
+$$\text{OutlierSignal}_t = \begin{cases} 1 & \text{if } P_t > \text{Upper Bound}_{n, t} \quad (\text{Upper Price Outlier}) \\ -1 & \text{if } P_t < \text{Lower Bound}_{n, t} \quad (\text{Lower Price Outlier}) \\ 0 & \text{otherwise (Normal Range)} \end{cases}$$

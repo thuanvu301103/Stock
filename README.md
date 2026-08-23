@@ -78,7 +78,7 @@ graph TD
 2. **dim_stock (Stock Profile)**: Stores company metadata. Use ReplacingMergeTree so that when n8n rescans the market, it updates existing records with the latest info.
 
 #### Fact Tables
-1. **fact_stock_prices (Market Price & Volume)**: The central repository for Daily OHLCV (Open, High, Low, Close, Volume) data. Physically sorted by symbol and trade_date to make calculating SMA, EMA, and CMF lightning-fast.
+1. **fact_market_data (Market Price & Volume)**: The central repository for Daily OHLCV (Open, High, Low, Close, Volume) data. Physically sorted by symbol and trade_date to make calculating SMA, EMA, and CMF lightning-fast.
 2. **fact_market_sentiment (Capital Flow)**: Tracks institutional and foreign movement to gauge market sentiment.
 3. **fact_technical_indicators (Technical Indicators)**: Stores pre-calculated technical indicator values derived from historical price and volume data across standard timeframes.
 
@@ -227,8 +227,20 @@ sys.stdin.reconfigure(encoding='utf-8')
 3. **fact_stock_prices**: Run n8n workflwo `n8n_workflows\Stock__Seed_Price_Data.json`
 
 ### Mine Stock data
-1. Run workflow in n8n: `n8n_workflows\Stock__Mine_Price_Data.json`
+
+#### Vnstock as Data source 
+1. Run workflow in n8n: `n8n_workflows\Stock__Mine_Market_Data_Vnstock.json`
 2. If there is error, re-run the workflow with option `Retry with curently saved workflow (from node with error)`
+
+- Primary Use Case: Historical data backfilling and backup source.
+- Technical Constraint: Rate-limited to 60 requests per minute.
+
+#### SSI as Data source
+1. Download market data *csv files from SSI
+2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI.json`
+
+- Primary Use Case: Daily real-time data extraction.
+- Technical Constraint: Restricted to current-day data only, requiring immediate daily processing for high throughput.
 
 ### Visualize data
 1. Run PowerBI, then open file `power_bi_visual.pbix`
