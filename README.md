@@ -246,6 +246,22 @@ sys.stdin.reconfigure(encoding='utf-8')
 1. Run PowerBI, then open file `power_bi_visual.pbix`
 2. At tab `Home` -> group `Queries` -> `Refresh`
 
+### Optimize Investment
+Here is the user guide for the **Optimize Investment** section written in concise English:
+
+### Optimize Investment
+1. **Analyze and Select Assets (`SelectedSymbols`)**:
+Review technical and financial analysis to select a target pool of potential stocks. Enter the chosen tickers into the `SelectedSymbols` parameter, separated by commas (e.g., `HPG, FPT, SSI`).
+2. **Configure Input Parameters**:
+* **`SelectedTradeDate`**: Set the base trading date to retrieve historical data and expected metrics.
+* **`TotalInvestment`**: Input the total capital budget planned for execution (e.g., `100000000`).
+3. **Execute the Script**:
+Open Power Query Editor, select the query, and click **Refresh Preview** (or **Apply & Close**) to trigger the Python Sharpe ratio optimization model.
+4. **Interpret Output Metrics**:
+* **`optimal_weight`**: Target capital allocation percentage for each asset (sums to 1.0).
+* **`allocated_amount`**: Precise capital amount to spend on each stock ($\text{optimal\_weight} \times \text{TotalInvestment}$).
+* **`suggested_shares`**: Recommended number of shares to purchase ($\lfloor \text{allocated\_amount} / \text{close\_price} \rfloor$).
+
 ### Purge Cold data
 1. Run workflow in n8n `n8n_workflows\Stock__Purge_Data.json`
 2. Check data in `dim_date` and `fact_stock_prices` tables

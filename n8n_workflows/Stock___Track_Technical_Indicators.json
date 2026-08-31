@@ -18,11 +18,11 @@
           "string": [
             {
               "name": "start_date",
-              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-08-21\"}}"
+              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-05-01\"}}"
             },
             {
               "name": "end_date",
-              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-08-21\"}}"
+              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-05-31\"}}"
             }
           ]
         },
@@ -161,38 +161,6 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://clickhouse:8123",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-ClickHouse-User",
-              "value": "n8n"
-            },
-            {
-              "name": "X-ClickHouse-Key",
-              "value": "n8n_pass"
-            }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "application/x-www-form-urlencoded",
-        "body": "=INSERT INTO n8n_olap.fact_technical_indicators FORMAT JSONEachRow\n{{$input.first().json.formatted_data}}",
-        "options": {}
-      },
-      "id": "ee2ed3f7-524c-491d-a2bb-64adaccd923d",
-      "name": "Insert table",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        1760,
-        200
-      ]
-    },
-    {
-      "parameters": {
         "jsCode": "const records = [];\n\nfor (const item of $input.all()) {\n  records.push(item.json);\n}\n\nconst jsonEachRowString = records.map(row => JSON.stringify(row)).join('\\n');\n\nreturn {\n  json: {\n    formatted_data: jsonEachRowString\n  }\n};"
       },
       "id": "97991a42-4256-4589-867a-42bb93ced86e",
@@ -294,6 +262,107 @@
         1420,
         -60
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Helper: Calculates the Arithmetic Mean\n */\nfunction getMean(arr) {\n  if (arr.length === 0) return 0;\n  const sum = arr.reduce((acc, val) => acc + val, 0);\n  return sum / arr.length;\n}\n\n/**\n * Helper: Calculates the Sample Standard Deviation\n */\nfunction getSampleStdDev(arr) {\n  if (arr.length <= 1) return 0;\n  const mean = getMean(arr);\n  const variance = arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (arr.length - 1);\n  return Math.sqrt(variance);\n}\n\nconst windowSize = 20;\n\n// Extract rows array from ClickHouse JSON response ($input.first().json.data)\nconst inputData = $input.first()?.json?.data || [];\n\n// Group items by stock symbol (stock_key)\nconst groupedData = {};\nfor (const item of inputData) {\n  const stock = item.stock_key;\n  if (!groupedData[stock]) {\n    groupedData[stock] = [];\n  }\n  groupedData[stock].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock series\nfor (const stock in groupedData) {\n  // Sort time series in ascending order\n  const stockItems = groupedData[stock].sort(\n    (a, b) => new Date(a.trade_date) - new Date(b.trade_date)\n  );\n\n  // STEP 1: Compute log_return_t2 for each trade session: log(close_t / close_{t-2})\n  const series = stockItems.map((item, index) => {\n    const closeCurr = parseFloat(item.close) || 0;\n    \n    let logReturnT2 = 0;\n    if (index >= 2) {\n      const closeLag2 = parseFloat(stockItems[index - 2].close) || 0;\n      if (closeLag2 > 0 && closeCurr > 0) {\n        logReturnT2 = Math.log(closeCurr / closeLag2);\n      }\n    }\n\n    return {\n      trade_date: item.trade_date,\n      symbol: item.stock_key,\n      close_price: closeCurr,\n      log_return_t2: logReturnT2,\n      window_padding: item.window_padding\n    };\n  });\n\n  // STEP 2: Compute metrics STRICTLY when window_padding === 0\n  for (let i = 0; i < series.length; i++) {\n    const curr = series[i];\n\n    // Evaluate ONLY when window_padding is strictly 0\n    if (Number(curr.window_padding) === 0) {\n      // 20-period rolling window slice (ROWS BETWEEN 19 PRECEDING AND CURRENT ROW)\n      const startIndex = Math.max(0, i - windowSize + 1);\n      const windowSlice = series.slice(startIndex, i + 1);\n      const windowReturns = windowSlice.map((d) => d.log_return_t2);\n\n      const expectedReturn = getMean(windowReturns);\n      const volatility = getSampleStdDev(windowReturns);\n\n      // Map output fields directly to n8n_olap.fact_portfolio_return_metrics schema\n      outputItems.push({\n        json: {\n          symbol: curr.symbol,\n          trade_date: curr.trade_date,\n          close_price: Number(curr.close_price.toFixed(4)),\n          log_return_t2: Number(curr.log_return_t2.toFixed(6)),\n          expected_return_t2_n20: Number(expectedReturn.toFixed(6)),\n          volatility_t2_n20: Number(volatility.toFixed(6))\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
+      },
+      "id": "e14e98cf-6504-4a1d-b05a-ded5a625db46",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=INSERT INTO n8n_olap.fact_technical_indicators FORMAT JSONEachRow\n{{$input.first().json.formatted_data}}",
+        "options": {}
+      },
+      "id": "ee2ed3f7-524c-491d-a2bb-64adaccd923d",
+      "name": "Insert Technical Indicators table",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1780,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const records = [];\n\nfor (const item of $input.all()) {\n  records.push(item.json);\n}\n\nconst jsonEachRowString = records.map(row => JSON.stringify(row)).join('\\n');\n\nreturn {\n  json: {\n    formatted_data: jsonEachRowString\n  }\n};"
+      },
+      "id": "02a7f842-49b7-4a18-b140-198f37afe0f7",
+      "name": "Combine Calculation1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=INSERT INTO n8n_olap.fact_portfolio_return_metrics FORMAT JSONEachRow\n{{$input.first().json.formatted_data}}",
+        "options": {}
+      },
+      "id": "3d85b6a4-8273-486d-8ff6-cf7ef6670113",
+      "name": "Insert Technical Indicators table1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1780,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a6988fbd-903b-436f-bac8-80158c10990e",
+      "name": "Merge2",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2000,
+        380
+      ]
     }
   ],
   "pinData": {},
@@ -381,15 +450,9 @@
             "node": "Volume IQR Calculation",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Insert table": {
-      "main": [
-        [
+          },
           {
-            "node": "Split In Batches",
+            "node": "Code",
             "type": "main",
             "index": 0
           }
@@ -411,7 +474,7 @@
       "main": [
         [
           {
-            "node": "Insert table",
+            "node": "Insert Technical Indicators table",
             "type": "main",
             "index": 0
           }
@@ -472,6 +535,61 @@
           }
         ]
       ]
+    },
+    "Insert Technical Indicators table": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Combine Calculation1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Calculation1": {
+      "main": [
+        [
+          {
+            "node": "Insert Technical Indicators table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Technical Indicators table1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -480,7 +598,7 @@
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "5b84b379-fc26-4a54-9351-33660924783e",
+  "versionId": "51219cba-0a78-4559-9edb-ceafd46e9231",
   "id": "5",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

@@ -1,41 +1,15 @@
 {
-  "name": "Stock - Seed Dim Date",
+  "name": "Stock___Seed_Dim_Date",
   "nodes": [
     {
       "parameters": {},
-      "id": "948d0602-059c-4071-8fa8-eaa36e548350",
+      "id": "d17e8dac-1f28-447e-8b4b-8356d20ddfc0",
       "name": "When clicking \"Execute Workflow\"",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        460,
-        460
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const days = 120;\nconst results = [];\n\nconst today = new Date();\n\nfor (let i = 0; i < days; i++) {\n  const d = new Date(today);\n  d.setDate(today.getDate() - i);\n\n  const year = d.getFullYear();\n  const month = d.getMonth() + 1;\n  const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay(); // Monday=1\n  const quarter = Math.floor((month - 1) / 3) + 1;\n\n  const isWeekend = dayOfWeek === 6 || dayOfWeek === 7 ? 1 : 0;\n\n  results.push({\n    date_key: d.toISOString().slice(0, 10),\n    year,\n    quarter,\n    month,\n    day_of_week: dayOfWeek,\n    is_weekend: isWeekend,\n    is_trading_day: isWeekend ? 0 : 1\n  });\n}\n\nreturn results.map(r => ({ json: r }));"
-      },
-      "id": "f645a0ec-27d7-488d-84c5-47b076af3697",
-      "name": "Generate dim_date rows",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 1,
-      "position": [
-        680,
-        460
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
-      },
-      "id": "0f8e91d0-9706-49bb-a7ed-c4d563d88918",
-      "name": "Format",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 1,
-      "position": [
-        880,
-        460
+        140,
+        520
       ]
     },
     {
@@ -47,13 +21,13 @@
         "body": "={{ $json.body }}",
         "options": {}
       },
-      "id": "7408d03b-e843-436b-9544-cd45abe0483b",
+      "id": "d3326c0b-b576-4431-ade6-2633d16eae99",
       "name": "Insert Date data",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1100,
-        460
+        940,
+        520
       ]
     },
     {
@@ -62,19 +36,94 @@
         "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.dim_date FINAL",
         "options": {}
       },
-      "id": "a6abe7b1-4367-4489-8882-c5217bce97f9",
+      "id": "2f130f8e-dc7e-405b-979e-1e4d8e07ee15",
       "name": "Remove duplication",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1320,
-        460
+        1160,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "start_date",
+              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-17\"*/}}"
+            },
+            {
+              "name": "end_date",
+              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-12-31\"}}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "8433b0bc-65c9-41a0-8da2-ab451d270c00",
+      "name": "Set time range",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        340,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nconst timeRange = $input.all()[0].json;\nconst startDate = new Date(timeRange['start_date']);\nconst endDate = new Date(timeRange['end_date']); // Fixed typo in key name 'end _date'\n\n// Set time to 00:00:00 to avoid daylight saving time offset issues\nstartDate.setHours(0, 0, 0, 0);\nendDate.setHours(0, 0, 0, 0);\n\nconst currentDate = new Date(startDate);\n\nwhile (currentDate <= endDate) {\n  const year = currentDate.getFullYear();\n  const month = currentDate.getMonth() + 1;\n  const dayOfWeek = currentDate.getDay() === 0 ? 7 : currentDate.getDay(); // Monday=1, Sunday=7\n  const quarter = Math.floor((month - 1) / 3) + 1;\n\n  const isWeekend = dayOfWeek === 6 || dayOfWeek === 7 ? 1 : 0;\n\n  // Format YYYY-MM-DD using local time\n  const dayStr = String(currentDate.getDate()).padStart(2, '0');\n  const monthStr = String(month).padStart(2, '0');\n  const dateKey = `${year}-${monthStr}-${dayStr}`;\n\n  results.push({\n    date_key: dateKey,\n    year,\n    quarter,\n    month,\n    day_of_week: dayOfWeek,\n    is_weekend: isWeekend,\n    is_trading_day: isWeekend ? 0 : 1\n  });\n\n  // Increment by 1 day\n  currentDate.setDate(currentDate.getDate() + 1);\n}\n\nreturn results.map(r => ({ json: r }));"
+      },
+      "id": "89ddbe21-33e6-4f0a-84c5-a28faa325865",
+      "name": "Generate dim_date rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        540,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
+      },
+      "id": "9ab33bcb-1e67-4ee2-9c17-7505ffb4e387",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        740,
+        520
       ]
     }
   ],
   "pinData": {},
   "connections": {
     "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Date data": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set time range": {
       "main": [
         [
           {
@@ -106,25 +155,14 @@
           }
         ]
       ]
-    },
-    "Insert Date data": {
-      "main": [
-        [
-          {
-            "node": "Remove duplication",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "active": false,
   "settings": {},
-  "versionId": "e784f70a-2481-4ffe-b3a6-a7ff63f9f027",
-  "id": "1",
+  "versionId": "fd6e6ffd-c415-4099-9cc2-9666d7be0495",
+  "id": "3",
   "meta": {
-    "instanceId": "9d25c3da4af5fb88d80daecff018d8f76f803a766d741d363ffa10b480519421"
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
   },
   "tags": []
 }
