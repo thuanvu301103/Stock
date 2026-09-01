@@ -50,7 +50,9 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "mine-market--data-ssi",
+        "path": "mine-market-data-ssi",
+        "responseMode": "lastNode",
+        "responseData": "noData",
         "options": {
           "binaryData": true
         }
@@ -96,7 +98,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\n// Extract headers from the first item\nconst headers = items[0].json.row;\n\n// Map remaining rows directly into ClickHouse table schema\nreturn items.slice(1).map(item => {\n  const rowData = item.json.row;\n  \n  // Create key-value object from headers and row data\n  const rawData = {};\n  headers.forEach((header, index) => {\n    rawData[header] = rowData[index];\n  });\n\n  return {\n    json: {\n      symbol: String(rawData[\"CK\"] || \"\"),\n      open: (parseFloat(rawData[\"Mở cửa\"]) / 1000) || 0.0,\n      high: (parseFloat(rawData[\"Cao\"]) / 1000) || 0.0,\n      low: (parseFloat(rawData[\"Thấp\"]) / 1000)|| 0.0,\n      close: (parseFloat(rawData[\"TC\"]) / 1000) || 0.0,\n      adj_close: (parseFloat(rawData[\"TC\"]) / 1000) || 0.0,\n      volume: parseInt(rawData[\"Tổng KL\"], 10) || 0,\n      trading_value: (parseFloat(rawData[\"Tổng GT\"]) / 1000000) || 0.0,\n    }\n  };\n});"
+        "jsCode": "const items = $input.all();\n// Extract headers from the first item\nconst headers = items[0].json.row;\n\n// Map remaining rows directly into ClickHouse table schema\nreturn items.slice(1).map(item => {\n  const rowData = item.json.row;\n  \n  // Create key-value object from headers and row data\n  const rawData = {};\n  headers.forEach((header, index) => {\n    rawData[header] = rowData[index];\n  });\n\n  return {\n    json: {\n      symbol: String(rawData[\"CK\"] || \"\"),\n      open: (parseFloat(rawData[\"Mở cửa\"]) / 1000) || 0.0,\n      high: (parseFloat(rawData[\"Cao\"]) / 1000) || 0.0,\n      low: (parseFloat(rawData[\"Thấp\"]) / 1000)|| 0.0,\n      close: (parseFloat(rawData[\"Giá\"]) / 1000) || 0.0,\n      adj_close: (parseFloat(rawData[\"Giá\"]) / 1000) || 0.0,\n      volume: parseInt(rawData[\"Tổng KL\"], 10) || 0,\n      trading_value: (parseFloat(rawData[\"Tổng GT\"]) / 1000000) || 0.0,\n    }\n  };\n});"
       },
       "id": "070b2219-34a8-447e-8488-aeb158b65346",
       "name": "Format object",
@@ -114,7 +116,7 @@
           "string": [
             {
               "name": "trade_date",
-              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-17\"*/}}"
+              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-28\"*/}}"
             }
           ]
         },
@@ -156,11 +158,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Remove duplication": {
-      "main": [
-        []
       ]
     },
     "Insert Price data": {
@@ -252,7 +249,7 @@
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "9ae19948-5c8e-4109-ba37-d73e9b93383b",
+  "versionId": "4bec7822-0fc7-4274-9be4-ba52e2fe4c62",
   "id": "1",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

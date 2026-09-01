@@ -51,6 +51,8 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "mine-corporate-actions-ssi",
+        "responseMode": "lastNode",
+        "responseData": "noData",
         "options": {
           "binaryData": true
         }
@@ -177,13 +179,13 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "saveExecutionProgress": true,
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "683f8d42-902a-4640-a76f-3e3b600b6976",
+  "versionId": "76c82513-8e56-4063-89b8-b3306673fdc9",
   "id": "7",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

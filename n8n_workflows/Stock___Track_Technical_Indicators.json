@@ -2,27 +2,16 @@
   "name": "Stock___Track_Technical_Indicators",
   "nodes": [
     {
-      "parameters": {},
-      "id": "c1d23f20-1d79-49b5-855a-c71f33044e9d",
-      "name": "When clicking \"Execute Workflow\"",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -180,
-        220
-      ]
-    },
-    {
       "parameters": {
         "values": {
           "string": [
             {
               "name": "start_date",
-              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-05-01\"}}"
+              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-01\"*/}}"
             },
             {
               "name": "end_date",
-              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-05-31\"}}"
+              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-01\"*/}}"
             }
           ]
         },
@@ -363,21 +352,28 @@
         2000,
         380
       ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "track-technical-indicators",
+        "responseMode": "lastNode",
+        "responseData": "noData",
+        "options": {}
+      },
+      "id": "b689b97f-7246-4e44-a4e9-33d14f239901",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        220
+      ],
+      "webhookId": "b9ce9c2f-a690-4121-a6dc-76f8a885a7a9"
     }
   ],
   "pinData": {},
   "connections": {
-    "When clicking \"Execute Workflow\"": {
-      "main": [
-        [
-          {
-            "node": "Get all Stock symbols",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Get all Stock symbols": {
       "main": [
         [
@@ -590,15 +586,26 @@
           }
         ]
       ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get all Stock symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
-    "saveExecutionProgress": true,
-    "saveManualExecutions": true,
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "51219cba-0a78-4559-9edb-ceafd46e9231",
+  "versionId": "4f1d2828-88d5-4f2f-b32b-248424a30d4a",
   "id": "5",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

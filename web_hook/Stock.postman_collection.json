@@ -55,6 +55,30 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "Track Technical Indicators",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "file",
+          "file": {}
+        },
+        "url": {
+          "raw": "http://localhost:5678/webhook/track-technical-indicators",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5678",
+          "path": [
+            "webhook",
+            "track-technical-indicators"
+          ]
+        }
+      },
+      "response": []
     }
   ]
 }

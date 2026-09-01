@@ -95,7 +95,7 @@ else:
 if num_assets > 0:
     allocated_amount = np.round(weights * total_budget, 2)
     # Calculate whole shares (floor division) based on close_price
-    suggested_shares = np.where(prices > 0, np.floor(allocated_amount / prices), 0).astype(int)
+    suggested_shares = np.where(prices > 0, np.ceil(allocated_amount / prices), 0).astype(int)
 
     result_df = pd.DataFrame({
         'calculated_for_date': [latest_date] * num_assets,
