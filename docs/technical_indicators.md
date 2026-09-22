@@ -184,18 +184,4 @@ $$IQR_{20, t} = Q_{3, 20, t} - Q_{1, 20, t}$$
 
 > *Technical Constraint:* A minimum of **20 consecutive sessions** of historical closing prices is required to compute the first valid $IQR_{20}$ value.
 
-### Derived Metrics
-
-#### IQR Upper and Lower Outer Bounds (Outlier Detection)
-
-Identifies extreme price anomalies or sudden volatility shifts using the standard $1.5 \times IQR$ threshold:
-
-$$\text{Upper Bound}_{n, t} = Q_{3, n, t} + 1.5 \times IQR_{n, t}$$
-
-$$\text{Lower Bound}_{n, t} = Q_{1, n, t} - 1.5 \times IQR_{n, t}$$
-
-#### Outlier Anomaly Signal
-
-The quantitative outlier indicator $\text{OutlierSignal}_t \in \{-1, 0, 1\}$ at session $t$ is defined as:
-
-$$\text{OutlierSignal}_t = \begin{cases} 1 & \text{if } P_t > \text{Upper Bound}_{n, t} \quad (\text{Upper Price Outlier}) \\ -1 & \text{if } P_t < \text{Lower Bound}_{n, t} \quad (\text{Lower Price Outlier}) \\ 0 & \text{otherwise (Normal Range)} \end{cases}$$
+---

@@ -15,6 +15,9 @@ SELECT
     v.volume_upper_bound,
     v.volume_lower_bound,
     v.signal_volume_outlier,
+    v.pivot_point,
+    v.pivot_s1,
+    v.pivot_s2,
 
     -- Market Data from fact_market_data
     m.open,
