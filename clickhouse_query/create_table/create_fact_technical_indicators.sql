@@ -7,9 +7,11 @@ CREATE TABLE n8n_olap.fact_technical_indicators (
     rsi_7 Float32,
     rsi_14 Float32,
     rsi_21 Float32,
-    volume_iqr_p25 Float32,
-    volume_iqr_p75 Float32,
-    volume_rolling_iqr Float32,
+    --volume_iqr_p25 Float32,
+    --volume_iqr_p75 Float32,
+    --volume_rolling_iqr Float32,
+    signal_volume_outlier Float32,
+    days_since_volume_outlier Float32,
     updated_at DateTime
 )
 ENGINE = ReplacingMergeTree(updated_at)

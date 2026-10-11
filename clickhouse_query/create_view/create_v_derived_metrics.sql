@@ -25,16 +25,6 @@ WITH base_data AS (
 
         (sma_50 - sma_100) AS delta_sma_50_100,
         (lagInFrame(sma_50, 1) OVER w - lagInFrame(sma_100, 1) OVER w) AS delta_sma_50_100_lag_1,
-    
-        -- Volume and Volume IQR Metrics
-        p.volume AS volume,
-        volume_iqr_p25,
-        volume_iqr_p75,
-        volume_rolling_iqr,
-
-        -- Volume Bounds
-        (volume_iqr_p75 + 1.5 * volume_rolling_iqr) AS volume_upper_bound,
-        (volume_iqr_p25 - 1.5 * volume_rolling_iqr) AS volume_lower_bound
 
         -- Current Price Values for Pivot Point Calculations (Lag 0)
         p.high AS high_price,
@@ -75,17 +65,6 @@ SELECT
         WHEN (delta_sma_50_100 < 0 AND delta_sma_50_100_lag_1 >= 0) THEN -1
         ELSE 0
     END AS signal_crossover_sma_50_100,
-
-    -- Volume IQR Outer Bounds
-    volume_upper_bound,
-    volume_lower_bound,
-
-    -- Volume Outlier Signal
-    CASE
-        WHEN volume > volume_upper_bound THEN 1
-        WHEN volume < volume_lower_bound THEN -1
-        ELSE 0
-    END AS signal_volume_outlier,
 
     -- Pivot Point Metrics for Next Session (t+1) calculated from Current Session (t)
     (high_price + low_price + close_price) / 3.0 AS pivot_point_plus_1,

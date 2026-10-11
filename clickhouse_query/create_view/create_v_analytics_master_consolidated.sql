@@ -12,12 +12,9 @@ SELECT
     v.sma_100_slope_k5,
     v.signal_crossover_sma_20_50,
     v.signal_crossover_sma_50_100,
-    v.volume_upper_bound,
-    v.volume_lower_bound,
-    v.signal_volume_outlier,
-    v.pivot_point,
-    v.pivot_s1,
-    v.pivot_s2,
+    v.pivot_point_plus_1,
+    v.pivot_s1_plus_1,
+    v.pivot_s2_plus_1,
 
     -- Market Data from fact_market_data
     m.open,
@@ -35,9 +32,8 @@ SELECT
     t.rsi_7,
     t.rsi_14,
     t.rsi_21,
-    t.volume_iqr_p25,
-    t.volume_iqr_p75,
-    t.volume_rolling_iqr,
+    t.signal_volume_outlier,
+    t.days_since_volume_outlier,
 
     -- Portfolio Return Metrics from fact_portfolio_return_metrics
     p.log_return_t2,

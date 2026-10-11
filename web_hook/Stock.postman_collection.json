@@ -7,7 +7,7 @@
   },
   "item": [
     {
-      "name": "Mine Corporate Actions SSI",
+      "name": "Mine Corporate Actions SSI - xlsx",
       "request": {
         "method": "POST",
         "header": [],
@@ -33,23 +33,66 @@
       "response": []
     },
     {
-      "name": "Mine Market Data SSI",
+      "name": "Mine Corporate Actions SSI - json",
       "request": {
         "method": "POST",
         "header": [],
         "body": {
-          "mode": "file",
-          "file": {}
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            }
+          ]
         },
         "url": {
-          "raw": "http://localhost:5678/webhook-test/mine-market-data-ssi",
+          "raw": "http://localhost:5678/webhook/mine-corporate-actions-ssi-json",
           "protocol": "http",
           "host": [
             "localhost"
           ],
           "port": "5678",
           "path": [
-            "webhook-test",
+            "webhook",
+            "mine-corporate-actions-ssi-json"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Mine Market Data SSI",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "trade_date",
+              "value": "2026-10-01",
+              "type": "text",
+              "description": "YYYY-MM-dd",
+              "disabled": true
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5678/webhook/mine-market-data-ssi",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5678",
+          "path": [
+            "webhook",
             "mine-market-data-ssi"
           ]
         }
@@ -61,10 +104,6 @@
       "request": {
         "method": "POST",
         "header": [],
-        "body": {
-          "mode": "file",
-          "file": {}
-        },
         "url": {
           "raw": "http://localhost:5678/webhook/track-technical-indicators",
           "protocol": "http",
@@ -75,6 +114,20 @@
           "path": [
             "webhook",
             "track-technical-indicators"
+          ],
+          "query": [
+            {
+              "key": "start_date",
+              "value": "2026-10-01",
+              "description": "YYYY-MM-dd",
+              "disabled": true
+            },
+            {
+              "key": "end_date",
+              "value": "2026-10-01",
+              "description": "YYYY-MM-dd",
+              "disabled": true
+            }
           ]
         }
       },

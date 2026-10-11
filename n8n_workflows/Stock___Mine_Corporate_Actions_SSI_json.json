@@ -1,0 +1,191 @@
+{
+  "name": "Stock___Mine_Corporate_Actions_SSI_json",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
+      },
+      "id": "9c2a8052-17b4-46bf-88df-3b1a037832e2",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        360,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.fact_stock_prices FINAL",
+        "options": {}
+      },
+      "id": "1408e6b8-8b19-4394-b4b9-74e0c1ba9327",
+      "name": "Remove duplication",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        760,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT INTO n8n_olap.corporate_actions FORMAT JSONEachRow",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "546a95fe-5fda-4952-9628-f36ce42fa1b4",
+      "name": "Insert Price data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        560,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mine-corporate-actions-ssi-json",
+        "responseMode": "lastNode",
+        "responseData": "noData",
+        "options": {
+          "binaryData": false
+        }
+      },
+      "id": "175d306e-225e-4e38-9b73-0f40ebb65214",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        620
+      ],
+      "webhookId": "afc38c10-3f4a-4d19-bdfa-ade6d6603673"
+    },
+    {
+      "parameters": {
+        "jsCode": "function formatDate(dateStr) {\n  if (!dateStr || typeof dateStr !== 'string') return null;\n\n  const parts = dateStr.trim().split(/[\\/-]/);\n  if (parts.length === 3) {\n    const [day, month, year] = parts;\n    if (day.length === 2 && month.length === 2 && year.length === 4) {\n      return `${year}-${month}-${day}`;\n    }\n  }\n  return null;\n}\n\nconst items = $input.all();\nconst output = [];\n\nitems.forEach((item) => {\n  const data = item.json;\n  const symbol = data.stockSymbol || data.code;\n  const events = data.corporateEvents;\n\n  if (!symbol || !Array.isArray(events) || events.length === 0) {\n    return;\n  }\n\n  events.forEach((event) => {\n    output.push({\n      symbol: symbol,\n      event_type: event.eventListCode || null,\n      description: event.eventTitle || null,\n      ex_rights_date: formatDate(event.exrightDate),\n      record_date: formatDate(event.recordDate),\n      payment_date: formatDate(event.exerciseDate),\n    });\n  });\n});\n\nreturn output;"
+      },
+      "id": "0c3cd1c3-5959-4ef0-a90c-8ad8baacf175",
+      "name": "Format object",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        160,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract text content from binary file property\nconst binaryPropertyName = 'file'; // Change to match your binary property name\n\nif (!items[0].binary || !items[0].binary[binaryPropertyName]) {\n  throw new Error(`Binary property \"${binaryPropertyName}\" not found in input.`);\n}\n\n// Convert base64 data to string\nconst base64Data = items[0].binary[binaryPropertyName].data;\nconst jsonText = Buffer.from(base64Data, 'base64').toString('utf-8');\n\n// Parse string to JSON object\nconst parsedData = JSON.parse(jsonText);\n\nreturn {\n  json: parsedData\n};"
+      },
+      "id": "71013ba7-f4e7-4aa3-aeef-262ded5ce712",
+      "name": "Read File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawData = $input.first().json;\n\nlet stockList = [];\nif (rawData.data && Array.isArray(rawData.data)) {\n  stockList = rawData.data;\n} else if (Array.isArray(rawData) && rawData[0]?.data) {\n  stockList = rawData[0].data;\n}\n\nreturn stockList\n  .filter(item => Array.isArray(item.corporateEvents) && item.corporateEvents.length > 0)\n  .map(item => ({\n    json: {\n      stockSymbol: item.stockSymbol,\n      corporateEvents: item.corporateEvents\n    }\n  }));"
+      },
+      "id": "6d2b581c-c960-4be9-89db-f2947405e299",
+      "name": "Read Action",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        620
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Format": {
+      "main": [
+        [
+          {
+            "node": "Insert Price data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Price data": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format object": {
+      "main": [
+        [
+          {
+            "node": "Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read File": {
+      "main": [
+        [
+          {
+            "node": "Read Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Action": {
+      "main": [
+        [
+          {
+            "node": "Format object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "1b7235fd-2863-4fe1-a6b2-88a6abf59d6f",
+  "id": "8",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}

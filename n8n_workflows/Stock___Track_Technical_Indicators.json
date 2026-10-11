@@ -3,15 +3,16 @@
   "nodes": [
     {
       "parameters": {
+        "keepOnlySet": true,
         "values": {
           "string": [
             {
               "name": "start_date",
-              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-01\"*/}}"
+              "value": "={{$json.query?.start_date ?? $now.toFormat('yyyy-MM-dd')}}"
             },
             {
               "name": "end_date",
-              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-01\"*/}}"
+              "value": "={{$json.query?.end_date ?? $now.toFormat('yyyy-MM-dd')}}"
             }
           ]
         },
@@ -24,8 +25,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        620,
-        0
+        -280,
+        40
       ]
     },
     {
@@ -56,7 +57,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        20,
+        -280,
         220
       ]
     },
@@ -72,35 +73,35 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 2,
       "position": [
-        380,
-        220
+        300,
+        140
       ],
       "notesInFlow": true
     },
     {
       "parameters": {
-        "jsCode": "const stockArr = $input.first().json.data\nreturn stockArr;"
+        "jsCode": "const payload = $input.first().json;\n\nconst startDate = payload.start_date;\nconst endDate = payload.end_date;\nconst stockArr = payload.data || [];\n\nreturn stockArr.map(item => ({\n  json: {\n    stock_key: item.stock_key,\n    start_date: startDate,\n    end_date: endDate\n  }\n}));"
       },
       "id": "12b60973-45d8-4a5a-8a78-9ab7ebd6c9b7",
       "name": "Format stocks",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        200,
-        220
+        120,
+        140
       ]
     },
     {
       "parameters": {
-        "jsCode": "let stockArr = [];\nlet stockStr = \"\";\nfor (const item of $input.all()) {\n  stockArr.push(item.json[\"stock_key\"]);\n  stockStr = stockArr.map(x => \"'\" + x + \"'\").join(\",\");\n}\n\nreturn [{ \n  stock_keys: stockArr,\n  stock_keys_str: stockStr \n}];"
+        "jsCode": "let stockArr = [];\nlet stockStr = \"\";\nfor (const item of $input.all()) {\n  stockArr.push(item.json[\"stock_key\"]);\n  stockStr = stockArr.map(x => \"'\" + x + \"'\").join(\",\");\n}\n\nconst startDate = items[0].json.start_date;\nconst endDate = items[0].json.end_date;\n\nreturn [{ \n  start_date: startDate,\n  end_date: endDate,\n  stock_keys: stockArr,\n  stock_keys_str: stockStr \n}];"
       },
       "id": "d66e846d-8963-463f-a374-7e32574f2398",
       "name": "Combine Stock symbol",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        440,
-        0
+        480,
+        120
       ]
     },
     {
@@ -209,13 +210,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        620,
+        660,
         200
       ]
     },
     {
       "parameters": {
-        "jsCode": "function getPercentile(arr, percentile) {\n  if (arr.length === 0) return 0;\n  if (arr.length === 1) return arr[0];\n\n  const sorted = [...arr].sort((a, b) => a - b);\n  const index = (sorted.length - 1) * percentile;\n  const lower = Math.floor(index);\n  const upper = Math.ceil(index);\n  const weight = index - lower;\n\n  if (upper >= sorted.length) return sorted[sorted.length - 1];\n  return sorted[lower] * (1 - weight) + sorted[upper] * weight;\n}\n\nconst windowSize = 20;\n\n// Extract rows array from ClickHouse JSON wrapper ($input.first().json.data)\nconst inputData = $input.first()?.json?.data || [];\n\n// Group items by stock_key\nconst groupedData = {};\nfor (const item of inputData) {\n  const stock = item.stock_key;\n  if (!groupedData[stock]) {\n    groupedData[stock] = [];\n  }\n  groupedData[stock].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock group\nfor (const stock in groupedData) {\n  const stockItems = groupedData[stock].sort(\n    (a, b) => new Date(a.trade_date) - new Date(b.trade_date)\n  );\n\n  for (let i = 0; i < stockItems.length; i++) {\n    const currentItem = stockItems[i];\n\n    if (Number(currentItem.window_padding) === 0) {\n      const startIndex = Math.max(0, i - windowSize + 1);\n      const windowVolumes = stockItems\n        .slice(startIndex, i + 1)\n        .map((d) => parseFloat(d.volume) || 0);\n\n      const p25 = getPercentile(windowVolumes, 0.25);\n      const p75 = getPercentile(windowVolumes, 0.75);\n      const iqr = p75 - p25;\n\n      outputItems.push({\n        json: {\n          trade_date: currentItem.trade_date,\n          symbol: currentItem.stock_key,\n          volume_iqr_p25: Number(p25.toFixed(4)),\n          volume_iqr_p75: Number(p75.toFixed(4)),\n          volume_rolling_iqr: Number(iqr.toFixed(4))\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
+        "jsCode": "function getPercentile(arr, percentile) {\n  if (arr.length === 0) return 0;\n  if (arr.length === 1) return arr[0];\n\n  const sorted = [...arr].sort((a, b) => a - b);\n  const index = (sorted.length - 1) * percentile;\n  const lower = Math.floor(index);\n  const upper = Math.ceil(index);\n  const weight = index - lower;\n\n  if (upper >= sorted.length) return sorted[sorted.length - 1];\n  return sorted[lower] * (1 - weight) + sorted[upper] * weight;\n}\n\nconst windowSize = 20;\n\n// Extract rows array from ClickHouse JSON wrapper ($input.first().json.data)\nconst inputData = $input.first()?.json?.data || [];\n\n// Group items by stock_key\nconst groupedData = {};\nfor (const item of inputData) {\n  const stock = item.stock_key;\n  if (!groupedData[stock]) {\n    groupedData[stock] = [];\n  }\n  groupedData[stock].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock group\nfor (const stock in groupedData) {\n  const stockItems = groupedData[stock].sort(\n    (a, b) => new Date(a.trade_date) - new Date(b.trade_date)\n  );\n\n  let prevDaysSinceVolumeOutlier = stockItems[0].days_since_volume_outlier;\n\n  for (let i = 0; i < stockItems.length; i++) {\n    const currentItem = stockItems[i];\n\n    if (Number(currentItem.window_padding) === 0) {\n      const startIndex = Math.max(0, i - windowSize + 1);\n      const windowVolumes = stockItems\n        .slice(startIndex, i + 1)\n        .map((d) => parseFloat(d.volume) || 0);\n\n      const p25 = getPercentile(windowVolumes, 0.25);\n      const p75 = getPercentile(windowVolumes, 0.75);\n      const iqr = p75 - p25;\n      const upperBound = p75 + 1.5 * iqr;\n      const lowerBound = p25 - 1.5 * iqr;\n      const currentVolume = parseFloat(currentItem.volume) || 0;\n\n      let signalVolumeOutlier = 0;\n      if (currentVolume > upperBound) {\n        signalVolumeOutlier = 1;\n      } else if (currentVolume < lowerBound) {\n        signalVolumeOutlier = -1;\n      }\n\n      let daysSinceVolumeOutlier = prevDaysSinceVolumeOutlier\n      if (signalVolumeOutlier == 0) {\n        if (i != 0) daysSinceVolumeOutlier += 1;\n      } else {\n        daysSinceVolumeOutlier = 0;\n      }\n      prevDaysSinceVolumeOutlier = daysSinceVolumeOutlier;\n\n      outputItems.push({\n        json: {\n          trade_date: currentItem.trade_date,\n          symbol: currentItem.stock_key,\n          //volume_iqr_p25: Number(p25.toFixed(4)),\n          //volume_iqr_p75: Number(p75.toFixed(4)),\n          //volume_rolling_iqr: Number(iqr.toFixed(4)),\n          signal_volume_outlier: signalVolumeOutlier,\n          days_since_volume_outlier: daysSinceVolumeOutlier\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
       },
       "id": "746c5c2d-e196-43d7-a902-9af7aba2537b",
       "name": "Volume IQR Calculation",
@@ -250,19 +251,6 @@
       "position": [
         1420,
         -60
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "/**\n * Helper: Calculates the Arithmetic Mean\n */\nfunction getMean(arr) {\n  if (arr.length === 0) return 0;\n  const sum = arr.reduce((acc, val) => acc + val, 0);\n  return sum / arr.length;\n}\n\n/**\n * Helper: Calculates the Sample Standard Deviation\n */\nfunction getSampleStdDev(arr) {\n  if (arr.length <= 1) return 0;\n  const mean = getMean(arr);\n  const variance = arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (arr.length - 1);\n  return Math.sqrt(variance);\n}\n\nconst windowSize = 20;\n\n// Extract rows array from ClickHouse JSON response ($input.first().json.data)\nconst inputData = $input.first()?.json?.data || [];\n\n// Group items by stock symbol (stock_key)\nconst groupedData = {};\nfor (const item of inputData) {\n  const stock = item.stock_key;\n  if (!groupedData[stock]) {\n    groupedData[stock] = [];\n  }\n  groupedData[stock].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock series\nfor (const stock in groupedData) {\n  // Sort time series in ascending order\n  const stockItems = groupedData[stock].sort(\n    (a, b) => new Date(a.trade_date) - new Date(b.trade_date)\n  );\n\n  // STEP 1: Compute log_return_t2 for each trade session: log(close_t / close_{t-2})\n  const series = stockItems.map((item, index) => {\n    const closeCurr = parseFloat(item.close) || 0;\n    \n    let logReturnT2 = 0;\n    if (index >= 2) {\n      const closeLag2 = parseFloat(stockItems[index - 2].close) || 0;\n      if (closeLag2 > 0 && closeCurr > 0) {\n        logReturnT2 = Math.log(closeCurr / closeLag2);\n      }\n    }\n\n    return {\n      trade_date: item.trade_date,\n      symbol: item.stock_key,\n      close_price: closeCurr,\n      log_return_t2: logReturnT2,\n      window_padding: item.window_padding\n    };\n  });\n\n  // STEP 2: Compute metrics STRICTLY when window_padding === 0\n  for (let i = 0; i < series.length; i++) {\n    const curr = series[i];\n\n    // Evaluate ONLY when window_padding is strictly 0\n    if (Number(curr.window_padding) === 0) {\n      // 20-period rolling window slice (ROWS BETWEEN 19 PRECEDING AND CURRENT ROW)\n      const startIndex = Math.max(0, i - windowSize + 1);\n      const windowSlice = series.slice(startIndex, i + 1);\n      const windowReturns = windowSlice.map((d) => d.log_return_t2);\n\n      const expectedReturn = getMean(windowReturns);\n      const volatility = getSampleStdDev(windowReturns);\n\n      // Map output fields directly to n8n_olap.fact_portfolio_return_metrics schema\n      outputItems.push({\n        json: {\n          symbol: curr.symbol,\n          trade_date: curr.trade_date,\n          close_price: Number(curr.close_price.toFixed(4)),\n          log_return_t2: Number(curr.log_return_t2.toFixed(6)),\n          expected_return_t2_n20: Number(expectedReturn.toFixed(6)),\n          volatility_t2_n20: Number(volatility.toFixed(6))\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
-      },
-      "id": "e14e98cf-6504-4a1d-b05a-ded5a625db46",
-      "name": "Code",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 1,
-      "position": [
-        1040,
-        400
       ]
     },
     {
@@ -366,10 +354,38 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -200,
+        -480,
         220
       ],
       "webhookId": "b9ce9c2f-a690-4121-a6dc-76f8a885a7a9"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "6c11c0b4-af65-46e9-b944-0f4594e895b3",
+      "name": "Merge3",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -60,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Helper: Calculates the Arithmetic Mean\n */\nfunction getMean(arr) {\n  if (arr.length === 0) return 0;\n  const sum = arr.reduce((acc, val) => acc + val, 0);\n  return sum / arr.length;\n}\n\n/**\n * Helper: Calculates the Sample Standard Deviation\n */\nfunction getSampleStdDev(arr) {\n  if (arr.length <= 1) return 0;\n  const mean = getMean(arr);\n  const variance = arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (arr.length - 1);\n  return Math.sqrt(variance);\n}\n\nconst windowSize = 20;\n\n// Extract rows array from ClickHouse JSON response ($input.first().json.data)\nconst inputData = $input.first()?.json?.data || [];\n\n// Group items by stock symbol (stock_key)\nconst groupedData = {};\nfor (const item of inputData) {\n  const stock = item.stock_key;\n  if (!groupedData[stock]) {\n    groupedData[stock] = [];\n  }\n  groupedData[stock].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock series\nfor (const stock in groupedData) {\n  // Sort time series in ascending order\n  const stockItems = groupedData[stock].sort(\n    (a, b) => new Date(a.trade_date) - new Date(b.trade_date)\n  );\n\n  // STEP 1: Compute log_return_t2 for each trade session: log(close_t / close_{t-2})\n  const series = stockItems.map((item, index) => {\n    const closeCurr = parseFloat(item.close) || 0;\n    \n    let logReturnT2 = 0;\n    if (index >= 2) {\n      const closeLag2 = parseFloat(stockItems[index - 2].close) || 0;\n      if (closeLag2 > 0 && closeCurr > 0) {\n        logReturnT2 = Math.log(closeCurr / closeLag2);\n      }\n    }\n\n    return {\n      trade_date: item.trade_date,\n      symbol: item.stock_key,\n      close_price: closeCurr,\n      log_return_t2: logReturnT2,\n      window_padding: item.window_padding\n    };\n  });\n\n  // STEP 2: Compute metrics STRICTLY when window_padding === 0\n  for (let i = 0; i < series.length; i++) {\n    const curr = series[i];\n\n    // Evaluate ONLY when window_padding is strictly 0\n    if (Number(curr.window_padding) === 0) {\n      // 20-period rolling window slice (ROWS BETWEEN 19 PRECEDING AND CURRENT ROW)\n      const startIndex = Math.max(0, i - windowSize + 1);\n      const windowSlice = series.slice(startIndex, i + 1);\n      const windowReturns = windowSlice.map((d) => d.log_return_t2);\n\n      const expectedReturn = getMean(windowReturns);\n      const volatility = getSampleStdDev(windowReturns);\n\n      // Map output fields directly to n8n_olap.fact_portfolio_return_metrics schema\n      outputItems.push({\n        json: {\n          symbol: curr.symbol,\n          trade_date: curr.trade_date,\n          close_price: Number(curr.close_price.toFixed(4)),\n          log_return_t2: Number(curr.log_return_t2.toFixed(6)),\n          expected_return_t2_n20: Number(expectedReturn.toFixed(6)),\n          volatility_t2_n20: Number(volatility.toFixed(6))\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
+      },
+      "id": "e14e98cf-6504-4a1d-b05a-ded5a625db46",
+      "name": "Portfolio Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        400
+      ]
     }
   ],
   "pinData": {},
@@ -378,9 +394,9 @@
       "main": [
         [
           {
-            "node": "Format stocks",
+            "node": "Merge3",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -411,7 +427,7 @@
       "main": [
         [
           {
-            "node": "Set time range",
+            "node": "Set data start time",
             "type": "main",
             "index": 0
           }
@@ -422,7 +438,7 @@
       "main": [
         [
           {
-            "node": "Set data start time",
+            "node": "Merge3",
             "type": "main",
             "index": 0
           }
@@ -448,7 +464,7 @@
             "index": 0
           },
           {
-            "node": "Code",
+            "node": "Portfolio Calculation",
             "type": "main",
             "index": 0
           }
@@ -543,17 +559,6 @@
         ]
       ]
     },
-    "Code": {
-      "main": [
-        [
-          {
-            "node": "Combine Calculation1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Combine Calculation1": {
       "main": [
         [
@@ -591,7 +596,34 @@
       "main": [
         [
           {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          },
+          {
             "node": "Get all Stock symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Format stocks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portfolio Calculation": {
+      "main": [
+        [
+          {
+            "node": "Combine Calculation1",
             "type": "main",
             "index": 0
           }
@@ -605,7 +637,7 @@
     "saveManualExecutions": false,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "4f1d2828-88d5-4f2f-b32b-248424a30d4a",
+  "versionId": "21a2994d-5ef8-43f9-bd0e-00af8a545029",
   "id": "5",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

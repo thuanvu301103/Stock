@@ -69,6 +69,7 @@
     },
     {
       "parameters": {
+        "binaryPropertyName": "file",
         "options": {
           "headerRow": false,
           "rawData": false
@@ -116,19 +117,21 @@
           "string": [
             {
               "name": "trade_date",
-              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-28\"*/}}"
+              "value": "={{$json.body?.trade_date ? $json.body.trade_date : $now.toFormat('yyyy-MM-dd')}}"
             }
           ]
         },
-        "options": {}
+        "options": {
+          "dotNotation": false
+        }
       },
       "id": "bdf3a933-68e1-4e73-9773-3f41ba010104",
       "name": "Set trade_date",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        160,
-        440
+        -40,
+        460
       ]
     },
     {
@@ -175,12 +178,12 @@
       "main": [
         [
           {
-            "node": "Spreadsheet File",
+            "node": "Set trade_date",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Set trade_date",
+            "node": "Spreadsheet File",
             "type": "main",
             "index": 0
           }
@@ -245,11 +248,9 @@
   },
   "active": true,
   "settings": {
-    "saveExecutionProgress": true,
-    "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "4bec7822-0fc7-4274-9be4-ba52e2fe4c62",
+  "versionId": "ff485dbc-942d-4300-bf5e-e31c18942d8b",
   "id": "1",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

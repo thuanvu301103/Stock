@@ -1,5 +1,5 @@
 {
-  "name": "Stock___Mine_Corporate_Actions_SSI",
+  "name": "Stock___Mine_Corporate_Actions_SSI_xlsx",
   "nodes": [
     {
       "parameters": {
@@ -185,7 +185,7 @@
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "677738bd-5d9f-48dc-95b7-217dbd000bc9",
+  "versionId": "37ba857f-6b0d-4470-bdac-b4b4296643f5",
   "id": "7",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
