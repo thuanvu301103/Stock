@@ -63,7 +63,7 @@
     },
     {
       "parameters": {
-        "batchSize": 100,
+        "batchSize": 1,
         "options": {
           "reset": false
         }
@@ -124,7 +124,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/x-www-form-urlencoded",
-        "body": "=SELECT \n   *,\n   (trade_date < '{{$input.first().json.start_date}}') AS window_padding  \nFROM n8n_olap.v_pre_calculate_market_data\nWHERE has([{{$input.first().json.stock_keys_str}}], stock_key)\nAND trade_date BETWEEN '{{$input.first().json.data_start_date}}' AND '{{$input.first().json.end_date}}'\nFORMAT JSON",
+        "body": "=SELECT \n   *,\n   (trade_date < '{{$input.first().json.start_date}}') AS window_padding  \nFROM n8n_olap.v_pre_calculate_market_data\nWHERE has([{{$input.first().json.stock_keys_str}}], stock_key)\nAND trade_date BETWEEN '{{$input.first().json.data_start_date}}' AND '{{$input.first().json.end_date}}'\nAND is_trading_day != 0\nFORMAT JSON",
         "options": {}
       },
       "id": "2a2883a0-12fa-4924-8eeb-c7f550e33e1a",
@@ -635,9 +635,10 @@
   "settings": {
     "saveExecutionProgress": false,
     "saveManualExecutions": false,
-    "callerPolicy": "workflowsFromSameOwner"
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "none"
   },
-  "versionId": "21a2994d-5ef8-43f9-bd0e-00af8a545029",
+  "versionId": "4dd3e729-57d1-4800-be68-f4cef60c0704",
   "id": "5",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
