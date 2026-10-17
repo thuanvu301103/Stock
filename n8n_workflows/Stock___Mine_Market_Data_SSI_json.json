@@ -1,0 +1,233 @@
+{
+  "name": "Stock___Mine_Market_Data_SSI_json",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
+      },
+      "id": "2f90c908-a63a-4649-8a84-6f0ef0f51371",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        560,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.fact_stock_prices FINAL",
+        "options": {}
+      },
+      "id": "66810166-60db-4b35-be06-667f4a4f3302",
+      "name": "Remove duplication",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        960,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT INTO n8n_olap.fact_stock_prices FORMAT JSONEachRow",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "a829b42f-539e-4fce-ad3f-b7af263675f0",
+      "name": "Insert Price data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        760,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mine-market-data-ssi-json",
+        "responseMode": "lastNode",
+        "responseData": "noData",
+        "options": {
+          "binaryData": true
+        }
+      },
+      "id": "e3ab748d-e116-4eba-a5b5-13e61ce10c08",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        620
+      ],
+      "webhookId": "1c2bcef6-3883-4a39-8506-09116d96d265"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.first().json;\nconst items = inputData.data;\n\n// Validate that the data property contains an array\nif (!Array.isArray(items)) {\n    return [];\n}\n\n// Map rows directly into the ClickHouse table schema\nreturn items.map(item => {\n    return {\n        json: {\n            symbol: String(item.stockSymbol || \"\"),\n            open: (parseFloat(item.openPrice) / 1000) || 0.0,\n            high: (parseFloat(item.highest) / 1000) || 0.0,\n            low: (parseFloat(item.lowest) / 1000) || 0.0,\n            close: (parseFloat(item.matchedPrice) / 1000) || 0.0,\n            adj_close: (parseFloat(item.matchedPrice) / 1000) || 0.0,\n            volume: parseInt(item.nmTotalTradedQty, 10) || 0,\n            trading_value: (parseFloat(item.nmTotalTradedValue) / 1000000) || 0.0\n        }\n    };\n});"
+      },
+      "id": "db8fdab0-3384-44c1-ae63-078821dc7839",
+      "name": "Format object",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        160,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "trade_date",
+              "value": "={{$json.body?.trade_date ? $json.body.trade_date : $now.toFormat('yyyy-MM-dd')}}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "id": "ac9834e3-d038-4733-bd05-25f50a03e6f7",
+      "name": "Set trade_date",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "0978df93-1c16-442c-814f-0fa710432fbc",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        360,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract text content from binary file property\nconst binaryPropertyName = 'file'; // Change to match your binary property name\n\nif (!items[0].binary || !items[0].binary[binaryPropertyName]) {\n  throw new Error(`Binary property \"${binaryPropertyName}\" not found in input.`);\n}\n\n// Convert base64 data to string\nconst base64Data = items[0].binary[binaryPropertyName].data;\nconst jsonText = Buffer.from(base64Data, 'base64').toString('utf-8');\n\n// Parse string to JSON object\nconst parsedData = JSON.parse(jsonText);\n\nreturn {\n  json: parsedData\n};"
+      },
+      "id": "4fc718ff-3e16-409b-9c96-235f2c4dd619",
+      "name": "Read file",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        620
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Format": {
+      "main": [
+        [
+          {
+            "node": "Insert Price data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Price data": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set trade_date",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set trade_date": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format object": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read file": {
+      "main": [
+        [
+          {
+            "node": "Format object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false
+  },
+  "versionId": "e8121955-107e-4d6d-8ad9-b729bcdf92e5",
+  "id": "9",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}

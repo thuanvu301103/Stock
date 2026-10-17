@@ -1,5 +1,5 @@
 {
-  "name": "Stock___Mine_Market_Data_SSI",
+  "name": "Stock___Mine_Market_Data_SSI_csv",
   "nodes": [
     {
       "parameters": {
@@ -248,9 +248,11 @@
   },
   "active": true,
   "settings": {
-    "callerPolicy": "workflowsFromSameOwner"
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false
   },
-  "versionId": "ff485dbc-942d-4300-bf5e-e31c18942d8b",
+  "versionId": "e2dd248f-5cef-45bc-8baa-2223d60abed5",
   "id": "1",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

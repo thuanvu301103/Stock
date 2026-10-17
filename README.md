@@ -237,7 +237,12 @@ sys.stdin.reconfigure(encoding='utf-8')
 
 #### SSI as Data source
 1. Download market data *csv files from SSI
-2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI.json`
+2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_csv.json`
+
+or
+
+1. Open browser's console while being in SSI dashboard page, copy javascript code inside `scripts\ssi_data_puller.js` 
+2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_json.json` and `n8n_workflows\Stock___Mine_Corporate_Actions_SSI_json.json`
 
 - Primary Use Case: Daily real-time data extraction.
 - Technical Constraint: Restricted to current-day data only, requiring immediate daily processing for high throughput.
@@ -245,9 +250,6 @@ sys.stdin.reconfigure(encoding='utf-8')
 ### Visualize data
 1. Run PowerBI, then open file `power_bi_visual.pbix`
 2. At tab `Home` -> group `Queries` -> `Refresh`
-
-### Optimize Investment
-Here is the user guide for the **Optimize Investment** section written in concise English:
 
 ### Optimize Investment
 1. **Analyze and Select Assets (`SelectedSymbols`)**:
