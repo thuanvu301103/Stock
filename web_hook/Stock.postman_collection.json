@@ -167,6 +167,57 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "SSI full Workflow",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "trade_date",
+              "value": "2026-10-16",
+              "type": "text",
+              "description": "YYYY-MM-dd (for mining data & actions logging)",
+              "disabled": true
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5678/webhook/ssi-full-workflow",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5678",
+          "path": [
+            "webhook",
+            "ssi-full-workflow"
+          ],
+          "query": [
+            {
+              "key": "start_date",
+              "value": "2026-10-16",
+              "description": "YYYY-MM-dd (for technical calculation)",
+              "disabled": true
+            },
+            {
+              "key": "end_date",
+              "value": "2026-10-16",
+              "description": "YYYY-MM-dd (for technical calculation)",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
     }
   ]
 }

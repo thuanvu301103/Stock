@@ -1,0 +1,130 @@
+{
+  "name": "Stock___SSI_full_workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ssi-full-workflow",
+        "responseMode": "lastNode",
+        "responseData": "noData",
+        "options": {}
+      },
+      "id": "109d66fb-88ca-404b-95c4-2b821b3809ef",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        540,
+        420
+      ],
+      "webhookId": "b9ce9c2f-a690-4121-a6dc-76f8a885a7a9"
+    },
+    {
+      "parameters": {
+        "workflowId": "9"
+      },
+      "id": "442dbcdc-7f02-41de-ac74-eaf10c0a2bf1",
+      "name": "Execute Workflow - Mine Market Data",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        780,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "8"
+      },
+      "id": "51ef13ce-32d1-4a5c-bff2-4a6a1441509d",
+      "name": "Execute Workflow - Mine Corporate Actions",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        780,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "input2"
+      },
+      "id": "81e4b9a1-19a7-4371-9de7-bb3b16eb413b",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1020,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "5"
+      },
+      "id": "d2f4089a-850a-49ea-9ef8-cf15ef90efce",
+      "name": "Execute Workflow - Technical Indicators Calculation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        400
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - Mine Market Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute Workflow - Mine Corporate Actions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - Mine Market Data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - Technical Indicators Calculation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "0bb28504-db7c-4ed1-8a0b-40ba1af8a05a",
+  "id": "11",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}

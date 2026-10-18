@@ -386,6 +386,17 @@
         1040,
         400
       ]
+    },
+    {
+      "parameters": {},
+      "id": "3d1d9c78-9c28-4054-ab06-99dc0db07a39",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        40
+      ]
     }
   ],
   "pinData": {},
@@ -629,16 +640,32 @@
           }
         ]
       ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get all Stock symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "saveExecutionProgress": false,
-    "saveManualExecutions": false,
+    "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "saveDataSuccessExecution": "none"
+    "saveDataSuccessExecution": "all"
   },
-  "versionId": "8e3c80e9-c880-44fc-b919-f32c841fe86c",
+  "versionId": "3d58adc1-c9c8-4352-84a1-952e118eeb60",
   "id": "5",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

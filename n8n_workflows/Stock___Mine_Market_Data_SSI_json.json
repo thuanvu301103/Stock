@@ -131,6 +131,17 @@
         -40,
         620
       ]
+    },
+    {
+      "parameters": {},
+      "id": "fe84ced4-67ee-420d-a168-22a0c7e33c7b",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        460
+      ]
     }
   ],
   "pinData": {},
@@ -216,15 +227,30 @@
           }
         ]
       ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set trade_date",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "callerPolicy": "workflowsFromSameOwner",
-    "saveDataSuccessExecution": "none",
-    "saveManualExecutions": false
+    "saveManualExecutions": true
   },
-  "versionId": "e8121955-107e-4d6d-8ad9-b729bcdf92e5",
+  "versionId": "1bb314c0-bd55-4e66-a065-3daba195583a",
   "id": "9",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

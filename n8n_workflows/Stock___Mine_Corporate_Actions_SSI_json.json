@@ -105,6 +105,17 @@
         -40,
         620
       ]
+    },
+    {
+      "parameters": {},
+      "id": "6fd2e0e9-9e19-43a0-890d-61154d7d6d66",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        460
+      ]
     }
   ],
   "pinData": {},
@@ -174,15 +185,27 @@
           }
         ]
       ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "saveExecutionProgress": true,
     "saveManualExecutions": true,
-    "callerPolicy": "workflowsFromSameOwner"
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
   },
-  "versionId": "1b7235fd-2863-4fe1-a6b2-88a6abf59d6f",
+  "versionId": "7b82cc5c-bfa0-4659-82c4-fcdfd27f487c",
   "id": "8",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
