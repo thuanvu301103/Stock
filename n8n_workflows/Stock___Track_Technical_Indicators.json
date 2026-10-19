@@ -63,7 +63,7 @@
     },
     {
       "parameters": {
-        "batchSize": 100,
+        "batchSize": 200,
         "options": {
           "reset": false
         }
@@ -216,7 +216,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function getPercentile(arr, percentile) {\n  if (arr.length === 0) return 0;\n  if (arr.length === 1) return arr[0];\n\n  const sorted = [...arr].sort((a, b) => a - b);\n  const index = (sorted.length - 1) * percentile;\n  const lower = Math.floor(index);\n  const upper = Math.ceil(index);\n  const weight = index - lower;\n\n  if (upper >= sorted.length) return sorted[sorted.length - 1];\n  return sorted[lower] * (1 - weight) + sorted[upper] * weight;\n}\n\nconst windowSize = 20;\n\n// Extract rows array from ClickHouse JSON wrapper ($input.first().json.data)\nlet inputData = $input.first()?.json?.data || [];\n\nconst uniqueMap = new Map();\nfor (const item of inputData) {\n  const key = `${item.stock_key}_${item.trade_date}`;\n  if (!uniqueMap.has(key)) {\n    uniqueMap.set(key, item);\n  }\n}\nconst inputDataCleaned = Array.from(uniqueMap.values());\ninputData = inputDataCleaned;\n\n// Group items by stock_key\nconst groupedData = {};\nfor (const item of inputData) {\n  const stock = item.stock_key;\n  if (!groupedData[stock]) {\n    groupedData[stock] = [];\n  }\n  groupedData[stock].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock group\nfor (const stock in groupedData) {\n  const stockItems = groupedData[stock].sort(\n    (a, b) => new Date(a.trade_date) - new Date(b.trade_date)\n  );\n\n  let prevDaysSinceVolumeOutlier = stockItems[0].days_since_volume_outlier;\n\n  for (let i = 0; i < stockItems.length; i++) {\n    const currentItem = stockItems[i];\n\n    const startIndex = Math.max(0, i - windowSize + 1);\n    const windowVolumes = stockItems\n      .slice(startIndex, i + 1)\n      .map((d) => parseFloat(d.volume) || 0);\n\n    const p25 = getPercentile(windowVolumes, 0.25);\n    const p75 = getPercentile(windowVolumes, 0.75);\n    const iqr = p75 - p25;\n    const upperBound = p75 + 1.5 * iqr;\n    const lowerBound = p25 - 1.5 * iqr;\n    const currentVolume = parseFloat(currentItem.volume) || 0;\n\n    let signalVolumeOutlier = 0;\n    if (currentVolume > upperBound) {\n      signalVolumeOutlier = 1;\n    } else if (currentVolume < lowerBound) {\n      signalVolumeOutlier = -1;\n    }\n\n    let daysSinceVolumeOutlier = prevDaysSinceVolumeOutlier\n    if (signalVolumeOutlier == 0) {\n      if (i != 0) daysSinceVolumeOutlier += 1;\n    } else {\n      daysSinceVolumeOutlier = 0;\n    }\n    prevDaysSinceVolumeOutlier = daysSinceVolumeOutlier;\n\n    //if (Number(currentItem.window_padding) === 0) {\n      outputItems.push({\n        json: {\n          trade_date: currentItem.trade_date,\n          symbol: currentItem.stock_key,\n          //volume_iqr_p25: Number(p25.toFixed(4)),\n          //volume_iqr_p75: Number(p75.toFixed(4)),\n          //volume_rolling_iqr: Number(iqr.toFixed(4)),\n          signal_volume_outlier: signalVolumeOutlier,\n          days_since_volume_outlier: daysSinceVolumeOutlier\n        }\n      });\n    //}\n  }\n}\n\nreturn outputItems;"
+        "jsCode": "function getPercentile(arr, percentile) {\n  if (arr.length === 0) return 0;\n  if (arr.length === 1) return arr[0];\n\n  const sorted = [...arr].sort((a, b) => a - b);\n  const index = (sorted.length - 1) * percentile;\n  const lower = Math.floor(index);\n  const upper = Math.ceil(index);\n  const weight = index - lower;\n\n  if (upper >= sorted.length) return sorted[sorted.length - 1];\n  return sorted[lower] * (1 - weight) + sorted[upper] * weight;\n}\n\nconst windowSize = 20;\n\n// Extract rows array from ClickHouse JSON wrapper ($input.first().json.data)\nlet inputData = $input.first()?.json?.data || [];\n\nconst uniqueMap = new Map();\nfor (const item of inputData) {\n  const key = `${item.stock_key}_${item.trade_date}`;\n  if (!uniqueMap.has(key)) {\n    uniqueMap.set(key, item);\n  }\n}\nconst inputDataCleaned = Array.from(uniqueMap.values());\ninputData = inputDataCleaned;\n\n// Group items by stock_key\nconst groupedData = {};\nfor (const item of inputData) {\n  const stock = item.stock_key;\n  if (!groupedData[stock]) {\n    groupedData[stock] = [];\n  }\n  groupedData[stock].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock group\nfor (const stock in groupedData) {\n  const stockItems = groupedData[stock].sort(\n    (a, b) => new Date(a.trade_date) - new Date(b.trade_date)\n  );\n\n  let prevDaysSinceVolumeOutlier = stockItems[0].days_since_volume_outlier;\n\n  for (let i = 0; i < stockItems.length; i++) {\n    const currentItem = stockItems[i];\n\n    const startIndex = Math.max(0, i - windowSize + 1);\n    const windowVolumes = stockItems\n      .slice(startIndex, i + 1)\n      .map((d) => parseFloat(d.volume) || 0);\n\n    const p25 = getPercentile(windowVolumes, 0.25);\n    const p75 = getPercentile(windowVolumes, 0.75);\n    const iqr = p75 - p25;\n    const upperBound = p75 + 1.5 * iqr;\n    const lowerBound = p25 - 1.5 * iqr;\n    const currentVolume = parseFloat(currentItem.volume) || 0;\n\n    let signalVolumeOutlier = 0;\n    if (currentVolume > upperBound) {\n      signalVolumeOutlier = 1;\n    } else if (currentVolume < lowerBound) {\n      signalVolumeOutlier = -1;\n    }\n\n    let daysSinceVolumeOutlier = prevDaysSinceVolumeOutlier\n    if (signalVolumeOutlier == 0) {\n      if (i != 0) daysSinceVolumeOutlier += 1;\n    } else {\n      daysSinceVolumeOutlier = 0;\n    }\n    prevDaysSinceVolumeOutlier = daysSinceVolumeOutlier;\n\n    if (Number(currentItem.window_padding) === 0) {\n      outputItems.push({\n        json: {\n          trade_date: currentItem.trade_date,\n          symbol: currentItem.stock_key,\n          //volume_iqr_p25: Number(p25.toFixed(4)),\n          //volume_iqr_p75: Number(p75.toFixed(4)),\n          //volume_rolling_iqr: Number(iqr.toFixed(4)),\n          signal_volume_outlier: signalVolumeOutlier,\n          days_since_volume_outlier: daysSinceVolumeOutlier\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
       },
       "id": "746c5c2d-e196-43d7-a902-9af7aba2537b",
       "name": "Volume IQR Calculation",
@@ -397,6 +397,19 @@
         -480,
         40
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {};"
+      },
+      "id": "b295ef63-be08-4eac-8ed2-6bf924b03aa2",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        480,
+        340
+      ]
     }
   ],
   "pinData": {},
@@ -428,6 +441,13 @@
         [
           {
             "node": "Combine Stock symbol",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
             "type": "main",
             "index": 0
           }
@@ -665,7 +685,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "saveDataSuccessExecution": "all"
   },
-  "versionId": "3d58adc1-c9c8-4352-84a1-952e118eeb60",
+  "versionId": "5d092628-2388-46b0-a3e9-003e43e87ea9",
   "id": "5",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

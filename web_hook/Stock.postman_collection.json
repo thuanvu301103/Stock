@@ -179,6 +179,7 @@
             {
               "key": "file",
               "type": "file",
+              "description": "Omit for default analyser only",
               "src": []
             },
             {

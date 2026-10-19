@@ -6,7 +6,6 @@
         "httpMethod": "POST",
         "path": "ssi-full-workflow",
         "responseMode": "lastNode",
-        "responseData": "noData",
         "options": {}
       },
       "id": "109d66fb-88ca-404b-95c4-2b821b3809ef",
@@ -14,7 +13,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        540,
+        320,
         420
       ],
       "webhookId": "b9ce9c2f-a690-4121-a6dc-76f8a885a7a9"
@@ -28,8 +27,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        780,
-        280
+        740,
+        260
       ]
     },
     {
@@ -41,8 +40,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        780,
-        520
+        740,
+        60
       ]
     },
     {
@@ -55,8 +54,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2.1,
       "position": [
-        1020,
-        400
+        960,
+        380
       ]
     },
     {
@@ -68,8 +67,97 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        1220,
-        400
+        1140,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT \n    symbol as stock_key,\n    trade_date as date_key,\n    sma_20_slope_k1,\n    sma_20_slope_k5,\n    sma_50_slope_k1,\n    sma_50_slope_k5,\n    signal_crossover_sma_20_50,\n    signal_crossover_sma_50_100,\n    expected_return_t2_n20,\n    volatility_t2_n20,\n    rsi_7,\n    rsi_14,\n    signal_volume_outlier,\n    days_since_volume_outlier\nFROM n8n_olap.v_analytics_master_consolidated\nWHERE date_key = '{{ $json.trade_date }}' \n    AND signal_crossover_sma_50_100 >= 0\n    AND rsi_14 BETWEEN 30 AND 70\n    AND volume >= 50000\n    AND sma_50_slope_k1 >= 0\n    AND sma_20_slope_k1 >= 0\n    AND sma_20_slope_k5 >= 0\n    AND sma_50_slope_k5 >= 0\n    AND volatility_t2_n20 BETWEEN 0.01 AND 0.05\n    AND expected_return_t2_n20 BETWEEN 0.002 AND 0.055\n    AND rsi_7 BETWEEN 40 AND 85\n    AND signal_crossover_sma_20_50 >= 0\n    AND signal_volume_outlier = 0\n    AND close >= 15\n    AND days_since_volume_outlier >= 4\nORDER BY \n    expected_return_t2_n20 DESC,\n    stock_key ASC,\n    date_key ASC,\n    sma_20_slope_k1 ASC,\n    sma_20_slope_k5 ASC,\n    sma_50_slope_k1 ASC,\n    sma_50_slope_k5 ASC,\n    signal_crossover_sma_20_50 ASC,\n    signal_crossover_sma_50_100 ASC,\n    volatility_t2_n20 ASC,\n    rsi_7 ASC,\n    rsi_14 ASC,\n    signal_volume_outlier ASC,\n    days_since_volume_outlier ASC\nLIMIT 501 FORMAT JSON;",
+        "options": {}
+      },
+      "id": "b7442ddf-85e9-49c6-a7a3-36180da4481d",
+      "name": "Default analyser",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1140,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "trade_date",
+              "value": "={{$json.body?.trade_date ? $json.body.trade_date : $now.toFormat('yyyy-MM-dd')}}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "id": "7ec47b04-0247-45d2-8e6a-8835ce5e2eeb",
+      "name": "Set trade_date",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        980,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $binary.file !== undefined }}",
+              "value2": "={{ true }}"
+            }
+          ]
+        }
+      },
+      "id": "f08a2e55-c0d0-450d-8ca1-d3e76a0ee102",
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        520,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.data;\nconst uniqueStockKeys = [...new Set(items.map(item => item.stock_key))];\nconst resultString = uniqueStockKeys.join(',');\n\nreturn [\n  {\n    json: {\n      stock_keys_string: resultString\n    }\n  }\n];"
+      },
+      "id": "b87494c4-ec4a-474e-b9d0-ce33558e75e4",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        580
       ]
     }
   ],
@@ -79,19 +167,9 @@
       "main": [
         [
           {
-            "node": "Execute Workflow - Mine Market Data",
+            "node": "IF",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Execute Workflow - Mine Corporate Actions",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
           }
         ]
       ]
@@ -117,11 +195,72 @@
           }
         ]
       ]
+    },
+    "Execute Workflow - Technical Indicators Calculation": {
+      "main": [
+        [
+          {
+            "node": "Set trade_date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set trade_date": {
+      "main": [
+        [
+          {
+            "node": "Default analyser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - Mine Market Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute Workflow - Mine Corporate Actions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Set trade_date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default analyser": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {},
-  "versionId": "0bb28504-db7c-4ed1-8a0b-40ba1af8a05a",
+  "versionId": "68613c93-85fa-48a6-a2af-9a2006cb3d4f",
   "id": "11",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
