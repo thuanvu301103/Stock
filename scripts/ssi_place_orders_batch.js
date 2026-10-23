@@ -2,10 +2,16 @@
 const PRICE_MULTIPLIER = 1000;
 const ACCOUNT_ID = "GXXXXX1";
 const ENDPOINT_URL = "https://iboard-tapi.ssi.com.vn/trading/order";
-const REQUEST_DELAY_MS = 5000; // Delay in milliseconds between consecutive orders to prevent rate limiting
+const REQUEST_DELAY_MS = 10000; // Delay in milliseconds between consecutive orders to prevent rate limiting
 
 // Utility function to introduce a controlled delay
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Function to properly extract the device ID from document cookies
+function getDeviceId() {
+    const match = document.cookie.match(/(?:^|;)\s*deviceId=([^;]*)/);
+    return match ? decodeURIComponent(match[1]) : "1F559EEA-9058-4CB6-A9A6-417D891DB7C0";
+}
 
 // Function to properly create, mount, and trigger the native file dialog
 function loadCsvFile() {
@@ -82,11 +88,6 @@ function parseCsvToOrders(csvText) {
     return orders;
 }
 
-function getDeviceId() {
-    const match = document.cookie.match("deviceId");
-    return match ? match[2] : "";
-}
-
 // Function to process and send stock orders sequentially with a delay between requests
 async function processOrderBatch(orderList) {
     const authToken = localStorage.getItem("token") || sessionStorage.getItem("token") || "";
@@ -95,11 +96,14 @@ async function processOrderBatch(orderList) {
     const headers = {
         "Content-Type": "application/json",
         "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "vi",
         "Authorization": `Bearer ${authToken}`,
         "X-Temp-Token": `Bearer ${tempToken}`,
-        "Device-Id": getDeviceId(),
-        "X-Device-Name": "Microsoft Edge",
-        "X-Os-Name": "Windows"
+        "device-id": getDeviceId(),
+        "Origin": "https://iboard.ssi.com.vn",
+        "Referer": "https://iboard.ssi.com.vn/",
+        "x-device-name": "Microsoft Edge",
+        "x-os-name": "Windows"
     };
 
     const successfulOrders = [];
