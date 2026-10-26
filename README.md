@@ -176,10 +176,12 @@ sys.stdin.reconfigure(encoding='utf-8')
 
 ## Connect to Clickhouse
 
-**Step 1: Install the Clickhouse ODBC Driver**
-1. Go to the ClickHouse ODBC Github Releases.
-2. Download the 64-bit MSI installer (e.g., clickhouse-odbc-1.1.10-win64.msi).
-3. Install it on the Windows machine where Power BI Desktop is located.
+**Step 1: Config the Clickhouse Connection**
+- ODBC Driver (outdated):
+    1. Go to the ClickHouse ODBC Github Releases.
+    2. Download the 64-bit MSI installer (e.g., clickhouse-odbc-1.1.10-win64.msi).
+    3. Install it on the Windows machine where Power BI Desktop is located.
+- Clickhouse Driver (currently used)
 
 **Step 2: Configure the Windows DSN** - This step tells Windows exactly where your ClickHouse server lives.
 1. Open ODBC Data Source Administrator (64-bit) on your PC.
@@ -194,12 +196,20 @@ sys.stdin.reconfigure(encoding='utf-8')
 5. Click *Test* to ensure it says "Success."
 
 **Step 3: Connect Power BI to the DSN** - Now, open Power BI Desktop to pull the data.
-1. Click *Get Data* > *More...* > Search for ODBC.
-2. In the Data source name (DSN) dropdown, select `ClickHouse_Stock`.
-3. Storage Mode (Critical Decision):
-    - Import: Use this for `dim_stock` and `dim_date`. It loads the data into RAM for lightning-fast filtering.
-    - DirectQuery: Use this for your `v_indicators_base` View. Power BI will send the SQL queries directly to ClickHouse so your PC doesn't have to calculate the SMA/RSI math.
-5. Select your tables and click Load.
+- Using ODBC Driver: (ODBC Driver does not provide enough metadata information => can not use **Direct Query** option)
+    1. Click *Get Data* > *More...* > Search for ODBC.
+    2. In the Data source name (DSN) dropdown, select `ClickHouse_Stock`.
+    3. Storage Mode (Critical Decision):
+        - Import: Use this for `dim_stock` and `dim_date`. It loads the data into RAM for lightning-fast filtering.
+        - DirectQuery: Use this for your `v_indicators_base` View. Power BI will send the SQL queries directly to ClickHouse so your PC doesn't have to calculate the SMA/RSI math.
+    5. Select your tables and click Load.
+- Using Clickhouse Driver (currently used):
+    1. Click *Get Data* > *More...* > Search for ODBC.
+    2. In the Data source name (DSN) dropdown, select `ClickHouse`.
+    3. Storage Mode (Critical Decision):
+        - Import: Use this for `dim_stock` and `dim_date`. It loads the data into RAM for lightning-fast filtering.
+        - DirectQuery: Use this for your `v_indicators_base` View. Power BI will send the SQL queries directly to ClickHouse so your PC doesn't have to calculate the SMA/RSI math.
+    5. Select your tables and click Load.
 
 ### Other configuration
 
