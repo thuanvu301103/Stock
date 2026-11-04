@@ -1,5 +1,5 @@
 # Stock
-This project provides a robust Python-based integration for the vnstock library within n8n. It is designed to automate the retrieval of Vietnamese stock market data while maintaining compatibility between local development environments (VS Code) and production environments (n8n/Docker)
+This project automates Vietnamese stock-market data ingestion and analytics with n8n, Python, and ClickHouse. Docker Compose runs the workflow engine and its supporting services; Power BI Desktop connects to ClickHouse for analysis and visualization.
 
 ## Deployment (Docker)
 To spin up n8n with the pre-configured Python environment:
@@ -10,64 +10,63 @@ docker compose up -d
 
 ## Architecture
 ```mermaid
-graph TD
-    %% External Sources
-    subgraph External_Sources [Data Sources]
-        VNS[vnstock Library / Market APIs]
+flowchart LR
+    subgraph Sources["Data sources"]
+        VN["vnstock / market data providers"]
+        SSI["SSI exports or dashboard data"]
     end
 
-    %% Ingestion Layer
-    subgraph Ingestion_Layer [Ingestion & Orchestration - n8n/Docker]
-        direction TB
-        N8N[n8n Workflow Engine]
-        
-        subgraph Python_Node [Python Processing Node]
-            VENV[.venv Environment]
-            CLEANER[SuppressOutput Context Manager]
-            VNS_CORE[vnstock Logic]
-            
-            CLEANER --> VNS_CORE
-        end
+    subgraph Compose["Docker Compose"]
+        N8N["n8n<br/>workflows and Python nodes"]
+        PG[("PostgreSQL<br/>n8n application data")]
+        REDIS[("Redis<br/>queue support")]
+        CH[("ClickHouse<br/>n8n_olap")]
 
-        N8N -->|Trigger/Schedule| Python_Node
-        Python_Node -->|Clean JSON Data| N8N
+        N8N -->|"workflow state"| PG
+        N8N -.->|"queue configuration"| REDIS
+        N8N -->|"HTTP queries and inserts"| CH
     end
 
-    %% Storage & Analytics
-    subgraph Storage_Layer [OLAP & Analytics - ClickHouse]
-        direction TB
-        CH_DB[(ClickHouse Engine)]
-        
-        subgraph Tables [Schema Design]
-            DIM[Dimension Tables: dim_date, dim_stock]
-            FACT[Fact Tables: fact_prices, fact_sentiment]
-            VIEWS[Analytics Layer: v_advanced_indicators]
-            
-            DIM -.->|Join| VIEWS
-            FACT -.->|Transform/Window| VIEWS
-        end
-        
-        CH_DB --- Tables
+    subgraph Analytics["ClickHouse data model"]
+        TABLES["Dimensions and facts<br/>dim_date, dim_stock,<br/>fact_market_data, sentiment,<br/>technical indicators, corporate actions"]
+        VIEWS["Views<br/>pre-calculation, derived metrics,<br/>analytics master, indicators"]
+        TABLES --> VIEWS
     end
 
-    %% Visualization
-    subgraph BI_Layer [Visualization & Reporting]
-        PBI_GW[Power BI Gateway]
-        PBI_DASH[Power BI Dashboard]
+    subgraph Consumers["Analysis"]
+        PBI["Power BI Desktop<br/>ClickHouse ODBC"]
+        REPORT["Power BI reports"]
+        PBI --> REPORT
     end
 
-    %% Data Flow Connections
-    VNS_CORE -.->|Extract| VNS
-    N8N -->|Batch Insert/SQL| CH_DB
-    CH_DB -.->|DirectQuery / ODBC| PBI_GW
-    PBI_GW --> PBI_DASH
+    VN -->|"Vnstock workflows"| N8N
+    SSI -->|"SSI ingestion workflows"| N8N
+    CH --- TABLES
+    VIEWS -->|"ODBC / SQL"| PBI
 
-    %% Styling
-    style N8N fill:#ff6d5a,stroke:#333,stroke-width:2px,color:#fff
-    style CH_DB fill:#000,stroke:#f00,stroke-width:2px,color:#fff
-    style PBI_DASH fill:#f2c811,stroke:#333,stroke-width:2px,color:#000
-    style Python_Node fill:#3776ab,stroke:#fff,stroke-width:1px,color:#fff
+    classDef engine fill:#ff6d5a,stroke:#333,color:#fff
+    classDef database fill:#000,stroke:#f00,color:#fff
+    classDef report fill:#f2c811,stroke:#333,color:#000
+    class N8N engine
+    class CH,PG,REDIS database
+    class REPORT report
 ```
+
+### Component responsibilities
+
+- **n8n** orchestrates ingestion, seed, technical-indicator, and maintenance workflows. The workflows are versioned in `n8n_workflows/`.
+- **Python** runs in n8n's Python nodes for Vnstock-backed collection and processing; the custom image is based on `naskio/n8n-python` and installs dependencies from `requirements.txt`. It is not a separate Compose service.
+- **PostgreSQL** stores n8n application data. **Redis** is configured for n8n queue support.
+- **ClickHouse** is the analytical store. n8n sends queries and inserts to its HTTP endpoint on the Compose network; table and view DDL is maintained under `clickhouse_query/`.
+- **Power BI Desktop** connects from the host through the ClickHouse ODBC driver. No Power BI Gateway service is defined in this Compose project.
+- Compose persists PostgreSQL, Redis, and ClickHouse data in named volumes. The n8n state, local files, and optional Python scripts are mounted from `n8n_data/`, `local_files/`, and `python_scripts/`.
+
+### Data flow
+
+1. Scheduled or manually triggered n8n workflows collect data from Vnstock, SSI exports, or SSI dashboard payloads.
+2. Workflow nodes normalize and de-duplicate records, then write them to ClickHouse over HTTP. Seed and maintenance workflows also update or purge data there.
+3. ClickHouse views provide pre-calculated and derived data for technical analysis and reporting.
+4. Power BI Desktop reads ClickHouse through ODBC to refresh reports and visualizations.
 
 ## Clickhouse Setup
 
@@ -78,18 +77,21 @@ graph TD
 2. **dim_stock (Stock Profile)**: Stores company metadata. Use ReplacingMergeTree so that when n8n rescans the market, it updates existing records with the latest info.
 
 #### Fact Tables
-1. **fact_stock_prices (Market Price & Volume)**: The central repository for Daily OHLCV (Open, High, Low, Close, Volume) data. Physically sorted by symbol and trade_date to make calculating SMA, EMA, and CMF lightning-fast.
+1. **fact_market_data (Market Price & Volume)**: The central repository for Daily OHLCV (Open, High, Low, Close, Volume) data. Physically sorted by symbol and trade_date to make calculating SMA, EMA, and CMF lightning-fast.
 2. **fact_market_sentiment (Capital Flow)**: Tracks institutional and foreign movement to gauge market sentiment.
+3. **fact_technical_indicators (Technical Indicators)**: Stores pre-calculated technical indicator values derived from historical price and volume data across standard timeframes.
+4. **corporate_actions** and **fact_portfolio_return_metrics**: Store corporate-action records and portfolio-return metrics.
 
-#### Analytics Layer (Automated Calculations)
-1. **v_advanced_indicators**: An abstraction layer that standardizes complex technical analysis. This view automates the calculation of rolling metrics such as Simple Moving Averages (SMA), Chaikin Money Flow (CMF)... By encapsulating intricate Window Functions, it provides a "plug-and-play" interface for BI tools and reports, ensuring consistent indicator logic across the entire ecosystem without the need for repetitive, manual computations.
+#### Pre-calculated and Analytics Views
+1. **v_pre_calculate_market_data**: Provides pre-calculated price and volume values used by downstream calculations.
+2. **v_derived_metrics**, **v_analytics_master_consolidated**, **v_indicators_base**, and **v_indicators_nor**: Provide derived metrics and analytical views for indicators and reporting.
 
 ### Create Tables
-- Run all the scripts inside folder `clickhouse_query\create_table` and `clickhouse_query\create_analytics_layer`
-- Create tables in order: dim tables, fact tables, analytics layer.
+- Run the scripts inside `clickhouse_query/create_table`, `clickhouse_query/create_view`, and `clickhouse_query/create_analytics_layer` in dependency order.
+- Add new columns to the schema using the migration script `clickhouse_query/utils/add_new_column.sql`.
 
 ### Import seed data
-- Import seed data for `dim_table` using `clickhouse_seed_data\stock_seed_data.csv`
+- Import seed data for `dim_stock` using `clickhouse_seed_data/stock_seed_data.csv`.
 
 ## n8n Setup 
 
@@ -111,11 +113,11 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-#### Create test script
-Copy Node Script code inside `my_n8n_logic` function
+#### Test a Python node locally
+Copy the Python node logic into a local script and replace n8n input references with representative test data. `test_bench.py` is a standalone example with sample items; it does not import code from an n8n workflow.
 
 #### Run test
-The `test_bench.py` script imports the logic from your main script and outputs the result in a clean JSON format:
+Run the local script (or the sample bench) to inspect its JSON output:
 ```Bash
 python test_bench.py
 ```
@@ -171,10 +173,12 @@ sys.stdin.reconfigure(encoding='utf-8')
 
 ## Connect to Clickhouse
 
-**Step 1: Install the Clickhouse ODBC Driver**
-1. Go to the ClickHouse ODBC Github Releases.
-2. Download the 64-bit MSI installer (e.g., clickhouse-odbc-1.1.10-win64.msi).
-3. Install it on the Windows machine where Power BI Desktop is located.
+**Step 1: Config the Clickhouse Connection**
+- ODBC Driver (outdated):
+    1. Go to the ClickHouse ODBC Github Releases.
+    2. Download the 64-bit MSI installer (e.g., clickhouse-odbc-1.1.10-win64.msi).
+    3. Install it on the Windows machine where Power BI Desktop is located.
+- Clickhouse Driver (currently used)
 
 **Step 2: Configure the Windows DSN** - This step tells Windows exactly where your ClickHouse server lives.
 1. Open ODBC Data Source Administrator (64-bit) on your PC.
@@ -189,12 +193,20 @@ sys.stdin.reconfigure(encoding='utf-8')
 5. Click *Test* to ensure it says "Success."
 
 **Step 3: Connect Power BI to the DSN** - Now, open Power BI Desktop to pull the data.
-1. Click *Get Data* > *More...* > Search for ODBC.
-2. In the Data source name (DSN) dropdown, select `ClickHouse_Stock`.
-3. Storage Mode (Critical Decision):
-    - Import: Use this for `dim_stock` and `dim_date`. It loads the data into RAM for lightning-fast filtering.
-    - DirectQuery: Use this for your `v_indicators_base` View. Power BI will send the SQL queries directly to ClickHouse so your PC doesn't have to calculate the SMA/RSI math.
-5. Select your tables and click Load.
+- Using ODBC Driver: (ODBC Driver does not provide enough metadata information => can not use **Direct Query** option)
+    1. Click *Get Data* > *More...* > Search for ODBC.
+    2. In the Data source name (DSN) dropdown, select `ClickHouse_Stock`.
+    3. Storage Mode (Critical Decision):
+        - Import: Use this for `dim_stock` and `dim_date`. It loads the data into RAM for lightning-fast filtering.
+        - DirectQuery: Use this for your `v_indicators_base` View. Power BI will send the SQL queries directly to ClickHouse so your PC doesn't have to calculate the SMA/RSI math.
+    5. Select your tables and click Load.
+- Using Clickhouse Driver (currently used):
+    1. Click *Get Data* > *More...* > Search for ODBC.
+    2. In the Data source name (DSN) dropdown, select `ClickHouse`.
+    3. Storage Mode (Critical Decision):
+        - Import: Use this for `dim_stock` and `dim_date`. It loads the data into RAM for lightning-fast filtering.
+        - DirectQuery: Use this for your `v_indicators_base` View. Power BI will send the SQL queries directly to ClickHouse so your PC doesn't have to calculate the SMA/RSI math.
+    5. Select your tables and click Load.
 
 ### Other configuration
 
@@ -222,12 +234,42 @@ sys.stdin.reconfigure(encoding='utf-8')
 3. **fact_stock_prices**: Run n8n workflwo `n8n_workflows\Stock__Seed_Price_Data.json`
 
 ### Mine Stock data
-1. Run workflow in n8n: `n8n_workflows\Stock__Mine_Price_Data.json`
+
+#### Vnstock as Data source 
+1. Run workflow in n8n: `n8n_workflows\Stock__Mine_Market_Data_Vnstock.json`
 2. If there is error, re-run the workflow with option `Retry with curently saved workflow (from node with error)`
 
+- Primary Use Case: Historical data backfilling and backup source.
+- Technical Constraint: Rate-limited to 60 requests per minute.
+
+#### SSI as Data source
+1. Download market data *csv files from SSI
+2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_csv.json`
+
+or
+
+1. Open browser's console while being in SSI dashboard page, copy javascript code inside `scripts\ssi_data_puller.js` 
+2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_json.json` and `n8n_workflows\Stock___Mine_Corporate_Actions_SSI_json.json`
+
+- Primary Use Case: Daily real-time data extraction.
+- Technical Constraint: Restricted to current-day data only, requiring immediate daily processing for high throughput.
+
 ### Visualize data
-1. Run PowerBI, then open file `power_bi_visual.pbix`
+1. Open one of the Power BI reports in `power_bi_visual/`.
 2. At tab `Home` -> group `Queries` -> `Refresh`
+
+### Optimize Investment
+1. **Analyze and Select Assets (`SelectedSymbols`)**:
+Review technical and financial analysis to select a target pool of potential stocks. Enter the chosen tickers into the `SelectedSymbols` parameter, separated by commas (e.g., `HPG, FPT, SSI`).
+2. **Configure Input Parameters**:
+* **`SelectedTradeDate`**: Set the base trading date to retrieve historical data and expected metrics.
+* **`TotalInvestment`**: Input the total capital budget planned for execution (e.g., `100000000`).
+3. **Execute the Script**:
+Open Power Query Editor, select the query, and click **Refresh Preview** (or **Apply & Close**) to trigger the Python Sharpe ratio optimization model.
+4. **Interpret Output Metrics**:
+* **`optimal_weight`**: Target capital allocation percentage for each asset (sums to 1.0).
+* **`allocated_amount`**: Precise capital amount to spend on each stock ($\text{optimal\_weight} \times \text{TotalInvestment}$).
+* **`suggested_shares`**: Recommended number of shares to purchase ($\lfloor \text{allocated\_amount} / \text{close\_price} \rfloor$).
 
 ### Purge Cold data
 1. Run workflow in n8n `n8n_workflows\Stock__Purge_Data.json`

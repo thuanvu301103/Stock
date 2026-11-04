@@ -1,0 +1,380 @@
+{
+  "name": "Stock___Mine_Market_Data_Vnstock",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "fff2e26e-72c3-4c2b-ae88-f7f25bb1cdf1",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 18,
+        "options": {}
+      },
+      "id": "f9dd913d-d64b-4a5c-b4e8-e095fe73c83a",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        600,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "import sys\nimport os\nsys.stdin.reconfigure(encoding='utf-8')\nsys.stdout.reconfigure(encoding='utf-8')\nsys.stderr.reconfigure(encoding='utf-8')\ninput_group = [\"HNX\", \"HOSE\", \"VN30\", \"UPCOM\"]\n#input_group = [\"VN30\"]\nclass SuppressOutput:\n    def __enter__(self):\n        self._original_stdout = sys.stdout\n        self._original_stderr = sys.stderr\n        self._devnull = open(os.devnull, 'w', encoding='utf-8')\n        sys.stdout = self._devnull\n        sys.stderr = self._devnull\n        \n    def __exit__(self, exc_type, exc_val, exc_tb):\n        sys.stdout = self._original_stdout\n        sys.stderr = self._original_stderr\n        self._devnull.close()\n        \nwith SuppressOutput():\n    from vnstock import Listing,register_user\n    register_user('vnstock_ea68d8f56b62078b88a51b3bbc12e4d5')\n    listing = Listing()\n    all_symbols = set()\n    for group in input_group:\n        all_symbols.update(listing.symbols_by_group(group).to_list())\n    \nreturn [{\"symbol\": s} for s in sorted(all_symbols)]"
+      },
+      "id": "481a1a0d-c322-4f56-b926-acd999d262b9",
+      "name": "Get Symbols",
+      "type": "n8n-nodes-python.pythonFunction",
+      "typeVersion": 1,
+      "position": [
+        700,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 60,
+        "unit": "seconds"
+      },
+      "id": "9363fb1a-5167-4f50-bf8c-c3afb5f26143",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        500
+      ],
+      "webhookId": "4c2527fe-99a8-403e-bf0e-99deee889742"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
+      },
+      "id": "ea002472-f75c-49c3-a235-794049d7b46d",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        900,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.fact_stock_prices FINAL",
+        "options": {}
+      },
+      "id": "77575330-8767-4334-aea9-e000b90b4973",
+      "name": "Remove duplication",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1180,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "from datetime import datetime, timedelta\nimport sys\nimport os\nimport time\n\nsys.stdin.reconfigure(encoding='utf-8')\nsys.stdout.reconfigure(encoding='utf-8')\nsys.stderr.reconfigure(encoding='utf-8')\n\nclass SuppressOutput:\n    def __enter__(self):\n        self._original_stdout = sys.stdout\n        self._original_stderr = sys.stderr\n        self._devnull = open(os.devnull, 'w', encoding='utf-8')\n        sys.stdout = self._devnull\n        sys.stderr = self._devnull\n        \n    def __exit__(self, exc_type, exc_val, exc_tb):\n        sys.stdout = self._original_stdout\n        sys.stderr = self._original_stderr\n        self._devnull.close()\n\nprocessed_items = []\n\nwith SuppressOutput():\n    from vnstock import Quote,register_user\n    register_user('vnstock_ea68d8f56b62078b88a51b3bbc12e4d5')\n\n    for item in items:\n        try:\n            #time.sleep(10)\n            endDate = item[\"end_date\"]\n            startDate = item[\"start_date\"]\n            symbol = item[\"symbol\"]\n            quote = Quote(symbol=symbol, source=\"VCI\")\n            df = quote.history(start=startDate, end=endDate)\n\n            if df.empty:\n                continue\n\n            for _, row in df.iterrows():\n                close_price = float(row[\"close\"])\n                volume = int(row[\"volume\"])\n\n                processed_items.append({\n                    \"symbol\": symbol,\n                    \"trade_date\": row[\"time\"].strftime(\"%Y-%m-%d\"),\n                    \"open\": float(row[\"open\"]),\n                    \"high\": float(row[\"high\"]),\n                    \"low\": float(row[\"low\"]),\n                    \"close\": close_price,\n                    \"adj_close\": close_price,\n                    \"volume\": volume,\n                    \"trading_value\": close_price * volume\n                })\n\n        except Exception:\n            continue\n\nreturn processed_items\n"
+      },
+      "id": "bfef1923-4d34-4149-a407-cbd2f7a5abab",
+      "name": "Get Price Data",
+      "type": "n8n-nodes-python.pythonFunction",
+      "typeVersion": 1,
+      "position": [
+        800,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT INTO n8n_olap.fact_stock_prices FORMAT JSONEachRow",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "d2a552fc-8795-431f-a24f-6285dcd8a622",
+      "name": "Insert Price data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        980,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nconst timeRange = $input.all()[0].json;\nconst startDate = new Date(timeRange['start_date']);\nconst endDate = new Date(timeRange['end_date']); // Fixed typo in key name 'end _date'\n\n// Set time to 00:00:00 to avoid daylight saving time offset issues\nstartDate.setHours(0, 0, 0, 0);\nendDate.setHours(0, 0, 0, 0);\n\nconst currentDate = new Date(startDate);\n\nwhile (currentDate <= endDate) {\n  const year = currentDate.getFullYear();\n  const month = currentDate.getMonth() + 1;\n  const dayOfWeek = currentDate.getDay() === 0 ? 7 : currentDate.getDay(); // Monday=1, Sunday=7\n  const quarter = Math.floor((month - 1) / 3) + 1;\n\n  const isWeekend = dayOfWeek === 6 || dayOfWeek === 7 ? 1 : 0;\n\n  // Format YYYY-MM-DD using local time\n  const dayStr = String(currentDate.getDate()).padStart(2, '0');\n  const monthStr = String(month).padStart(2, '0');\n  const dateKey = `${year}-${monthStr}-${dayStr}`;\n\n  results.push({\n    date_key: dateKey,\n    year,\n    quarter,\n    month,\n    day_of_week: dayOfWeek,\n    is_weekend: isWeekend,\n    is_trading_day: isWeekend ? 0 : 1\n  });\n\n  // Increment by 1 day\n  currentDate.setDate(currentDate.getDate() + 1);\n}\n\nreturn results.map(r => ({ json: r }));"
+      },
+      "id": "754237b6-8c52-4835-96f1-e4edfc1198dd",
+      "name": "Generate dim_date rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        360,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
+      },
+      "id": "3099953b-791e-4fd4-af48-727992738927",
+      "name": "Format1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        440,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "start_date",
+              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-08-17\"}}"
+            },
+            {
+              "name": "end_date",
+              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-15\"*/}}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "29ecaec3-e644-4daa-a248-c91f6275902e",
+      "name": "Set time range",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        180,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=INSERT INTO n8n_olap.dim_date (date_key, year, quarter, month, day_of_week,is_weekend,is_trading_day) \nFORMAT JSONEachRow\n{{ $json.body }}",
+        "options": {}
+      },
+      "id": "82d59037-a495-4d60-9c53-ecae1d3f6988",
+      "name": "Insert dim Date data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        540,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "e973584f-3ce2-4c78-a6a6-4bc070d52158",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        420,
+        520
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Symbols": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Get Price Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format": {
+      "main": [
+        [
+          {
+            "node": "Insert Price data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove duplication": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Price Data": {
+      "main": [
+        [
+          {
+            "node": "Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Price data": {
+      "main": [
+        [
+          {
+            "node": "Remove duplication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set time range": {
+      "main": [
+        [
+          {
+            "node": "Generate dim_date rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Generate dim_date rows": {
+      "main": [
+        [
+          {
+            "node": "Format1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert dim Date data": {
+      "main": [
+        [
+          {
+            "node": "Get Symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format1": {
+      "main": [
+        [
+          {
+            "node": "Insert dim Date data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "839b006b-d7dd-4f83-8c0d-0281ff39d606",
+  "id": "6",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}

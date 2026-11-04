@@ -3,6 +3,7 @@ CREATE TABLE n8n_olap.dim_date (
     year UInt16,
     quarter UInt8,
     month UInt8,
+    week UInt8 DEFAULT toISOWeek(date_key),
     day_of_week UInt8,
     is_weekend UInt8,
     is_trading_day UInt8,

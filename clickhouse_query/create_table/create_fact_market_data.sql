@@ -1,4 +1,4 @@
-CREATE TABLE n8n_olap.fact_stock_prices (
+CREATE TABLE n8n_olap.fact_market_data (
     symbol LowCardinality(String),
     trade_date Date,
     open Float32,

@@ -1,0 +1,694 @@
+{
+  "name": "Stock___Track_Technical_Indicators",
+  "nodes": [
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "start_date",
+              "value": "={{$json.query?.start_date ?? $now.toFormat('yyyy-MM-dd')}}"
+            },
+            {
+              "name": "end_date",
+              "value": "={{$json.query?.end_date ?? $now.toFormat('yyyy-MM-dd')}}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "1996b066-0ab5-4a71-b937-01ddf314f3ca",
+      "name": "Set time range",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "SELECT stock_key FROM n8n_olap.dim_stock ORDER BY stock_key FORMAT JSON",
+        "options": {}
+      },
+      "id": "a8f51cbe-b009-489c-ac97-a3e016246b45",
+      "name": "Get all Stock symbols",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -280,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 200,
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "e2d6e03d-ea1f-4fcd-83e2-494d6bfae617",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        300,
+        140
+      ],
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $input.first().json;\n\nconst startDate = payload.start_date;\nconst endDate = payload.end_date;\nconst stockArr = payload.data || [];\n\nreturn stockArr.map(item => ({\n  json: {\n    stock_key: item.stock_key,\n    start_date: startDate,\n    end_date: endDate\n  }\n}));"
+      },
+      "id": "12b60973-45d8-4a5a-8a78-9ab7ebd6c9b7",
+      "name": "Format stocks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        120,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let stockArr = [];\nlet stockStr = \"\";\nfor (const item of $input.all()) {\n  stockArr.push(item.json[\"stock_key\"]);\n  stockStr = stockArr.map(x => \"'\" + x + \"'\").join(\",\");\n}\n\nconst startDate = items[0].json.start_date;\nconst endDate = items[0].json.end_date;\n\nreturn [{ \n  start_date: startDate,\n  end_date: endDate,\n  stock_keys: stockArr,\n  stock_keys_str: stockStr \n}];"
+      },
+      "id": "d66e846d-8963-463f-a374-7e32574f2398",
+      "name": "Combine Stock symbol",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        480,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT \n   *,\n   (trade_date < '{{$input.first().json.start_date}}') AS window_padding  \nFROM n8n_olap.v_pre_calculate_market_data\nWHERE has([{{$input.first().json.stock_keys_str}}], stock_key)\nAND trade_date BETWEEN '{{$input.first().json.data_start_date}}' AND '{{$input.first().json.end_date}}'\nAND is_trading_day != 0\nFORMAT JSON",
+        "options": {}
+      },
+      "id": "2a2883a0-12fa-4924-8eeb-c7f550e33e1a",
+      "name": "Pre-calculate Market data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        820,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "smaArr = [];\nfor (const item of $input.first().json.data) {\n  if (item.window_padding == 1) continue;\n  calculatedItem = {\n    trade_date: item.trade_date,\n    symbol: item.stock_key,\n    sma_20: item.sum_close_20 / 20,\n    sma_50: item.sum_close_50 / 50,\n    sma_100: item.sum_close_100 / 100\n  }\n  smaArr.push(calculatedItem)\n}\n\nreturn smaArr;"
+      },
+      "id": "7e62ed2d-28de-4245-8b5c-4440ed436879",
+      "name": "SMA Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const records = [];\n\nfor (const item of $input.all()) {\n  records.push(item.json);\n}\n\nconst jsonEachRowString = records.map(row => JSON.stringify(row)).join('\\n');\n\nreturn {\n  json: {\n    formatted_data: jsonEachRowString\n  }\n};"
+      },
+      "id": "97991a42-4256-4589-867a-42bb93ced86e",
+      "name": "Combine Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "data = $input.first().json.data;\n\n// Distribute raw data rows into groups by stock_key\ngrouped = {};\nfor (const item of data) {\n  if (!grouped[item.stock_key]) grouped[item.stock_key] = [];\n  grouped[item.stock_key].push(item);\n}\n\nperiods = [7, 14, 21];\nrsiArr = [];\n\nfor (const symbol in grouped) {\n  rows = grouped[symbol].sort((a, b) => new Date(a.trade_date) - new Date(b.trade_date));\n\n  state = {};\n  for (const p of periods) {\n    state[p] = { ag: null, al: null, sumGain: 0, sumLoss: 0 };\n  }\n\n  rows.forEach((item, i) => {\n    rowsSeen = i + 1;\n    calculatedItem = {\n      trade_date: item.trade_date,\n      symbol: symbol\n    };\n\n    for (const p of periods) {\n      state[p].sumGain += item.gain;\n      state[p].sumLoss += item.loss;\n\n      if (rowsSeen < p) {\n        calculatedItem['rsi_' + p] = null;\n        continue;\n      }\n\n      if (rowsSeen === p) {\n        // Seed: initial average gain/loss over the first n periods\n        state[p].ag = state[p].sumGain / p;\n        state[p].al = state[p].sumLoss / p;\n      } else {\n        // Wilder's smoothing recursion\n        state[p].ag = (state[p].ag * (p - 1) + item.gain) / p;\n        state[p].al = (state[p].al * (p - 1) + item.loss) / p;\n      }\n\n      ag = state[p].ag;\n      al = state[p].al;\n      calculatedItem['rsi_' + p] = al === 0 ? (ag === 0 ? 50 : 100) : 100 - (100 / (1 + (ag / al)));\n    }\n    if (item.window_padding != 1) rsiArr.push(calculatedItem);\n  });\n}\n\nreturn rsiArr;"
+      },
+      "id": "8c85d750-c61e-47fb-a749-23dfd02b7f2e",
+      "name": "RSI Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "trade_date",
+              "field2": "trade_date"
+            },
+            {
+              "field1": "symbol",
+              "field2": "symbol"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "14a70f1c-9105-44ff-ae2f-f7578a76d0f5",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1260,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const daysToSubtract = 150;\n\nfor (const item of $input.all()) {\n  const originalDate = new Date(item.json.start_date);\n  originalDate.setDate(originalDate.getDate() - daysToSubtract);\n  item.json.data_start_date = originalDate.toISOString().split('T')[0];\n}\n\nreturn $input.all();"
+      },
+      "id": "988dbf54-8d56-4732-a366-6c89d80d9162",
+      "name": "Set data start time",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        660,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function getPercentile(arr, percentile) {\n  if (arr.length === 0) return 0;\n  if (arr.length === 1) return arr[0];\n\n  const sorted = [...arr].sort((a, b) => a - b);\n  const index = (sorted.length - 1) * percentile;\n  const lower = Math.floor(index);\n  const upper = Math.ceil(index);\n  const weight = index - lower;\n\n  if (upper >= sorted.length) return sorted[sorted.length - 1];\n  return sorted[lower] * (1 - weight) + sorted[upper] * weight;\n}\n\nconst windowSize = 20;\n\n// Extract rows array from ClickHouse JSON wrapper ($input.first().json.data)\nlet inputData = $input.first()?.json?.data || [];\n\nconst uniqueMap = new Map();\nfor (const item of inputData) {\n  const key = `${item.stock_key}_${item.trade_date}`;\n  if (!uniqueMap.has(key)) {\n    uniqueMap.set(key, item);\n  }\n}\nconst inputDataCleaned = Array.from(uniqueMap.values());\ninputData = inputDataCleaned;\n\n// Group items by stock_key\nconst groupedData = {};\nfor (const item of inputData) {\n  const stock = item.stock_key;\n  if (!groupedData[stock]) {\n    groupedData[stock] = [];\n  }\n  groupedData[stock].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock group\nfor (const stock in groupedData) {\n  const stockItems = groupedData[stock].sort(\n    (a, b) => new Date(a.trade_date) - new Date(b.trade_date)\n  );\n\n  let prevDaysSinceVolumeOutlier = stockItems[0].days_since_volume_outlier;\n\n  for (let i = 0; i < stockItems.length; i++) {\n    const currentItem = stockItems[i];\n\n    const startIndex = Math.max(0, i - windowSize + 1);\n    const windowVolumes = stockItems\n      .slice(startIndex, i + 1)\n      .map((d) => parseFloat(d.volume) || 0);\n\n    const p25 = getPercentile(windowVolumes, 0.25);\n    const p75 = getPercentile(windowVolumes, 0.75);\n    const iqr = p75 - p25;\n    const upperBound = p75 + 1.5 * iqr;\n    const lowerBound = p25 - 1.5 * iqr;\n    const currentVolume = parseFloat(currentItem.volume) || 0;\n\n    let signalVolumeOutlier = 0;\n    if (currentVolume > upperBound) {\n      signalVolumeOutlier = 1;\n    } else if (currentVolume < lowerBound) {\n      signalVolumeOutlier = -1;\n    }\n\n    let daysSinceVolumeOutlier = prevDaysSinceVolumeOutlier\n    if (signalVolumeOutlier == 0) {\n      if (i != 0) daysSinceVolumeOutlier += 1;\n    } else {\n      daysSinceVolumeOutlier = 0;\n    }\n    prevDaysSinceVolumeOutlier = daysSinceVolumeOutlier;\n\n    if (Number(currentItem.window_padding) === 0) {\n      outputItems.push({\n        json: {\n          trade_date: currentItem.trade_date,\n          symbol: currentItem.stock_key,\n          //volume_iqr_p25: Number(p25.toFixed(4)),\n          //volume_iqr_p75: Number(p75.toFixed(4)),\n          //volume_rolling_iqr: Number(iqr.toFixed(4)),\n          signal_volume_outlier: signalVolumeOutlier,\n          days_since_volume_outlier: daysSinceVolumeOutlier\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
+      },
+      "id": "746c5c2d-e196-43d7-a902-9af7aba2537b",
+      "name": "Volume IQR Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "trade_date",
+              "field2": "trade_date"
+            },
+            {
+              "field1": "symbol",
+              "field2": "symbol"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3402dd5e-24b0-42e0-8d7d-609a1e95e2cc",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1420,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=INSERT INTO n8n_olap.fact_technical_indicators FORMAT JSONEachRow\n{{$input.first().json.formatted_data}}",
+        "options": {}
+      },
+      "id": "ee2ed3f7-524c-491d-a2bb-64adaccd923d",
+      "name": "Insert Technical Indicators table",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1780,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const records = [];\n\nfor (const item of $input.all()) {\n  records.push(item.json);\n}\n\nconst jsonEachRowString = records.map(row => JSON.stringify(row)).join('\\n');\n\nreturn {\n  json: {\n    formatted_data: jsonEachRowString\n  }\n};"
+      },
+      "id": "02a7f842-49b7-4a18-b140-198f37afe0f7",
+      "name": "Combine Calculation1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=INSERT INTO n8n_olap.fact_portfolio_return_metrics FORMAT JSONEachRow\n{{$input.first().json.formatted_data}}",
+        "options": {}
+      },
+      "id": "3d85b6a4-8273-486d-8ff6-cf7ef6670113",
+      "name": "Insert Technical Indicators table1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1780,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a6988fbd-903b-436f-bac8-80158c10990e",
+      "name": "Merge2",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2000,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "track-technical-indicators",
+        "responseMode": "lastNode",
+        "responseData": "noData",
+        "options": {}
+      },
+      "id": "b689b97f-7246-4e44-a4e9-33d14f239901",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        220
+      ],
+      "webhookId": "b9ce9c2f-a690-4121-a6dc-76f8a885a7a9"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "6c11c0b4-af65-46e9-b944-0f4594e895b3",
+      "name": "Merge3",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -60,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Helper: Calculates the Arithmetic Mean\n */\nfunction getMean(arr) {\n  if (arr.length === 0) return 0;\n  const sum = arr.reduce((acc, val) => acc + val, 0);\n  return sum / arr.length;\n}\n\n/**\n * Helper: Calculates the Sample Standard Deviation\n */\nfunction getSampleStdDev(arr) {\n  if (arr.length <= 1) return 0;\n  const mean = getMean(arr);\n  const variance = arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (arr.length - 1);\n  return Math.sqrt(variance);\n}\n\nconst windowSize = 20;\n\n// Extract rows array from ClickHouse JSON response ($input.first().json.data)\nconst inputData = $input.first()?.json?.data || [];\n\n// Group items by stock symbol (stock_key)\nconst groupedData = {};\nfor (const item of inputData) {\n  const stock = item.stock_key;\n  if (!groupedData[stock]) {\n    groupedData[stock] = [];\n  }\n  groupedData[stock].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock series\nfor (const stock in groupedData) {\n  // Sort time series in ascending order\n  const stockItems = groupedData[stock].sort(\n    (a, b) => new Date(a.trade_date) - new Date(b.trade_date)\n  );\n\n  // STEP 1: Compute log_return_t2 for each trade session: log(close_t / close_{t-2})\n  const series = stockItems.map((item, index) => {\n    const closeCurr = parseFloat(item.close) || 0;\n    \n    let logReturnT2 = 0;\n    if (index >= 2) {\n      const closeLag2 = parseFloat(stockItems[index - 2].close) || 0;\n      if (closeLag2 > 0 && closeCurr > 0) {\n        logReturnT2 = Math.log(closeCurr / closeLag2);\n      }\n    }\n\n    return {\n      trade_date: item.trade_date,\n      symbol: item.stock_key,\n      close_price: closeCurr,\n      log_return_t2: logReturnT2,\n      window_padding: item.window_padding\n    };\n  });\n\n  // STEP 2: Compute metrics STRICTLY when window_padding === 0\n  for (let i = 0; i < series.length; i++) {\n    const curr = series[i];\n\n    // Evaluate ONLY when window_padding is strictly 0\n    if (Number(curr.window_padding) === 0) {\n      // 20-period rolling window slice (ROWS BETWEEN 19 PRECEDING AND CURRENT ROW)\n      const startIndex = Math.max(0, i - windowSize + 1);\n      const windowSlice = series.slice(startIndex, i + 1);\n      const windowReturns = windowSlice.map((d) => d.log_return_t2);\n\n      const expectedReturn = getMean(windowReturns);\n      const volatility = getSampleStdDev(windowReturns);\n\n      // Map output fields directly to n8n_olap.fact_portfolio_return_metrics schema\n      outputItems.push({\n        json: {\n          symbol: curr.symbol,\n          trade_date: curr.trade_date,\n          close_price: Number(curr.close_price.toFixed(4)),\n          log_return_t2: Number(curr.log_return_t2.toFixed(6)),\n          expected_return_t2_n20: Number(expectedReturn.toFixed(6)),\n          volatility_t2_n20: Number(volatility.toFixed(6))\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
+      },
+      "id": "e14e98cf-6504-4a1d-b05a-ded5a625db46",
+      "name": "Portfolio Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "3d1d9c78-9c28-4054-ab06-99dc0db07a39",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {};"
+      },
+      "id": "b295ef63-be08-4eac-8ed2-6bf924b03aa2",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        480,
+        340
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get all Stock symbols": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Format stocks": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Combine Stock symbol",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Stock symbol": {
+      "main": [
+        [
+          {
+            "node": "Set data start time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set time range": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre-calculate Market data": {
+      "main": [
+        [
+          {
+            "node": "RSI Calculation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SMA Calculation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Volume IQR Calculation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Portfolio Calculation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMA Calculation": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Calculation": {
+      "main": [
+        [
+          {
+            "node": "Insert Technical Indicators table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSI Calculation": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set data start time": {
+      "main": [
+        [
+          {
+            "node": "Pre-calculate Market data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Volume IQR Calculation": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Combine Calculation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Technical Indicators table": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Calculation1": {
+      "main": [
+        [
+          {
+            "node": "Insert Technical Indicators table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Technical Indicators table1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get all Stock symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Format stocks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Portfolio Calculation": {
+      "main": [
+        [
+          {
+            "node": "Combine Calculation1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get all Stock symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "all"
+  },
+  "versionId": "5d092628-2388-46b0-a3e9-003e43e87ea9",
+  "id": "5",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}
