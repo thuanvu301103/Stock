@@ -1,6 +1,3 @@
-// Sample input csv file: ./samples/orders_batch_sample.csv
-
-
 // Configuration constants for execution parameters
 const PRICE_MULTIPLIER = 1000;
 const ACCOUNT_ID = "GXXXXX1";
