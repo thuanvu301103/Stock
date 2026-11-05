@@ -28,7 +28,7 @@ flowchart LR
     end
 
     subgraph Analytics["ClickHouse data model"]
-        TABLES["Dimensions and facts<br/>dim_date, dim_stock,<br/>fact_market_data, sentiment,<br/>technical indicators, corporate actions"]
+        TABLES["Dimensions and facts<br/>dim_date, dim_stock,<br/>fact_market_data, exchange indices,<br/>sentiment, technical indicators,<br/>corporate actions"]
         VIEWS["Views<br/>pre-calculation, derived metrics,<br/>analytics master, indicators"]
         TABLES --> VIEWS
     end
@@ -80,7 +80,8 @@ flowchart LR
 1. **fact_market_data (Market Price & Volume)**: The central repository for Daily OHLCV (Open, High, Low, Close, Volume) data. Physically sorted by symbol and trade_date to make calculating SMA, EMA, and CMF lightning-fast.
 2. **fact_market_sentiment (Capital Flow)**: Tracks institutional and foreign movement to gauge market sentiment.
 3. **fact_technical_indicators (Technical Indicators)**: Stores pre-calculated technical indicator values derived from historical price and volume data across standard timeframes.
-4. **corporate_actions** and **fact_portfolio_return_metrics**: Store corporate-action records and portfolio-return metrics.
+4. **fact_exchange_index_histories (Exchange Index History)**: Stores historical index values, price changes, market breadth, and trading activity for Vietnam's HOSE, HNX, and UPCoM indices. The `ReplacingMergeTree` table is partitioned monthly by `time` and ordered by `(index_id, time)`. See [the exchange indices documentation](docs/exchange_indices.md) for the full column schema and covered indices; its DDL is in `clickhouse_query/create_table/create_fact_exchange_index_history.sql`.
+5. **corporate_actions** and **fact_portfolio_return_metrics**: Store corporate-action records and portfolio-return metrics.
 
 #### Pre-calculated and Analytics Views
 1. **v_pre_calculate_market_data**: Provides pre-calculated price and volume values used by downstream calculations.
@@ -249,7 +250,7 @@ sys.stdin.reconfigure(encoding='utf-8')
 or
 
 1. Open browser's console while being in SSI dashboard page, copy javascript code inside `scripts\ssi_data_puller.js` 
-2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_json.json` and `n8n_workflows\Stock___Mine_Corporate_Actions_SSI_json.json`
+2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_json.json`, `n8n_workflows\Stock___Mine_Corporate_Actions_SSI_json.json` and  `n8n_workflows\Stock___Mine_Exchange_Indices_Data_SSI_json.json`
 
 - Primary Use Case: Daily real-time data extraction.
 - Technical Constraint: Restricted to current-day data only, requiring immediate daily processing for high throughput.
