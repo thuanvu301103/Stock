@@ -137,6 +137,43 @@
       "response": []
     },
     {
+      "name": "Mine Exchange Indices Data SSI - json",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "trade_date",
+              "value": "2026-10-17",
+              "type": "text",
+              "description": "YYYY-MM-dd",
+              "disabled": true
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5678/webhook/mine-exchange-indices-data-ssi-json",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5678",
+          "path": [
+            "webhook",
+            "mine-exchange-indices-data-ssi-json"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Track Technical Indicators",
       "request": {
         "method": "POST",

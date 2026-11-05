@@ -112,10 +112,16 @@ async function getMarketData() {
     Sample: ./samples/stock_master_data_sample.json
 --- */
 async function downloadData() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
 
-    //const fileName = 'exchange_indices_data.json';
-    //const fileName = 'market_data.json';
-    const fileName = 'stock_master_data.json';
+    //const baseFileName = 'exchange_indices_data';
+    //const baseFileName = 'market_data';
+    const baseFileName = 'stock_master_data';
+
+    const fileName = `${baseFileName}_${year}${month}${day}.json`
 
     const exchangeIndicesData = await getExchangeIndicesData();
     const marketData = await getMarketData();

@@ -683,9 +683,10 @@
     "saveExecutionProgress": false,
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "saveDataSuccessExecution": "all"
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none"
   },
-  "versionId": "5d092628-2388-46b0-a3e9-003e43e87ea9",
+  "versionId": "80dd88f5-b3f6-4be3-a8e2-2335d458189d",
   "id": "5",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

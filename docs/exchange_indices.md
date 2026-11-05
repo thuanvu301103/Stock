@@ -10,5 +10,34 @@ Utilizing this set of indices ensures comprehensive coverage across total market
 ---
 
 ### 2. Measuring Liquidity and Capital Concentration (Market Breadth & Liquidity Concentration)
-* **Large-Cap Indices (`VN30`, `HNX30`):** Reflect capital flows within blue-chip equities. These indices account for a major share of total market trading value (`allValue`, `totalValue`), acting as primary sentiment drivers for institutional liquidity.
+* **Large-Cap Indices (`VN30`, `HNX30`):** Reflect capital flows within blue-chip equities. These indices account for a major share of total market trading value (`all_value`, `total_value`), acting as primary sentiment drivers for institutional liquidity.
 * **Broad Market Indices (`VNINDEX`, `HNXIndex`, `HNXUpcomIndex`):** Provide a macro view of overall advance/decline trends across listed equities, serving as foundational inputs for computing market breadth metrics such as the Advance/Decline Line (A/D Line).
+
+---
+
+### 3. ClickHouse Table Schema
+The historical index data is stored in `n8n_olap.fact_exchange_index_histories`. Each row contains an index observation at a specific time, along with its price movement, market breadth, and trading activity:
+
+| Column | Type | Description |
+|---|---|---|
+| `index_id` | `LowCardinality(String)` | Exchange index identifier. |
+| `time` | `DateTime64(3, 'UTC')` | Observation timestamp in UTC, with millisecond precision. |
+| `index_value` | `Float64` | Index value at the observation time. |
+| `change` | `Float64` | Change in index value. |
+| `change_percent` | `Float64` | Percentage change in index value. |
+| `chart_open` | `Float64` | Opening value used for the index chart. |
+| `chart_high` | `Float64` | High value used for the index chart. |
+| `chart_low` | `Float64` | Low value used for the index chart. |
+| `advances` | `Int32` | Number of advancing constituents. |
+| `declines` | `Int32` | Number of declining constituents. |
+| `nochanges` | `Int32` | Number of unchanged constituents. |
+| `ceiling` | `Int32` | Number of constituents at ceiling price. |
+| `floor` | `Int32` | Number of constituents at floor price. |
+| `total_qtty` | `UInt64` | Total traded quantity. |
+| `total_qtty_pt` | `UInt64` | Total negotiated (put-through) traded quantity. |
+| `total_value` | `Float64` | Total traded value. |
+| `total_value_pt` | `Float64` | Total negotiated (put-through) traded value. |
+| `all_qty` | `UInt64` | Aggregate traded quantity across the market. |
+| `all_value` | `Float64` | Aggregate traded value across the market. |
+
+The table uses `ReplacingMergeTree`, partitions records by month with `toYYYYMM(time)`, and orders them by `(index_id, time)`.

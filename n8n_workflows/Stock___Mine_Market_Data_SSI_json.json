@@ -69,7 +69,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const inputData = $input.first().json;\nconst items = inputData.data;\n\n// Validate that the data property contains an array\nif (!Array.isArray(items)) {\n    return [];\n}\n\n// Map rows directly into the ClickHouse table schema\nreturn items.map(item => {\n    return {\n        json: {\n            symbol: String(item.stockSymbol || \"\"),\n            open: (parseFloat(item.openPrice) / 1000) || 0.0,\n            high: (parseFloat(item.highest) / 1000) || 0.0,\n            low: (parseFloat(item.lowest) / 1000) || 0.0,\n            close: (parseFloat(item.matchedPrice) / 1000) || 0.0,\n            adj_close: (parseFloat(item.matchedPrice) / 1000) || 0.0,\n            volume: parseInt(item.nmTotalTradedQty, 10) || 0,\n            trading_value: (parseFloat(item.nmTotalTradedValue) / 1000000) || 0.0\n        }\n    };\n});"
+        "jsCode": "const inputData = $input.first().json;\nconst items = inputData.marketData.data;\n\n// Validate that the data property contains an array\nif (!Array.isArray(items)) {\n    return [];\n}\n\n// Map rows directly into the ClickHouse table schema\nreturn items.map(item => {\n    return {\n        json: {\n            symbol: String(item.stockSymbol || \"\"),\n            open: (parseFloat(item.openPrice) / 1000) || 0.0,\n            high: (parseFloat(item.highest) / 1000) || 0.0,\n            low: (parseFloat(item.lowest) / 1000) || 0.0,\n            close: (parseFloat(item.matchedPrice) / 1000) || 0.0,\n            adj_close: (parseFloat(item.matchedPrice) / 1000) || 0.0,\n            volume: parseInt(item.nmTotalTradedQty, 10) || 0,\n            trading_value: (parseFloat(item.nmTotalTradedValue) / 1000000) || 0.0\n        }\n    };\n});"
       },
       "id": "db8fdab0-3384-44c1-ae63-078821dc7839",
       "name": "Format object",
@@ -248,9 +248,10 @@
   "active": true,
   "settings": {
     "callerPolicy": "workflowsFromSameOwner",
-    "saveManualExecutions": true
+    "saveManualExecutions": false,
+    "saveDataSuccessExecution": "none"
   },
-  "versionId": "1bb314c0-bd55-4e66-a065-3daba195583a",
+  "versionId": "34871237-7a48-4055-8c59-c58001ea1c87",
   "id": "9",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

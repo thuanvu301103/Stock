@@ -159,6 +159,19 @@
         1320,
         580
       ]
+    },
+    {
+      "parameters": {
+        "workflowId": "12"
+      },
+      "id": "96efc4bd-ce63-4ca8-8938-1287772207e0",
+      "name": "Execute Workflow - Mine Exchange Indices",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -140
+      ]
     }
   ],
   "pinData": {},
@@ -235,6 +248,11 @@
             "node": "Merge",
             "type": "main",
             "index": 1
+          },
+          {
+            "node": "Execute Workflow - Mine Exchange Indices",
+            "type": "main",
+            "index": 0
           }
         ],
         [
@@ -260,7 +278,7 @@
   },
   "active": true,
   "settings": {},
-  "versionId": "68613c93-85fa-48a6-a2af-9a2006cb3d4f",
+  "versionId": "84365966-3ecb-4e4b-ba0b-af41bcdb0e06",
   "id": "11",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
