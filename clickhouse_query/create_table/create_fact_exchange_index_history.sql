@@ -1,6 +1,6 @@
 CREATE TABLE n8n_olap.fact_exchange_index_histories (
     index_id LowCardinality(String),
-    time DateTime64(3, 'UTC'),
+    time Date,
     index_value Float64,
     change Float64,
     change_percent Float64,

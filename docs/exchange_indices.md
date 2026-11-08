@@ -16,13 +16,13 @@ Utilizing this set of indices ensures comprehensive coverage across total market
 ---
 
 ### 3. ClickHouse Table Schema
-The historical index data is stored in `n8n_olap.fact_exchange_index_histories`. Each row contains an index observation at a specific time, along with its price movement, market breadth, and trading activity:
+The historical index data is stored in `n8n_olap.fact_exchange_index_histories`. Each row contains one daily index observation, along with its price movement, market breadth, and trading activity:
 
 | Column | Type | Description |
 |---|---|---|
 | `index_id` | `LowCardinality(String)` | Exchange index identifier. |
-| `time` | `DateTime64(3, 'UTC')` | Observation timestamp in UTC, with millisecond precision. |
-| `index_value` | `Float64` | Index value at the observation time. |
+| `time` | `Date` | Exchange trading date. |
+| `index_value` | `Float64` | Index value for the trading date. |
 | `change` | `Float64` | Change in index value. |
 | `change_percent` | `Float64` | Percentage change in index value. |
 | `chart_open` | `Float64` | Opening value used for the index chart. |
@@ -40,4 +40,4 @@ The historical index data is stored in `n8n_olap.fact_exchange_index_histories`.
 | `all_qty` | `UInt64` | Aggregate traded quantity across the market. |
 | `all_value` | `Float64` | Aggregate traded value across the market. |
 
-The table uses `ReplacingMergeTree`, partitions records by month with `toYYYYMM(time)`, and orders them by `(index_id, time)`.
+The table uses `ReplacingMergeTree`, partitions records by month with `toYYYYMM(time)`, and orders them by `(index_id, time)`. Market breadth and index returns from this table are used to calculate daily market-flow indicators; see [market internal flow indicators](market_internal_flow_indicators.md).

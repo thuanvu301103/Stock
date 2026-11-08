@@ -206,6 +206,38 @@
       "response": []
     },
     {
+      "name": "Track Market Flow Indicators",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5678/webhook/track-market-flow-indicators?start_date=2026-11-01&end_date=2026-11-06",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5678",
+          "path": [
+            "webhook",
+            "track-market-flow-indicators"
+          ],
+          "query": [
+            {
+              "key": "start_date",
+              "value": "2026-11-01",
+              "description": "YYYY-MM-dd"
+            },
+            {
+              "key": "end_date",
+              "value": "2026-11-06",
+              "description": "YYYY-MM-dd"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "SSI full Workflow",
       "request": {
         "method": "POST",
@@ -221,7 +253,7 @@
             },
             {
               "key": "trade_date",
-              "value": "2026-10-16",
+              "value": "2026-11-06",
               "type": "text",
               "description": "YYYY-MM-dd (for mining data & actions logging)",
               "disabled": true
@@ -242,13 +274,13 @@
           "query": [
             {
               "key": "start_date",
-              "value": "2026-10-16",
+              "value": "2026-11-06",
               "description": "YYYY-MM-dd (for technical calculation)",
               "disabled": true
             },
             {
               "key": "end_date",
-              "value": "2026-10-16",
+              "value": "2026-11-06",
               "description": "YYYY-MM-dd (for technical calculation)",
               "disabled": true
             }

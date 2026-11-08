@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "ssi-full-workflow",
-        "responseMode": "lastNode",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "109d66fb-88ca-404b-95c4-2b821b3809ef",
@@ -28,7 +28,7 @@
       "typeVersion": 1,
       "position": [
         740,
-        260
+        120
       ]
     },
     {
@@ -41,7 +41,7 @@
       "typeVersion": 1,
       "position": [
         740,
-        60
+        -100
       ]
     },
     {
@@ -54,8 +54,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2.1,
       "position": [
-        960,
-        380
+        940,
+        220
       ]
     },
     {
@@ -67,8 +67,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        1140,
-        380
+        1120,
+        220
       ]
     },
     {
@@ -99,8 +99,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1140,
-        580
+        1680,
+        440
       ]
     },
     {
@@ -123,8 +123,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        980,
-        580
+        1520,
+        440
       ]
     },
     {
@@ -156,8 +156,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        1320,
-        580
+        1860,
+        440
       ]
     },
     {
@@ -169,8 +169,62 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        740,
-        -140
+        720,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "input2"
+      },
+      "id": "aa010ae3-e2ae-424f-b58b-624436188c9a",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        940,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "13"
+      },
+      "id": "71dba851-99b1-43d2-bd90-1a5f45176f99",
+      "name": "Execute Workflow - Track Market Flow Indicator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "04dfbb0c-3a19-4514-a6cd-bf3b8bb1de39",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "input2"
+      },
+      "id": "c14fe433-9c9b-4205-b37c-6f843381ef9c",
+      "name": "Merge2",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1340,
+        380
       ]
     }
   ],
@@ -213,7 +267,7 @@
       "main": [
         [
           {
-            "node": "Set trade_date",
+            "node": "Merge2",
             "type": "main",
             "index": 0
           }
@@ -253,6 +307,16 @@
             "node": "Execute Workflow - Mine Exchange Indices",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
           }
         ],
         [
@@ -274,11 +338,60 @@
           }
         ]
       ]
+    },
+    "Execute Workflow - Mine Exchange Indices": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - Track Market Flow Indicator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Set trade_date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
-  "settings": {},
-  "versionId": "84365966-3ecb-4e4b-ba0b-af41bcdb0e06",
+  "settings": {
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "5619ad90-5c1a-4ffd-8fd4-b93145a145cc",
   "id": "11",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
