@@ -226,6 +226,33 @@
         1340,
         380
       ]
+    },
+    {
+      "parameters": {
+        "workflowId": "15"
+      },
+      "id": "5263fc63-605a-4783-991f-73c7e4831e60",
+      "name": "Execute Workflow - Track Market Regime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "input2"
+      },
+      "id": "b94cb26d-4b4d-44e7-a359-54ebde0ba73f",
+      "name": "Merge3",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1320,
+        600
+      ]
     }
   ],
   "pinData": {},
@@ -257,17 +284,6 @@
         [
           {
             "node": "Execute Workflow - Technical Indicators Calculation",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Execute Workflow - Technical Indicators Calculation": {
-      "main": [
-        [
-          {
-            "node": "Merge2",
             "type": "main",
             "index": 0
           }
@@ -315,6 +331,11 @@
           },
           {
             "node": "Merge2",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge3",
             "type": "main",
             "index": 1
           }
@@ -382,16 +403,49 @@
           }
         ]
       ]
+    },
+    "Execute Workflow - Technical Indicators Calculation": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - Track Market Flow Indicator": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - Track Market Regime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
-    "saveDataErrorExecution": "none",
-    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
     "saveManualExecutions": false,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "5619ad90-5c1a-4ffd-8fd4-b93145a145cc",
+  "versionId": "3e620b73-0fef-4767-9596-60bb2769be06",
   "id": "11",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

@@ -2,7 +2,6 @@
  * Regime Classify rules: './samples/market_regime_rules_sample.json'
  * 
  */
-
 class RegimeClassifyEngine {
     constructor(ruleDefinitions) {
         this.regimeRules = ruleDefinitions.sort((a, b) => a.priority - b.priority);
@@ -110,7 +109,15 @@ class RegimeClassifyEngine {
                 };
             }
         }
-        return context.delta_ad > 0 ? "REGIME_1" : "REGIME_4";
+        return context.delta_ad > 0 ? {
+          "regime_code": "REGIME_1",
+          "state": "Broad Uptrend",
+          "description": "The flow of money is spreading across the entire market in line with market consensus",
+        } : {
+          "regime_code": "REGIME_4",
+          "state": "Broad Downtrend",
+          "description": "Widespread selling pressure led to a simultaneous decline in stock prices",
+        };
     }
 
     /**
