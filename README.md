@@ -236,7 +236,7 @@ sys.stdin.reconfigure(encoding='utf-8')
 
 ### Mine Stock data
 
-#### Vnstock as Data source 
+#### Vnstock as Data source (Deprecated)
 1. Run workflow in n8n: `n8n_workflows\Stock__Mine_Market_Data_Vnstock.json`
 2. If there is error, re-run the workflow with option `Retry with curently saved workflow (from node with error)`
 
