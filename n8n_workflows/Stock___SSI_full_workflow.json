@@ -209,8 +209,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        2040,
-        440
+        2220,
+        580
       ]
     },
     {
@@ -252,6 +252,21 @@
       "position": [
         1320,
         600
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "c43f0353-c1ab-40a1-81ad-6063b5f8d256",
+      "name": "Merge4",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2040,
+        580
       ]
     }
   ],
@@ -386,7 +401,7 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Merge4",
             "type": "main",
             "index": 0
           }
@@ -436,6 +451,28 @@
           }
         ]
       ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - Track Market Regime": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -445,7 +482,7 @@
     "saveManualExecutions": false,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "3e620b73-0fef-4767-9596-60bb2769be06",
+  "versionId": "f1f20fe2-0a3a-4c11-932f-3739df3410f0",
   "id": "11",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
