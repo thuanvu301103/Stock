@@ -20,9 +20,9 @@ The engine evaluates conditions in ascending priority order and selects the firs
 | Priority | Regime code | State | Condition from the rule sample | Interpretation |
 |---:|---|---|---|---|
 | 1 | `REGIME_5` | Capitulation / Panic | $R_{AD} < 0.2$ **AND** `ceiling < 5` **AND** `floor >= 30` | Extreme selling pressure, with very weak breadth and many stocks at the floor price. |
-| 2 | `REGIME_1` | Broad Uptrend | $\Delta AD_5 > 0$ **AND** $R_{AD} \ge 1.5$ **AND** $|D_{VN30}| \le 0.1$ | The advance is broad-based, while VN30 and VNINDEX returns remain close. |
+| 2 | `REGIME_1` | Broad Uptrend | $\Delta AD_5 > 0$ **AND** $R_{AD} \ge 1.5$ **AND** $abs(D_{VN30}) \le 0.1$ | The advance is broad-based, while VN30 and VNINDEX returns remain close. |
 | 3 | `REGIME_2` | Narrow Uptrend | $\Delta AD_5 \le 0$ **AND** $R_{AD} < 1.0$ **AND** $D_{VN30} > 0.5$ | VN30 outperforms while overall market breadth is weak. |
-| 4 | `REGIME_3` | Sideways / Rotation | $|\Delta AD_5| \le 0.05$ **AND** $0.8 \le R_{AD} \le 1.2$ | Breadth is balanced and the A/D Line is nearly flat, potentially indicating rotation among groups. |
+| 4 | `REGIME_3` | Sideways / Rotation | $abs(\Delta AD_5) \le 0.05$ **AND** $0.8 \le R_{AD} \le 1.2$ | Breadth is balanced and the A/D Line is nearly flat, potentially indicating rotation among groups. |
 | 5 | `REGIME_4` | Broad Downtrend | $\Delta AD_5 < 0$ **AND** $R_{AD} \le 0.66$ | Selling pressure is broad across the market. |
 
 The conditions shown are the exact checks in the rule sample. For example, `ABS_APPROX(x, 0, 0.1)` is equivalent to $|x| \le 0.1$. If no regime matches, the script has a fallback based on `delta_ad`; ensure this input is provided and consistent with the chosen A/D calculation.
