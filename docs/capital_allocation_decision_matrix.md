@@ -60,11 +60,3 @@ REGIME_5 should be treated as two layers, not combined into a single allocation:
 Assume the portfolio has a NAV of VND 500 million. The REGIME_5 base target is VND 100 million in equities and VND 400 million in cash. Within the VND 100 million equity target, approximately VND 70 million is allocated to VN30 and VND 30 million to mid-cap.
 
 If the system separately defines an exploratory budget of VND 10 million and RSI/Stochastic is below 20, `w_stock*`/`w_cash*` would correspond to VND 3 million for exploratory equities and VND 7 million retained as cash **within that VND 10 million exploratory budget**. This illustrates the calculation only after a denominator of VND 10 million has been chosen; the JSON does not specify VND 10 million, and it must not default to an amount entered by the user. Likewise, do not mechanically add VND 3 million if the base equity target has already been reached; assess the total NAV and portfolio state after any trade.
-
-## Scope and decisions required before automation
-
-- The JSON file is a sample matrix; no workflow has been identified that reads it to automatically rebalance the portfolio or place orders.
-- The matrix does not define the exact VN30/mid-cap universe, NAV calculation, regime update timing, permitted deviation thresholds, fees/taxes, lot sizes, or rounding rules.
-- Define the denominator and size of the `w_stock*`/`w_cash*` branch, and clarify whether the branch replaces or adjusts the base target during exploratory buying.
-- The matrix does not specify what to do if the oversold condition is only partially met, nor how to exit the exploratory branch.
-- These are target allocations for the system to work toward, not investment advice or a guarantee that the exact weights will be achieved.

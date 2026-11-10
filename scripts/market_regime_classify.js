@@ -3,8 +3,12 @@
  * 
  */
 class RegimeClassifyEngine {
-    constructor(ruleDefinitions) {
+
+    constructor(ruleDefinitions, allocationMatrixDefinitions) {
         this.regimeRules = ruleDefinitions.sort((a, b) => a.priority - b.priority);
+        this.regimeCodeMap = new Map(this.regimeRules.map(rule => [rule.regime_code, rule]));
+        this.allocationMatrix = allocationMatrixDefinitions;
+        this.allocationMatrixMap = new Map(this.allocationMatrix.map(rule => [rule.regime_code, rule]));
         this.overrideRules = ruleDefinitions.risk_override_rules;
     }
 
@@ -103,21 +107,28 @@ class RegimeClassifyEngine {
         for (const rule of this.regimeRules) {
             if (this.evaluateNode(rule.condition, context)) {
                 return {
-                    "regime_code": rule.regime_code,
-                    "state": rule.state,
-                    "description": rule.description
+                  "regime_code": rule.regime_code,
+                  "state": rule.state,
+                  "description": rule.description,
+                  "allocation": this.allocationMatrixMap.get(rule.regime_code).allocation
                 };
             }
         }
-        return context.delta_ad > 0 ? {
-          "regime_code": "REGIME_1",
-          "state": "Broad Uptrend",
-          "description": "The flow of money is spreading across the entire market in line with market consensus",
-        } : {
-          "regime_code": "REGIME_4",
-          "state": "Broad Downtrend",
-          "description": "Widespread selling pressure led to a simultaneous decline in stock prices",
-        };
+
+        let rule = undefined;
+        if (context.ad_slope_5 > 0) {
+          rule = this.regimeCodeMap.get("REGIME_1");
+        } else if (context.ad_slope_5 == 0) {
+          rule = this.regimeCodeMap.get("REGIME_3");
+        } else if (context.ad_slope_5 < 0) {
+          rule = this.regimeCodeMap.get("REGIME_4");
+        }
+        return {
+          "regime_code": rule.regime_code,
+          "state": rule.state,
+          "description": rule.description,
+          "allocation": this.allocationMatrixMap.get(rule.regime_code).allocation
+        }
     }
 
     /**
@@ -326,7 +337,58 @@ const marketRegimeRules = [
     }
   ];
 
-const engine = new RegimeClassifyEngine(marketRegimeRules);
+const allocationMatrix = [
+    {
+      "regime_code": "REGIME_1",
+      "allocation": {
+        "w_stock": 80,
+        "w_cash": 20,
+        "w_vn30/w_stock": 40,
+        "w_midcap/w_stock": 60
+      }
+    },
+    {
+      "regime_code": "REGIME_2",
+      "allocation": {
+        "w_stock": 50,
+        "w_cash": 50,
+        "w_vn30/w_stock": 80,
+        "w_midcap/w_stock": 20
+      }
+    },
+    {
+      "regime_code": "REGIME_3",
+      "allocation": {
+        "w_stock": 50,
+        "w_cash": 50,
+        "w_vn30/w_stock": 50,
+        "w_midcap/w_stock": 50
+      }
+    },
+    {
+      "regime_code": "REGIME_4",
+      "allocation": {
+        "w_stock": 20,
+        "w_cash": 80,
+        "w_vn30/w_stock": 100,
+        "w_midcap/w_stock": 0
+      }
+    },
+    {
+      "regime_code": "REGIME_5",
+      "description": "Allocate a minor position (w_stock* = 30%) for bottom-fishing strictly when momentum indicators (RSI/Stochastic) enter the oversold zone (< 20)",
+      "allocation": {
+        "w_stock": 20,
+        "w_cash": 80,
+        "w_stock*": 30,
+        "w_cash*": 70,
+        "w_vn30/w_stock": 70,
+        "w_midcap/w_stock": 30
+      }
+    }
+  ];
+
+const engine = new RegimeClassifyEngine(marketRegimeRules, allocationMatrix);
 // Regime 5
 console.log(engine.determineBaseRegime({
     "ratio_ad": 0.1,
@@ -338,6 +400,10 @@ console.log(engine.determineBaseRegime({
     "ad_slope_5": 1,
     "ratio_ad": 1.5,
     "index_return_differential_vn30_vnindex": 0.01
+}));
+// Regime 1 - default
+console.log(engine.determineBaseRegime({
+    "ad_slope_5": 10
 }));
 // Regime 2
 console.log(engine.determineBaseRegime({
@@ -354,4 +420,8 @@ console.log(engine.determineBaseRegime({
 console.log(engine.determineBaseRegime({
     "ad_slope_5": -1,
     "ratio_ad": 0.2
+}));
+// Regime 4 - default
+console.log(engine.determineBaseRegime({
+    "ad_slope_5": -1
 }));
