@@ -63,10 +63,25 @@ flowchart LR
 
 ### Data flow
 
-1. **Start SSI ingestion:** The `Stock___SSI_full_workflow` can run from its weekday schedule (12:30, `Asia/Ho_Chi_Minh`, after activation) or its `POST` webhook. The scheduled path runs the embedded SSI data puller. The webhook routes an upload with binary field `file` to ingestion; a request without that field is routed to the analyzer path with `trade_date` from the body or the current date as its default.
-2. **Collect and process market data:** The ingestion path fans out to the corporate-actions, market-data, and exchange-index subworkflows. Other connected branches calculate technical indicators, track market-flow indicators, and update market-regime data. The analyzer queries the consolidated analytics view in ClickHouse and builds its selected-stock output.
-3. **Store and prepare analytics:** n8n sends inserts and queries to ClickHouse over HTTP. ClickHouse tables hold the dimensions, market facts, indices, corporate actions, and calculated indicators; views provide pre-calculated and derived data for analysis. Seed and maintenance workflows also update or purge ClickHouse data.
-4. **Report in Power BI:** Power BI Desktop connects to ClickHouse through ODBC. Refreshing a report reads the prepared tables and views for visualizations. Vnstock, SSI CSV, and the standalone SSI collectors remain alternative collection paths; they are not required when using the integrated SSI workflow.
+```mermaid
+flowchart LR
+    SCHED["Weekday schedule<br/>12:30 VN time"] --> PULL["SSI data puller"]
+    WEBHOOK["POST webhook"] --> FILE{"File attached?"}
+    FILE -->|Yes| INGEST
+    FILE -->|No| ANALYZE
+    PULL --> INGEST["Ingest market data,<br/>corporate actions & indices"]
+
+    INGEST --> TECH["Technical indicators"]
+    INGEST --> FLOW["Market flow & regime"]
+    TECH --> CH["ClickHouse<br/>tables & analytics views"]
+    FLOW --> CH
+    INGEST --> CH
+    CH --> ANALYZE["Analyze stocks<br/>by trade date"]
+    ANALYZE --> RESPONSE["Webhook response"]
+    CH --> PBI["Power BI<br/>ODBC refresh"] --> REPORT["Reports"]
+```
+
+Activate the workflow before using it. The webhook can analyze a supplied file or, without a file, run analysis for `trade_date` (defaults to today). Power BI continues to refresh from ClickHouse via ODBC. Vnstock, SSI CSV, and standalone collectors are alternative data sources.
 
 ## Clickhouse Setup
 
@@ -282,8 +297,13 @@ Review technical and financial analysis to select a target pool of potential sto
 Open Power Query Editor, select the query, and click **Refresh Preview** (or **Apply & Close**) to trigger the Python Sharpe ratio optimization model.
 4. **Interpret Output Metrics**:
 * **`optimal_weight`**: Target capital allocation percentage for each asset (sums to 1.0).
-* **`allocated_amount`**: Precise capital amount to spend on each stock ($\text{optimal\_weight} \times \text{TotalInvestment}$).
-* **`suggested_shares`**: Recommended number of shares to purchase ($\lfloor \text{allocated\_amount} / \text{close\_price} \rfloor$).
+* **`allocated_amount`**: Precise capital amount to spend on each stock:
+
+    $$\text{allocated\_amount} = \text{optimal\_weight} \times \text{TotalInvestment}$$
+
+* **`suggested_shares`**: Recommended number of shares to purchase:
+
+    $$\text{suggested\_shares} = \left\lfloor \frac{\text{allocated\_amount}}{\text{close\_price}} \right\rfloor$$
 
 ### Purge Cold data
 1. Run workflow in n8n `n8n_workflows\Stock__Purge_Data.json`
