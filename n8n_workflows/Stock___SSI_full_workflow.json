@@ -8,13 +8,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "109d66fb-88ca-404b-95c4-2b821b3809ef",
+      "id": "95f82096-ada7-408c-9dd9-cc1c306167b4",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        320,
-        420
+        -320,
+        560
       ],
       "webhookId": "b9ce9c2f-a690-4121-a6dc-76f8a885a7a9"
     },
@@ -22,26 +22,26 @@
       "parameters": {
         "workflowId": "9"
       },
-      "id": "442dbcdc-7f02-41de-ac74-eaf10c0a2bf1",
+      "id": "bc6efd3e-5280-431f-8eff-62a85863ef60",
       "name": "Execute Workflow - Mine Market Data",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        740,
-        120
+        320,
+        260
       ]
     },
     {
       "parameters": {
         "workflowId": "8"
       },
-      "id": "51ef13ce-32d1-4a5c-bff2-4a6a1441509d",
+      "id": "d50a882d-7306-4f21-ab04-f56568a9e71a",
       "name": "Execute Workflow - Mine Corporate Actions",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        740,
-        -100
+        320,
+        40
       ]
     },
     {
@@ -49,26 +49,26 @@
         "mode": "chooseBranch",
         "output": "input2"
       },
-      "id": "81e4b9a1-19a7-4371-9de7-bb3b16eb413b",
+      "id": "9fafeb9c-bd8b-4235-b3bf-c7331224c00a",
       "name": "Merge",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2.1,
       "position": [
-        940,
-        220
+        520,
+        360
       ]
     },
     {
       "parameters": {
         "workflowId": "5"
       },
-      "id": "d2f4089a-850a-49ea-9ef8-cf15ef90efce",
+      "id": "41775cdc-8c9f-46da-9146-92166e89c350",
       "name": "Execute Workflow - Technical Indicators Calculation",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        1120,
-        220
+        700,
+        360
       ]
     },
     {
@@ -94,13 +94,13 @@
         "body": "=SELECT \n    symbol as stock_key,\n    trade_date as date_key,\n    sma_20_slope_k1,\n    sma_20_slope_k5,\n    sma_50_slope_k1,\n    sma_50_slope_k5,\n    signal_crossover_sma_20_50,\n    signal_crossover_sma_50_100,\n    expected_return_t2_n20,\n    volatility_t2_n20,\n    rsi_7,\n    rsi_14,\n    signal_volume_outlier,\n    days_since_volume_outlier\nFROM n8n_olap.v_analytics_master_consolidated\nWHERE date_key = '{{ $json.trade_date }}' \n    AND signal_crossover_sma_50_100 >= 0\n    AND rsi_14 BETWEEN 30 AND 70\n    AND volume >= 50000\n    AND sma_50_slope_k1 >= 0\n    AND sma_20_slope_k1 >= 0\n    AND sma_20_slope_k5 >= 0\n    AND sma_50_slope_k5 >= 0\n    AND volatility_t2_n20 BETWEEN 0.01 AND 0.05\n    AND expected_return_t2_n20 BETWEEN 0.002 AND 0.055\n    AND rsi_7 BETWEEN 40 AND 85\n    AND signal_crossover_sma_20_50 >= 0\n    AND signal_volume_outlier = 0\n    AND close >= 15\n    AND days_since_volume_outlier >= 4\nORDER BY \n    expected_return_t2_n20 DESC,\n    stock_key ASC,\n    date_key ASC,\n    sma_20_slope_k1 ASC,\n    sma_20_slope_k5 ASC,\n    sma_50_slope_k1 ASC,\n    sma_50_slope_k5 ASC,\n    signal_crossover_sma_20_50 ASC,\n    signal_crossover_sma_50_100 ASC,\n    volatility_t2_n20 ASC,\n    rsi_7 ASC,\n    rsi_14 ASC,\n    signal_volume_outlier ASC,\n    days_since_volume_outlier ASC\nLIMIT 501 FORMAT JSON;",
         "options": {}
       },
-      "id": "b7442ddf-85e9-49c6-a7a3-36180da4481d",
+      "id": "59ec9799-c421-4916-8666-2043df00186a",
       "name": "Default analyser",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1680,
-        440
+        1260,
+        580
       ]
     },
     {
@@ -118,13 +118,13 @@
           "dotNotation": false
         }
       },
-      "id": "7ec47b04-0247-45d2-8e6a-8835ce5e2eeb",
+      "id": "85feb1f5-6010-4acb-a336-72071b645c21",
       "name": "Set trade_date",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        1520,
-        440
+        1100,
+        580
       ]
     },
     {
@@ -138,39 +138,39 @@
           ]
         }
       },
-      "id": "f08a2e55-c0d0-450d-8ca1-d3e76a0ee102",
+      "id": "e970a594-6c32-4a3c-89aa-c57f6e31c280",
       "name": "IF",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        520,
-        420
+        -120,
+        560
       ]
     },
     {
       "parameters": {
         "jsCode": "const items = $input.first().json.data;\nconst uniqueStockKeys = [...new Set(items.map(item => item.stock_key))];\nconst resultString = uniqueStockKeys.join(',');\n\nreturn [\n  {\n    json: {\n      stock_keys_string: resultString\n    }\n  }\n];"
       },
-      "id": "b87494c4-ec4a-474e-b9d0-ce33558e75e4",
+      "id": "396295f4-5904-44d7-9baf-6f511e34adc5",
       "name": "Code",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        1860,
-        440
+        1440,
+        580
       ]
     },
     {
       "parameters": {
         "workflowId": "12"
       },
-      "id": "96efc4bd-ce63-4ca8-8938-1287772207e0",
+      "id": "ee3c45f3-7576-4373-bbc1-dc6579d9b4d3",
       "name": "Execute Workflow - Mine Exchange Indices",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        720,
-        560
+        300,
+        700
       ]
     },
     {
@@ -178,39 +178,39 @@
         "mode": "chooseBranch",
         "output": "input2"
       },
-      "id": "aa010ae3-e2ae-424f-b58b-624436188c9a",
+      "id": "3a36b41e-ee35-4d90-84dc-5e09b3f19872",
       "name": "Merge1",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2.1,
       "position": [
-        940,
-        580
+        520,
+        720
       ]
     },
     {
       "parameters": {
         "workflowId": "13"
       },
-      "id": "71dba851-99b1-43d2-bd90-1a5f45176f99",
+      "id": "c5d2dbf3-ba17-4c08-8d8d-570699bb4f5a",
       "name": "Execute Workflow - Track Market Flow Indicator",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        1120,
-        580
+        700,
+        720
       ]
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "04dfbb0c-3a19-4514-a6cd-bf3b8bb1de39",
+      "id": "72c72a8f-1241-43bd-b713-19dbc1e614f1",
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        2220,
-        580
+        1800,
+        720
       ]
     },
     {
@@ -218,26 +218,26 @@
         "mode": "chooseBranch",
         "output": "input2"
       },
-      "id": "c14fe433-9c9b-4205-b37c-6f843381ef9c",
+      "id": "30578a1b-c0ab-42a6-8e60-ece61b9d8c81",
       "name": "Merge2",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2.1,
       "position": [
-        1340,
-        380
+        920,
+        520
       ]
     },
     {
       "parameters": {
         "workflowId": "15"
       },
-      "id": "5263fc63-605a-4783-991f-73c7e4831e60",
+      "id": "168d651c-4fa2-4dcb-81f4-e6db56268cbc",
       "name": "Execute Workflow - Track Market Regime",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        1520,
-        600
+        1100,
+        740
       ]
     },
     {
@@ -245,13 +245,13 @@
         "mode": "chooseBranch",
         "output": "input2"
       },
-      "id": "b94cb26d-4b4d-44e7-a359-54ebde0ba73f",
+      "id": "3b3047f6-6c4d-4ad0-b94a-8cd58b79c7b1",
       "name": "Merge3",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2.1,
       "position": [
-        1320,
-        600
+        900,
+        740
       ]
     },
     {
@@ -260,13 +260,67 @@
         "combinationMode": "multiplex",
         "options": {}
       },
-      "id": "c43f0353-c1ab-40a1-81ad-6063b5f8d256",
+      "id": "9cda9b73-121f-4328-9867-2e350904a1ca",
       "name": "Merge4",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2.1,
       "position": [
-        2040,
-        580
+        1620,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "triggerAtHour": 12,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "id": "94d343c9-f6af-470d-9907-2c536a7cbff8",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node: Export Data as Binary File (Form-Data / Webhook payload format)\nasync function execute() {\n    const baseHeaders = {\n        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',\n        'Accept': 'application/json, text/plain, */*',\n        'Accept-Language': 'en-US,en;q=0.9,vi;q=0.8',\n        'Referer': 'https://iboard.ssi.com.vn/',\n        'Origin': 'https://iboard.ssi.com.vn/'\n    };\n\n    try {\n        // Step 1: Initialize session and safely extract cookies\n        const portalResponse = await this.helpers.httpRequest({\n            method: 'GET',\n            url: 'https://iboard.ssi.com.vn/',\n            headers: baseHeaders,\n            resolveWithFullResponse: true,\n            returnFullResponse: true\n        });\n\n        const headers = portalResponse.headers || {};\n        const cookieKey = Object.keys(headers).find(k => k.toLowerCase() === 'set-cookie');\n        const setCookieHeader = cookieKey ? headers[cookieKey] : null;\n\n        const requestHeaders = { ...baseHeaders };\n        if (setCookieHeader) {\n            const cookieString = Array.isArray(setCookieHeader) ? setCookieHeader.join('; ') : setCookieHeader;\n            requestHeaders['Cookie'] = cookieString;\n        }\n\n        // Step 2: Fetch Exchange Indices Data\n        const indexIds = [\"VNINDEX\", \"VN30\", \"HNX30\", \"VNXALL\", \"HNXIndex\", \"HNXUpcomIndex\"];\n        const exchangeUrl = 'https://iboard-query.ssi.com.vn/exchange-index/multiple';\n        \n        let exchangeIndicesData = { code: 'ERROR', totalRecords: 0, data: [] };\n        try {\n            const exchangeResponse = await this.helpers.httpRequest({\n                method: 'POST',\n                url: exchangeUrl,\n                headers: { ...requestHeaders, 'Content-Type': 'application/json' },\n                body: { indexIds },\n                json: true\n            });\n\n            if (exchangeResponse) {\n                exchangeIndicesData = {\n                    code: 'SUCCESS',\n                    totalRecords: Array.isArray(exchangeResponse.data) ? exchangeResponse.data.length : 0,\n                    data: exchangeResponse.data || []\n                };\n            }\n        } catch (e) {\n            console.error('Exchange Indices fetch error:', e.message);\n        }\n\n        // Step 3: Fetch Market Data endpoints in parallel\n        const marketUrls = [\n            'https://iboard-query.ssi.com.vn/stock/group/VN30',\n            'https://iboard-query.ssi.com.vn/stock/exchange/hose?boardId=MAIN',\n            'https://iboard-query.ssi.com.vn/stock/exchange/hnx?boardId=MAIN',\n            'https://iboard-query.ssi.com.vn/stock/exchange/upcom?boardId=MAIN'\n        ];\n\n        let marketData = { code: 'ERROR', totalRecords: 0, data: [] };\n        const results = await Promise.all(\n            marketUrls.map(async (url) => {\n                try {\n                    return await this.helpers.httpRequest({\n                        method: 'GET',\n                        url: url,\n                        headers: requestHeaders,\n                        json: true\n                    });\n                } catch (err) {\n                    return null;\n                }\n            })\n        );\n\n        const uniqueStocksMap = new Map();\n        results.forEach(response => {\n            if (response && Array.isArray(response.data)) {\n                response.data.forEach(item => {\n                    if (item && item.stockSymbol) {\n                        uniqueStocksMap.set(item.stockSymbol, item);\n                    }\n                });\n            }\n        });\n\n        const aggregatedData = Array.from(uniqueStocksMap.values());\n        if (aggregatedData.length > 0) {\n            marketData = {\n                code: 'SUCCESS',\n                totalRecords: aggregatedData.length,\n                data: aggregatedData\n            };\n        }\n\n        const finalResult = {\n            exchangeIndicesData,\n            marketData\n        };\n\n        // Step 4: Convert JSON object to Binary File format (ready for Form-Data / Webhook body)\n        const jsonString = JSON.stringify(finalResult, null, 2);\n        const binaryBuffer = Buffer.from(jsonString, 'utf-8');\n\n        // Generate dynamic file name with current date (YYYYMMDD)\n        const now = new Date();\n        const year = now.getFullYear();\n        const month = String(now.getMonth() + 1).padStart(2, '0');\n        const day = String(now.getDate()).padStart(2, '0');\n        const fileName = `stock_master_data_${year}${month}${day}.json`;\n\n        // Return output containing both JSON summary and Binary file data property\n        return [{\n            json: {\n                status: \"SUCCESS\",\n                totalExchangeRecords: exchangeIndicesData.totalRecords,\n                totalMarketRecords: marketData.totalRecords,\n                fileName: fileName\n            },\n            binary: {\n                data: await this.helpers.prepareBinaryData(binaryBuffer, fileName, 'application/json')\n            }\n        }];\n\n    } catch (error) {\n        return [{\n            json: {\n                code: 'FATAL_ERROR',\n                message: error.message\n            }\n        }];\n    }\n}\n\nreturn await execute();"
+      },
+      "id": "01250c14-f2eb-48a7-9ad9-e4f0bca19555",
+      "name": "SSI data puller",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all();"
+      },
+      "id": "2d63ca57-aeba-4a56-bdca-956d5c9fd6a3",
+      "name": "No-op",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        120,
+        540
       ]
     }
   ],
@@ -320,39 +374,9 @@
       "main": [
         [
           {
-            "node": "Execute Workflow - Mine Market Data",
+            "node": "No-op",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Execute Workflow - Mine Corporate Actions",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          },
-          {
-            "node": "Execute Workflow - Mine Exchange Indices",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge1",
-            "type": "main",
-            "index": 1
-          },
-          {
-            "node": "Merge2",
-            "type": "main",
-            "index": 1
-          },
-          {
-            "node": "Merge3",
-            "type": "main",
-            "index": 1
           }
         ],
         [
@@ -473,19 +497,82 @@
           }
         ]
       ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "SSI data puller",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SSI data puller": {
+      "main": [
+        [
+          {
+            "node": "No-op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No-op": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - Mine Corporate Actions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute Workflow - Mine Market Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Execute Workflow - Mine Exchange Indices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
-    "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all",
+    "timezone": "Asia/Ho_Chi_Minh",
     "saveManualExecutions": false,
-    "callerPolicy": "workflowsFromSameOwner"
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
   },
-  "versionId": "f1f20fe2-0a3a-4c11-932f-3739df3410f0",
-  "id": "11",
+  "versionId": "9e190a47-e3af-4299-a991-e7b6221f8581",
+  "id": "2",
   "meta": {
-    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+    "instanceId": "990a94333b6e2ace928598b2add9c4e2a149a41a04dc4bd8f4bffa31d82cf0a6"
   },
   "tags": []
 }

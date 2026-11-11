@@ -1,4 +1,9 @@
-/* --- 
+/* ---
+    Browser-console collector for an SSI current market snapshot.
+    Fetches exchange indices and stock lists, then downloads a combined JSON file.
+    Output sample: ./samples/stock_master_data_sample.json
+--- */
+/* ---
     Des: Get Exchange Indices Data
     Return type: JSON
     Sample: ./samples/exchange_indices_data_sample.json
@@ -46,8 +51,8 @@ async function getExchangeIndicesData() {
     }
 }
 
-/* --- 
-    Des: Get Exchange Indices Data
+/* ---
+    Des: Get Market Data from VN30, HOSE, HNX, and UPCoM endpoints
     Return type: JSON
     Sample: ./samples/market_data_sample.json
 --- */
@@ -107,8 +112,8 @@ async function getMarketData() {
     }
 }
 
-/* --- 
-    Des: Dowload data as JSON
+/* ---
+    Des: Download combined exchange-index and market data as JSON
     Sample: ./samples/stock_master_data_sample.json
 --- */
 async function downloadData() {

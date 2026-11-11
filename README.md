@@ -63,10 +63,10 @@ flowchart LR
 
 ### Data flow
 
-1. Scheduled or manually triggered n8n workflows collect data from Vnstock, SSI exports, or SSI dashboard payloads.
-2. Workflow nodes normalize and de-duplicate records, then write them to ClickHouse over HTTP. Seed and maintenance workflows also update or purge data there.
-3. ClickHouse views provide pre-calculated and derived data for technical analysis and reporting.
-4. Power BI Desktop reads ClickHouse through ODBC to refresh reports and visualizations.
+1. **Start SSI ingestion:** The `Stock___SSI_full_workflow` can run from its weekday schedule (12:30, `Asia/Ho_Chi_Minh`, after activation) or its `POST` webhook. The scheduled path runs the embedded SSI data puller. The webhook routes an upload with binary field `file` to ingestion; a request without that field is routed to the analyzer path with `trade_date` from the body or the current date as its default.
+2. **Collect and process market data:** The ingestion path fans out to the corporate-actions, market-data, and exchange-index subworkflows. Other connected branches calculate technical indicators, track market-flow indicators, and update market-regime data. The analyzer queries the consolidated analytics view in ClickHouse and builds its selected-stock output.
+3. **Store and prepare analytics:** n8n sends inserts and queries to ClickHouse over HTTP. ClickHouse tables hold the dimensions, market facts, indices, corporate actions, and calculated indicators; views provide pre-calculated and derived data for analysis. Seed and maintenance workflows also update or purge ClickHouse data.
+4. **Report in Power BI:** Power BI Desktop connects to ClickHouse through ODBC. Refreshing a report reads the prepared tables and views for visualizations. Vnstock, SSI CSV, and the standalone SSI collectors remain alternative collection paths; they are not required when using the integrated SSI workflow.
 
 ## Clickhouse Setup
 
@@ -247,10 +247,23 @@ sys.stdin.reconfigure(encoding='utf-8')
 1. Download market data *csv files from SSI
 2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_csv.json`
 
-or
+For an integrated SSI ingestion and analysis run, import [Stock___SSI_full_workflow.json](n8n_workflows/Stock___SSI_full_workflow.json) into n8n. The exported workflow is inactive by default; activate it to use its scheduled trigger or production webhook. It has two entry points:
 
-1. Open browser's console while being in SSI dashboard page, copy javascript code inside `scripts\ssi_data_puller.js` 
-2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_json.json`, `n8n_workflows\Stock___Mine_Corporate_Actions_SSI_json.json` and  `n8n_workflows\Stock___Mine_Exchange_Indices_Data_SSI_json.json`
+1. **Schedule:** after activation, it starts on weekdays at 12:30 in the `Asia/Ho_Chi_Minh` timezone. Its embedded SSI data-puller node gathers a current snapshot, then the workflow fans out to invoke its corporate-actions, market-data, and exchange-index subworkflows. Other branches calculate technical indicators, track market-flow indicators and market regime, and run the analyzer.
+2. **Webhook:** send a `POST` to the workflow's `ssi-full-workflow` webhook path. An uploaded binary file under the `file` field takes the ingestion path. Without that field, the workflow uses `trade_date` from the request body or defaults to the current date, then runs the default analyzer path. The webhook response is sent after the response node is reached.
+
+The standalone JavaScript collectors below are useful when you only need the SSI snapshot or want to reuse collection code; the full workflow already has its own embedded SSI data-puller node.
+
+##### Browser collector
+Use `scripts/ssi_data_puller_browser.js` when you want to download a JSON snapshot manually:
+1. Open the SSI iBoard dashboard in a browser and open its developer console.
+2. Paste and run the script. It requests exchange-index data for VNINDEX, VN30, HNX30, VNXALL, HNXIndex, and HNXUpcomIndex, plus the VN30 group and HOSE, HNX, and UPCoM main-board stock lists.
+3. The script merges stock records by `stockSymbol` and downloads `stock_master_data_YYYYMMDD.json`. The JSON contains `exchangeIndicesData` and `marketData`, each with `code`, `totalRecords`, and `data` fields. See [the sample output](scripts/samples/stock_master_data_sample.json).
+
+##### n8n Code node collector
+Use `scripts/ssi_data_puller_node.js` by pasting its contents into an n8n Code node when you want a standalone collector. It makes SSI index and stock-list requests using n8n's `this.helpers.httpRequest`, first requesting the SSI portal to obtain cookies. It returns an n8n item with a JSON summary (`status`, record counts, and `fileName`) and a binary property named `data` containing the complete JSON file. It does not download a file to the local machine. The filename is `stock_master_data_YYYYMMDD.json`. To send this binary to the full workflow's webhook ingestion path, rename/map the binary property from `data` to the expected `file` field.
+
+Both standalone collectors use the current SSI responses when run; the date in the filename is the run date, not a historical-data selector. The browser version logs request errors and may omit a failed data section from the downloaded JSON. The n8n version can return partial results when individual requests fail. Neither standalone script collects corporate actions; the integrated workflow above includes a corporate-actions branch.
 
 - Primary Use Case: Daily real-time data extraction.
 - Technical Constraint: Restricted to current-day data only, requiring immediate daily processing for high throughput.
