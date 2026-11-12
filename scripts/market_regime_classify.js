@@ -110,6 +110,7 @@ class RegimeClassifyEngine {
                   "regime_code": rule.regime_code,
                   "state": rule.state,
                   "description": rule.description,
+                  "conditions": rule.condition,
                   "allocation": this.allocationMatrixMap.get(rule.regime_code).allocation
                 };
             }
@@ -118,15 +119,37 @@ class RegimeClassifyEngine {
         let rule = undefined;
         if (context.ad_slope_5 > 0) {
           rule = this.regimeCodeMap.get("REGIME_1");
+          rule.condition = {
+            "operator": ">",
+            "operands": [
+              { "field": "ad_slope_5" },
+              { "value": 0 }
+            ]
+          }
         } else if (context.ad_slope_5 == 0) {
           rule = this.regimeCodeMap.get("REGIME_3");
+          rule.condition = {
+            "operator": "==",
+            "operands": [
+              { "field": "ad_slope_5" },
+              { "value": 0 }
+            ]
+          }
         } else if (context.ad_slope_5 < 0) {
           rule = this.regimeCodeMap.get("REGIME_4");
+          rule.condition = {
+            "operator": "<",
+            "operands": [
+              { "field": "ad_slope_5" },
+              { "value": 0 }
+            ]
+          }
         }
         return {
           "regime_code": rule.regime_code,
           "state": rule.state,
           "description": rule.description,
+          "conditions": rule.condition,
           "allocation": this.allocationMatrixMap.get(rule.regime_code).allocation
         }
     }
