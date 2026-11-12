@@ -32,8 +32,8 @@
       "allocation": {
         "w_stock": 20,
         "w_cash": 80,
-        "w_vn30/w_stock": 100,
-        "w_midcap/w_stock": 0
+        "w_vn30/w_stock": 80,
+        "w_midcap/w_stock": 20
       }
     },
     {

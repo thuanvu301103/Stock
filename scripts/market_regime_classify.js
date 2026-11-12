@@ -9,7 +9,7 @@ class RegimeClassifyEngine {
         this.regimeCodeMap = new Map(this.regimeRules.map(rule => [rule.regime_code, rule]));
         this.allocationMatrix = allocationMatrixDefinitions;
         this.allocationMatrixMap = new Map(this.allocationMatrix.map(rule => [rule.regime_code, rule]));
-        this.overrideRules = ruleDefinitions.risk_override_rules;
+        //this.overrideRules = ruleDefinitions.risk_override_rules;
     }
 
     /**
@@ -107,10 +107,12 @@ class RegimeClassifyEngine {
         for (const rule of this.regimeRules) {
             if (this.evaluateNode(rule.condition, context)) {
                 return {
-                  "regime_code": rule.regime_code,
-                  "state": rule.state,
-                  "description": rule.description,
-                  "conditions": rule.condition,
+                  "market_classification": {
+                    "regime_code": rule.regime_code,
+                    "state": rule.state,
+                    "description": rule.description,
+                    "conditions": rule.condition,
+                  },
                   "allocation": this.allocationMatrixMap.get(rule.regime_code).allocation
                 };
             }
@@ -118,7 +120,7 @@ class RegimeClassifyEngine {
 
         let rule = undefined;
         if (context.ad_slope_5 > 0) {
-          rule = this.regimeCodeMap.get("REGIME_1");
+          rule = JSON.parse(JSON.stringify(this.regimeCodeMap.get("REGIME_1")));
           rule.condition = {
             "operator": ">",
             "operands": [
@@ -127,7 +129,7 @@ class RegimeClassifyEngine {
             ]
           }
         } else if (context.ad_slope_5 == 0) {
-          rule = this.regimeCodeMap.get("REGIME_3");
+          rule = JSON.parse(JSON.stringify(this.regimeCodeMap.get("REGIME_3")));
           rule.condition = {
             "operator": "==",
             "operands": [
@@ -136,7 +138,7 @@ class RegimeClassifyEngine {
             ]
           }
         } else if (context.ad_slope_5 < 0) {
-          rule = this.regimeCodeMap.get("REGIME_4");
+          rule = JSON.parse(JSON.stringify(this.regimeCodeMap.get("REGIME_4")));
           rule.condition = {
             "operator": "<",
             "operands": [
@@ -146,10 +148,12 @@ class RegimeClassifyEngine {
           }
         }
         return {
-          "regime_code": rule.regime_code,
-          "state": rule.state,
-          "description": rule.description,
-          "conditions": rule.condition,
+          "market_classification": {
+            "regime_code": rule.regime_code,
+            "state": rule.state,
+            "description": `No rule matched - ${rule.description}`,
+            "conditions": rule.condition,
+          },
           "allocation": this.allocationMatrixMap.get(rule.regime_code).allocation
         }
     }
