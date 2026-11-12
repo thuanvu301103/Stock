@@ -1,29 +1,35 @@
 {
   "risk_override_rules": [
     {
-      "override_id": "EDGE_CASE_1_BULL_ON_WEIGHT",
+      "override_id": "EDGE_CASE_1",
+      "priority": 1,
+      "state": "Bull on Weight",
+      "description": "VN-Index surges while the A/D Line falls, signaling a large-cap-driven Bull on Weight trap; force REGIME_2, reduce mid/small-cap exposure, and halt new buys outside VN30.",
       "condition": {
         "operator": "AND",
         "operands": [
           {
             "operator": ">",
             "operands": [
-              { "field": "return_vnindex" },
-              { "value": 1.0 }
+              { "field": "return" },
+              { "value": 1.5 }
             ]
           },
           {
             "operator": "<",
             "operands": [
-              { "field": "r_ad" },
+              { "field": "ratio_ad" },
               { "value": 0.5 }
             ]
           }
         ]
       },
-      "actions": {
-        "force_regime": "REGIME_2"
-      }
+      "actions": [
+        {
+          "method": "force_regime",
+          "args": ["REGIME_2"]
+        }
+      ]
     },
     {
       "override_id": "EDGE_CASE_2_LIQUIDITY_CRUNCH",
