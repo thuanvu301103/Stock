@@ -1,0 +1,52 @@
+{
+  "capital_allocation_decision_matrix": [
+    {
+      "regime_code": "REGIME_1",
+      "allocation": {
+        "w_stock": 80,
+        "w_cash": 20,
+        "w_vn30/w_stock": 40,
+        "w_midcap/w_stock": 60
+      }
+    },
+    {
+      "regime_code": "REGIME_2",
+      "allocation": {
+        "w_stock": 50,
+        "w_cash": 50,
+        "w_vn30/w_stock": 80,
+        "w_midcap/w_stock": 20
+      }
+    },
+    {
+      "regime_code": "REGIME_3",
+      "allocation": {
+        "w_stock": 50,
+        "w_cash": 50,
+        "w_vn30/w_stock": 50,
+        "w_midcap/w_stock": 50
+      }
+    },
+    {
+      "regime_code": "REGIME_4",
+      "allocation": {
+        "w_stock": 20,
+        "w_cash": 80,
+        "w_vn30/w_stock": 100,
+        "w_midcap/w_stock": 0
+      }
+    },
+    {
+      "regime_code": "REGIME_5",
+      "description": "Allocate a minor position (w_stock* = 30%) for bottom-fishing strictly when momentum indicators (RSI/Stochastic) enter the oversold zone (< 20)",
+      "allocation": {
+        "w_stock": 20,
+        "w_cash": 80,
+        "w_stock*": 30,
+        "w_cash*": 70,
+        "w_vn30/w_stock": 70,
+        "w_midcap/w_stock": 30
+      }
+    }
+  ]
+}

@@ -28,7 +28,7 @@ flowchart LR
     end
 
     subgraph Analytics["ClickHouse data model"]
-        TABLES["Dimensions and facts<br/>dim_date, dim_stock,<br/>fact_market_data, sentiment,<br/>technical indicators, corporate actions"]
+        TABLES["Dimensions and facts<br/>dim_date, dim_stock,<br/>fact_market_data, exchange indices,<br/>sentiment, technical indicators,<br/>corporate actions"]
         VIEWS["Views<br/>pre-calculation, derived metrics,<br/>analytics master, indicators"]
         TABLES --> VIEWS
     end
@@ -63,10 +63,25 @@ flowchart LR
 
 ### Data flow
 
-1. Scheduled or manually triggered n8n workflows collect data from Vnstock, SSI exports, or SSI dashboard payloads.
-2. Workflow nodes normalize and de-duplicate records, then write them to ClickHouse over HTTP. Seed and maintenance workflows also update or purge data there.
-3. ClickHouse views provide pre-calculated and derived data for technical analysis and reporting.
-4. Power BI Desktop reads ClickHouse through ODBC to refresh reports and visualizations.
+```mermaid
+flowchart LR
+    SCHED["Weekday schedule<br/>12:30 VN time"] --> PULL["SSI data puller"]
+    WEBHOOK["POST webhook"] --> FILE{"File attached?"}
+    FILE -->|Yes| INGEST
+    FILE -->|No| ANALYZE
+    PULL --> INGEST["Ingest market data,<br/>corporate actions & indices"]
+
+    INGEST --> TECH["Technical indicators"]
+    INGEST --> FLOW["Market flow & regime"]
+    TECH --> CH["ClickHouse<br/>tables & analytics views"]
+    FLOW --> CH
+    INGEST --> CH
+    CH --> ANALYZE["Analyze stocks<br/>by trade date"]
+    ANALYZE --> RESPONSE["Webhook response"]
+    CH --> PBI["Power BI<br/>ODBC refresh"] --> REPORT["Reports"]
+```
+
+Activate the workflow before using it. The webhook can analyze a supplied file or, without a file, run analysis for `trade_date` (defaults to today). Power BI continues to refresh from ClickHouse via ODBC. Vnstock, SSI CSV, and standalone collectors are alternative data sources.
 
 ## Clickhouse Setup
 
@@ -80,7 +95,8 @@ flowchart LR
 1. **fact_market_data (Market Price & Volume)**: The central repository for Daily OHLCV (Open, High, Low, Close, Volume) data. Physically sorted by symbol and trade_date to make calculating SMA, EMA, and CMF lightning-fast.
 2. **fact_market_sentiment (Capital Flow)**: Tracks institutional and foreign movement to gauge market sentiment.
 3. **fact_technical_indicators (Technical Indicators)**: Stores pre-calculated technical indicator values derived from historical price and volume data across standard timeframes.
-4. **corporate_actions** and **fact_portfolio_return_metrics**: Store corporate-action records and portfolio-return metrics.
+4. **fact_exchange_index_histories (Exchange Index History)**: Stores historical index values, price changes, market breadth, and trading activity for Vietnam's HOSE, HNX, and UPCoM indices. The `ReplacingMergeTree` table is partitioned monthly by `time` and ordered by `(index_id, time)`. See [the exchange indices documentation](docs/exchange_indices.md) for the full column schema and covered indices; its DDL is in `clickhouse_query/create_table/create_fact_exchange_index_history.sql`.
+5. **corporate_actions** and **fact_portfolio_return_metrics**: Store corporate-action records and portfolio-return metrics.
 
 #### Pre-calculated and Analytics Views
 1. **v_pre_calculate_market_data**: Provides pre-calculated price and volume values used by downstream calculations.
@@ -230,12 +246,15 @@ sys.stdin.reconfigure(encoding='utf-8')
 
 ### Seed data
 1. **dim_stock**: Import data from `clickhouse_seed_data\stock_seed_data.csv` to clickhouse
-2. **dim_date**: Run n8n workflow `n8n_workflows\Stock__Seed_Dim_Date.json`
-3. **fact_stock_prices**: Run n8n workflwo `n8n_workflows\Stock__Seed_Price_Data.json`
+2. **dim_date**: 
+    - The n8n workflow `n8n_workflows/Stock___Seed_Dim_Date.json` has a monthly schedule on the first day of each month at 12:00, using n8n's configured timezone (`GENERIC_TIMEZONE`; Docker Compose defaults to UTC). Ensure the workflow is active in n8n for the schedule to run. Each scheduled run inserts dates from the first day of the current month through the last day of the following two months, then optimizes the table to remove duplicate rows. 
+    - For initial setup or a custom range, send `POST /webhook/seed-dim-date` with `start_date` and `end_date` as `YYYY-MM-DD` form-data fields; if either field is omitted, the workflow uses its default range.
+    - `dim_date.is_trading_day` currently marks weekdays as trading days and weekends as non-trading days; it does not account for Vietnamese market holidays.
+3. **fact_stock_prices**: Run n8n workflow `n8n_workflows/Stock___Seed_Price_Data.json`
 
 ### Mine Stock data
 
-#### Vnstock as Data source 
+#### Vnstock as Data source (Deprecated)
 1. Run workflow in n8n: `n8n_workflows\Stock__Mine_Market_Data_Vnstock.json`
 2. If there is error, re-run the workflow with option `Retry with curently saved workflow (from node with error)`
 
@@ -246,10 +265,23 @@ sys.stdin.reconfigure(encoding='utf-8')
 1. Download market data *csv files from SSI
 2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_csv.json`
 
-or
+For an integrated SSI ingestion and analysis run, import [Stock___SSI_full_workflow.json](n8n_workflows/Stock___SSI_full_workflow.json) into n8n. The exported workflow is inactive by default; activate it to use its scheduled trigger or production webhook. It has two entry points:
 
-1. Open browser's console while being in SSI dashboard page, copy javascript code inside `scripts\ssi_data_puller.js` 
-2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_json.json` and `n8n_workflows\Stock___Mine_Corporate_Actions_SSI_json.json`
+1. **Schedule:** after activation, it starts on weekdays at 12:30 in the `Asia/Ho_Chi_Minh` timezone. Its embedded SSI data-puller node gathers a current snapshot, then the workflow fans out to invoke its corporate-actions, market-data, and exchange-index subworkflows. Other branches calculate technical indicators, track market-flow indicators and market regime, and run the analyzer.
+2. **Webhook:** send a `POST` to the workflow's `ssi-full-workflow` webhook path. An uploaded binary file under the `file` field takes the ingestion path. Without that field, the workflow uses `trade_date` from the request body or defaults to the current date, then runs the default analyzer path. The webhook response is sent after the response node is reached.
+
+The standalone JavaScript collectors below are useful when you only need the SSI snapshot or want to reuse collection code; the full workflow already has its own embedded SSI data-puller node.
+
+##### Browser collector
+Use `scripts/ssi_data_puller_browser.js` when you want to download a JSON snapshot manually:
+1. Open the SSI iBoard dashboard in a browser and open its developer console.
+2. Paste and run the script. It requests exchange-index data for VNINDEX, VN30, HNX30, VNXALL, HNXIndex, and HNXUpcomIndex, plus the VN30 group and HOSE, HNX, and UPCoM main-board stock lists.
+3. The script merges stock records by `stockSymbol` and downloads `stock_master_data_YYYYMMDD.json`. The JSON contains `exchangeIndicesData` and `marketData`, each with `code`, `totalRecords`, and `data` fields. See [the sample output](scripts/samples/stock_master_data_sample.json).
+
+##### n8n Code node collector
+Use `scripts/ssi_data_puller_node.js` by pasting its contents into an n8n Code node when you want a standalone collector. It makes SSI index and stock-list requests using n8n's `this.helpers.httpRequest`, first requesting the SSI portal to obtain cookies. It returns an n8n item with a JSON summary (`status`, record counts, and `fileName`) and a binary property named `data` containing the complete JSON file. It does not download a file to the local machine. The filename is `stock_master_data_YYYYMMDD.json`. To send this binary to the full workflow's webhook ingestion path, rename/map the binary property from `data` to the expected `file` field.
+
+Both standalone collectors use the current SSI responses when run; the date in the filename is the run date, not a historical-data selector. The browser version logs request errors and may omit a failed data section from the downloaded JSON. The n8n version can return partial results when individual requests fail. Neither standalone script collects corporate actions; the integrated workflow above includes a corporate-actions branch.
 
 - Primary Use Case: Daily real-time data extraction.
 - Technical Constraint: Restricted to current-day data only, requiring immediate daily processing for high throughput.
@@ -268,8 +300,13 @@ Review technical and financial analysis to select a target pool of potential sto
 Open Power Query Editor, select the query, and click **Refresh Preview** (or **Apply & Close**) to trigger the Python Sharpe ratio optimization model.
 4. **Interpret Output Metrics**:
 * **`optimal_weight`**: Target capital allocation percentage for each asset (sums to 1.0).
-* **`allocated_amount`**: Precise capital amount to spend on each stock ($\text{optimal\_weight} \times \text{TotalInvestment}$).
-* **`suggested_shares`**: Recommended number of shares to purchase ($\lfloor \text{allocated\_amount} / \text{close\_price} \rfloor$).
+* **`allocated_amount`**: Precise capital amount to spend on each stock:
+
+    $$\text{allocated amount} = \text{optimal weight} \times \text{TotalInvestment}$$
+
+* **`suggested_shares`**: Recommended number of shares to purchase:
+
+    $$\text{suggested shares} = \left\lfloor \frac{\text{allocated amount}}{\text{close price}} \right\rfloor$$
 
 ### Purge Cold data
 1. Run workflow in n8n `n8n_workflows\Stock__Purge_Data.json`

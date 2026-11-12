@@ -1,0 +1,517 @@
+{
+  "name": "Stock___Track_Market_Flow_Indicators",
+  "nodes": [
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "start_date",
+              "value": "={{$json.query?.start_date ?? $now.toFormat('yyyy-MM-dd')}}"
+            },
+            {
+              "name": "end_date",
+              "value": "={{$json.query?.end_date ?? $now.toFormat('yyyy-MM-dd')}}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "7cb030eb-59c4-49bb-a28f-d58a4a845440",
+      "name": "Set time range",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const records = [];\n\nfor (const item of $input.all()) {\n  records.push(item.json);\n}\n\nconst jsonEachRowString = records.map(row => JSON.stringify(row)).join('\\n');\n\nreturn {\n  json: {\n    formatted_data: jsonEachRowString\n  }\n};"
+      },
+      "id": "648b8583-3fc1-4add-b781-90ec4f67f980",
+      "name": "Combine Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const daysToSubtract = 30;\n\nfor (const item of $input.all()) {\n  const originalDate = new Date(item.json.start_date);\n  originalDate.setDate(originalDate.getDate() - daysToSubtract);\n  item.json.data_start_date = originalDate.toISOString().split('T')[0];\n}\n\nreturn $input.all();"
+      },
+      "id": "18660d79-760f-4163-9322-6784f09a7ce1",
+      "name": "Set data start time",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        520,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "track-market-flow-indicators",
+        "responseMode": "lastNode",
+        "responseData": "noData",
+        "options": {}
+      },
+      "id": "15f5818d-d8b8-48f4-9a05-aceb8e43118e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        220
+      ],
+      "webhookId": "edc89bd6-2e8e-414b-84eb-2ddaeba12892"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "1db4cc6e-e07c-4af2-b440-6d62b351c8fc",
+      "name": "Merge3",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -60,
+        140
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "5296592e-7516-4498-94d5-c9ab4b161721",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "SELECT index_id FROM n8n_olap.dim_exchange_indices ORDER BY index_id FORMAT JSON",
+        "options": {}
+      },
+      "id": "6168deb4-de77-4443-b298-b9bcceb41f26",
+      "name": "Get all Exchange Indices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -280,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $input.first().json;\n\nconst startDate = payload.start_date;\nconst endDate = payload.end_date;\nconst indicesArr = payload.data || [];\n\nreturn indicesArr.map(item => ({\n  json: {\n    index_id: item.index_id,\n    start_date: startDate,\n    end_date: endDate\n  }\n}));"
+      },
+      "id": "cf67af80-90f9-4fde-9780-45ea27f8302d",
+      "name": "Format indices",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        120,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "let indicesArr = [];\nlet indicesStr = \"\";\nfor (const item of $input.all()) {\n  indicesArr.push(item.json[\"index_id\"]);\n  indicesStr = indicesArr.map(x => \"'\" + x + \"'\").join(\",\");\n}\n\nconst startDate = items[0].json.start_date;\nconst endDate = items[0].json.end_date;\n\nreturn [{ \n  start_date: startDate,\n  end_date: endDate,\n  index_ids: indicesArr,\n  index_id_str: indicesStr \n}];"
+      },
+      "id": "20e5f9a6-a275-4577-a74d-48a842f9abf4",
+      "name": "Combine batch indices",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        320,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT\n   h.index_id AS index_id,\n   h.time AS time, \n   h.*,\n   f.cumulative_ad AS cumulative_ad,\n   (h.time < '{{$input.first().json.start_date}}') AS window_padding  \nFROM n8n_olap.fact_exchange_index_histories AS h\nLEFT JOIN n8n_olap.fact_market_flow_indicators AS f \n   ON h.index_id = f.index_id AND h.time = f.time \nWHERE has([{{$input.first().json.index_id_str}}], h.index_id)\nAND h.time BETWEEN '{{$input.first().json.data_start_date}}' AND '{{$input.first().json.end_date}}'\nFORMAT JSON",
+        "options": {}
+      },
+      "id": "4df2ed95-420d-40e5-b74a-04528411b681",
+      "name": "Get Market Flow data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        700,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract rows array from ClickHouse JSON wrapper ($input.first().json.data)\nlet inputData = $input.first()?.json?.data || [];\n\nconst uniqueMap = new Map();\nfor (const item of inputData) {\n  const key = `${item.index_id}_${item.time}`;\n  if (!uniqueMap.has(key)) {\n    uniqueMap.set(key, item);\n  }\n}\nconst inputDataCleaned = Array.from(uniqueMap.values());\ninputData = inputDataCleaned;\n\n// Group items by index_id\nconst groupedData = {};\nfor (const item of inputData) {\n  const indexId = item.index_id;\n  if (!groupedData[indexId]) {\n    groupedData[indexId] = [];\n  }\n  groupedData[indexId].push(item);\n}\n\nconst outputItems = [];\n\n// Process each stock group\nfor (const index in groupedData) {\n  const indexItems = groupedData[index].sort(\n    (a, b) => new Date(a.time) - new Date(b.time)\n  );\n\n  let prevItem = null;\n  for (let i = 0; i < indexItems.length; i++) {\n    const currentItem = indexItems[i];\n    const n = (i >= 4) ? i-4 : 0;\n\n    if (Number(currentItem.window_padding) === 0) {\n      const netBreadth = currentItem.advances - currentItem.declines;\n      const breadthRatio = netBreadth / (currentItem.advances + currentItem.declines);\n      \n      if (prevItem != null) {\n        outputItems.push({\n          json: {\n            index_id: currentItem.index_id,\n            time: currentItem.time,\n            net_breadth:netBreadth,\n            cumulative_ad: prevItem.cumulative_ad + netBreadth,\n            breadth_ratio: breadthRatio,\n            ad_slope: netBreadth, \n            ad_slope_5: (prevItem.cumulative_ad + netBreadth - indexItems[n].cumulative_ad) / 5\n          }\n        });\n        currentItem.cumulative_ad = prevItem.cumulative_ad + netBreadth;\n      } else {\n        // Start cell\n         outputItems.push({\n          json: {\n            index_id: currentItem.index_id,\n            time: currentItem.time,\n            net_breadth: netBreadth,\n            cumulative_ad: netBreadth,\n            breadth_ratio: breadthRatio,\n            ad_slope: 0,\n            ad_slope_5: 0\n          }\n        }); \n        currentItem.cumulative_ad = netBreadth\n      }\n    }\n    \n    prevItem = currentItem;\n  }\n}\n\nreturn outputItems;"
+      },
+      "id": "52ad3d11-ac2b-40d9-b421-9db47df16954",
+      "name": "Main Calculation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        880,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=INSERT INTO n8n_olap.fact_market_flow_indicators FORMAT JSONEachRow\n{{$input.first().json.formatted_data}}",
+        "options": {}
+      },
+      "id": "3091e64e-f945-44ca-852f-7e1f2e06d348",
+      "name": "Insert Market Flow Indicators table",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1240,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "input2"
+      },
+      "id": "18e6f1b1-a65c-4a34-8eaf-6df057c33d20",
+      "name": "Merge2",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "baseline",
+              "value": "VNINDEX"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "e14b7112-373d-4357-b779-6ad61d92eecb",
+      "name": "Set baseline Index",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        680,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=INSERT INTO n8n_olap.fact_market_flow_indicators\nWITH previous_prices AS (\n    SELECT \n        index_id,\n        time,\n        index_value,\n        lagInFrame(index_value, 1) OVER (PARTITION BY index_id ORDER BY time) AS prev_index_value\n    FROM n8n_olap.fact_exchange_index_histories\n)\nSELECT \n    curr.index_id,\n    curr.time,\n    curr.net_breadth,\n    curr.cumulative_ad,\n    curr.ad_slope,\n    curr.ad_slope_5,\n    curr.breadth_ratio,\n    COALESCE(\n        (\n            ((hist_curr.index_value / hist_curr.prev_index_value) - 1) * 100\n        ) - (\n            ((vn_curr.index_value / vn_curr.prev_index_value) - 1) * 100\n        ),\n        0.0\n    ) AS index_return_differential,\n    now() AS updated_at\nFROM n8n_olap.fact_market_flow_indicators AS curr\nLEFT JOIN previous_prices AS hist_curr \n  ON curr.index_id = hist_curr.index_id AND curr.time = hist_curr.time\nLEFT JOIN previous_prices AS vn_curr \n  ON vn_curr.index_id = '{{ $json.baseline }}' AND curr.time = vn_curr.time\nWHERE curr.time >= '{{ $json.start_date }}' \n  AND curr.time <= '{{ $json.end_date }}';",
+        "options": {}
+      },
+      "id": "53921dfb-610f-4182-92bd-bccbdc857340",
+      "name": "Update Index Return Diferential",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        880,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {};"
+      },
+      "id": "f2aaca2d-caf4-41d8-a911-f455f0d82087",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        -60
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Set time range": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Calculation": {
+      "main": [
+        [
+          {
+            "node": "Insert Market Flow Indicators table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set data start time": {
+      "main": [
+        [
+          {
+            "node": "Get Market Flow data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get all Exchange Indices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get all Exchange Indices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get all Exchange Indices": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Format indices",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Format indices": {
+      "main": [
+        [
+          {
+            "node": "Combine batch indices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine batch indices": {
+      "main": [
+        [
+          {
+            "node": "Set data start time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Market Flow data": {
+      "main": [
+        [
+          {
+            "node": "Main Calculation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Main Calculation": {
+      "main": [
+        [
+          {
+            "node": "Combine Calculation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Market Flow Indicators table": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Set baseline Index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set baseline Index": {
+      "main": [
+        [
+          {
+            "node": "Update Index Return Diferential",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Index Return Diferential": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "versionId": "61fdafd7-a016-4417-ae49-63ce5f6befb4",
+  "id": "13",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}

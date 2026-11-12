@@ -1,0 +1,86 @@
+{
+  "risk_override_rules": [
+    {
+      "override_id": "EDGE_CASE_1_BULL_ON_WEIGHT",
+      "condition": {
+        "operator": "AND",
+        "operands": [
+          {
+            "operator": ">",
+            "operands": [
+              { "field": "return_vnindex" },
+              { "value": 1.0 }
+            ]
+          },
+          {
+            "operator": "<",
+            "operands": [
+              { "field": "r_ad" },
+              { "value": 0.5 }
+            ]
+          }
+        ]
+      },
+      "actions": {
+        "force_regime": "REGIME_2"
+      }
+    },
+    {
+      "override_id": "EDGE_CASE_2_LIQUIDITY_CRUNCH",
+      "condition": {
+        "operator": "AND",
+        "operands": [
+          {
+            "operator": ">",
+            "operands": [
+              { "field": "ma20_value" },
+              { "value": 0 }
+            ]
+          },
+          {
+            "operator": "<",
+            "operands": [
+              { "field": "net_matching_value" },
+              {
+                "operator": "*",
+                "operands": [
+                  { "value": 0.6 },
+                  { "field": "ma20_value" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "actions": {
+        "cap_w_stock_max": 50.0
+      }
+    },
+    {
+      "override_id": "EDGE_CASE_4_BEARISH_DIVERGENCE",
+      "condition": {
+        "operator": "AND",
+        "operands": [
+          {
+            "operator": "==",
+            "operands": [
+              { "field": "vnindex_is_20_high" },
+              { "value": true }
+            ]
+          },
+          {
+            "operator": "<",
+            "operands": [
+              { "field": "ad_current" },
+              { "field": "ad_20_ago" }
+            ]
+          }
+        ]
+      },
+      "actions": {
+        "set_trailing_stop_pct": 4.0,
+        "reduce_stock_bounds": 10.0
+      }
+    }
+  ]
+}

@@ -200,12 +200,12 @@
   },
   "active": true,
   "settings": {
-    "saveExecutionProgress": true,
-    "saveManualExecutions": true,
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
     "callerPolicy": "workflowsFromSameOwner",
-    "executionTimeout": -1
+    "saveDataSuccessExecution": "none"
   },
-  "versionId": "7b82cc5c-bfa0-4659-82c4-fcdfd27f487c",
+  "versionId": "e6dc6a9c-15aa-4fe7-b61d-21eda2e28d0c",
   "id": "8",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

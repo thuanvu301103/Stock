@@ -1,0 +1,331 @@
+{
+  "name": "Stock___Track_Market_Flow_Classification",
+  "nodes": [
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "start_date",
+              "value": "={{$json.query?.start_date ?? $now.toFormat('yyyy-MM-dd')}}"
+            },
+            {
+              "name": "end_date",
+              "value": "={{$json.query?.end_date ?? $now.toFormat('yyyy-MM-dd')}}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "030915b2-702b-4851-994a-fe5220952d56",
+      "name": "Set time range",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -1440,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "track-market-flow-classification",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "3d23f8b2-220e-40d4-baf2-f16acdbb7b27",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1640,
+        320
+      ],
+      "webhookId": "1eccf83e-0e4a-4ce1-9a1c-dbb30757ab7f"
+    },
+    {
+      "parameters": {},
+      "id": "137f9bb2-6222-4147-bc95-234771828bdc",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1640,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT * FROM n8n_olap.v_market_regime_context\nWHERE time >= '{{ $json.start_date }}' AND time <= '{{ $json.end_date }}'\nFORMAT JSON",
+        "options": {}
+      },
+      "id": "fa6485e3-c8fd-47fd-9340-cd26c22f4bac",
+      "name": "Get Market Regime context",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -1240,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $input.all();\n\nconst marketRegimeRules = [\n    {\n      \"regime_code\": \"REGIME_5\",\n      \"priority\": 1,\n      \"state\": \"Panic\",\n      \"description\": \"The market experienced extreme oversold conditions, and signs of panic emerged\",\n      \"condition\": {\n        \"operator\": \"AND\",\n        \"operands\": [\n          {\n            \"operator\": \"<\",\n            \"operands\": [\n              { \"field\": \"ratio_ad\" },\n              { \"value\": 0.2 }\n            ]\n          },\n          {\n            \"operator\": \"<\",\n            \"operands\": [\n              { \"field\": \"ceiling\" },\n              { \"value\": 5 }\n            ]\n          },\n          {\n            \"operator\": \">=\",\n            \"operands\": [\n              { \"field\": \"floor\" },\n              { \"value\": 30 }\n            ]\n          }\n        ]\n      }\n    },\n    {\n      \"regime_code\": \"REGIME_1\",\n      \"priority\": 2,\n      \"state\": \"Broad Uptrend\",\n      \"description\": \"The flow of money is spreading across the entire market in line with market consensus\",\n      \"condition\": {\n        \"operator\": \"AND\",\n        \"operands\": [\n          {\n            \"operator\": \">\",\n            \"operands\": [\n              { \"field\": \"ad_slope_5\" },\n              { \"value\": 0 }\n            ]\n          },\n          {\n            \"operator\": \">=\",\n            \"operands\": [\n              { \"field\": \"ratio_ad\" },\n              { \"value\": 1.5 }\n            ]\n          },\n          {\n            \"operator\": \"ABS_APPROX\",\n            \"operands\": [\n              { \"field\": \"index_return_differential_vn30_vnindex\" },\n              { \"value\": 0 },\n              { \"value\": 0.1 }\n            ]\n          }\n        ]\n      }\n    },\n    {\n      \"regime_code\": \"REGIME_2\",\n      \"priority\": 3,\n      \"state\": \"Narrow Uptrend\",\n      \"description\": \"Cash flow boosts VN30 stocks, while Midcap/Smallcap stocks experience capital outflow\",\n      \"condition\": {\n        \"operator\": \"AND\",\n        \"operands\": [\n          {\n            \"operator\": \"<=\",\n            \"operands\": [\n              { \"field\": \"ad_slope_5\" },\n              { \"value\": 0 }\n            ]\n          },\n          {\n            \"operator\": \"<\",\n            \"operands\": [\n              { \"field\": \"ratio_ad\" },\n              { \"value\": 1.0 }\n            ]\n          },\n          {\n            \"operator\": \">\",\n            \"operands\": [\n              { \"field\": \"index_return_differential_vn30_vnindex\" },\n              { \"value\": 0.5 }\n            ]\n          }\n        ]\n      }\n    },\n    {\n      \"regime_code\": \"REGIME_3\",\n      \"priority\": 4,\n      \"state\": \"Sideway\",\n      \"description\": \"Money flows between industry sectors, and there is no indication of a sustained trend\",\n      \"condition\": {\n        \"operator\": \"AND\",\n        \"operands\": [\n          {\n            \"operator\": \"ABS_APPROX\",\n            \"operands\": [\n              { \"field\": \"ad_slope_5\" },\n              { \"value\": 0 },\n              { \"value\": 0.05 }\n            ]\n          },\n          {\n            \"operator\": \"AND\",\n            \"operands\": [\n              {\n                \"operator\": \">=\",\n                \"operands\": [\n                  { \"field\": \"ratio_ad\" },\n                  { \"value\": 0.8 }\n                ]\n              },\n              {\n                \"operator\": \"<=\",\n                \"operands\": [\n                  { \"field\": \"ratio_ad\" },\n                  { \"value\": 1.2 }\n                ]\n              }\n            ]\n          }\n        ]\n      }\n    },\n    {\n      \"regime_code\": \"REGIME_4\",\n      \"priority\": 5,\n      \"state\": \"Broad Downtrend\",\n      \"description\": \"Widespread selling pressure led to a simultaneous decline in stock prices\",\n      \"condition\": {\n        \"operator\": \"AND\",\n        \"operands\": [\n          {\n            \"operator\": \"<\",\n            \"operands\": [\n              { \"field\": \"ad_slope_5\" },\n              { \"value\": 0 }\n            ]\n          },\n          {\n            \"operator\": \"<=\",\n            \"operands\": [\n              { \"field\": \"ratio_ad\" },\n              { \"value\": 0.66 }\n            ]\n          }\n        ]\n      }\n    }\n  ];\n\nreturn inputItems.map(item => {\n  return {\n    json: {\n      ...item.json,\n      market_regime_rules: marketRegimeRules\n    }\n  };\n});"
+      },
+      "id": "7aed1575-bebb-46ac-b806-5f109093dd2e",
+      "name": "Set Market Regime rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "class RegimeClassifyEngine {\n\n    constructor(ruleDefinitions, allocationMatrixDefinitions) {\n        this.regimeRules = ruleDefinitions.sort((a, b) => a.priority - b.priority);\n        this.regimeCodeMap = new Map(this.regimeRules.map(rule => [rule.regime_code, rule]));\n        this.allocationMatrix = allocationMatrixDefinitions;\n        this.allocationMatrixMap = new Map(this.allocationMatrix.map(rule => [rule.regime_code, rule]));\n        this.overrideRules = ruleDefinitions.risk_override_rules;\n    }\n\n    /**\n     * Resolves a single operand node (can be a field reference, a static value, or a nested operation).\n     * @param {Object} operandNode \n     * @param {Object} context \n     * @returns {any}\n     */\n    resolveOperand(operandNode, context) {\n        if ('field' in operandNode) {\n            return context[operandNode.field];\n        }\n        if ('value' in operandNode) {\n            return operandNode.value;\n        }\n        if ('operator' in operandNode) {\n            // It's a nested mathematical or logical expression node\n            return this.evaluateNode(operandNode, context);\n        }\n        return undefined;\n    }\n\n    /**\n     * Recursively evaluates any AST node (logical operators, comparison operators, or arithmetic operations).\n     * @param {Object} node \n     * @param {Object} context \n     * @returns {any}\n     */\n    evaluateNode(node, context) {\n        if (!node || !node.operator) return false;\n\n        const op = node.operator.toUpperCase();\n        const operands = node.operands || [];\n\n        // Handle logical operators\n        if (op === \"AND\") {\n            return operands.every(subNode => this.evaluateNode(subNode, context));\n        }\n        if (op === \"OR\") {\n            return operands.some(subNode => this.evaluateNode(subNode, context));\n        }\n        if (op === \"NOT\") {\n            return !this.evaluateNode(operands[0], context);\n        }\n\n        // Handle arithmetic operators (when evaluation is used inside an expression)\n        if (op === \"+\") {\n            return this.resolveOperand(operands[0], context) + this.resolveOperand(operands[1], context);\n        }\n        if (op === \"-\") {\n            return this.resolveOperand(operands[0], context) - this.resolveOperand(operands[1], context);\n        }\n        if (op === \"*\") {\n            return this.resolveOperand(operands[0], context) * this.resolveOperand(operands[1], context);\n        }\n        if (op === \"/\") {\n            const denominator = this.resolveOperand(operands[1], context);\n            return denominator === 0 ? 0 : this.resolveOperand(operands[0], context) / denominator;\n        }\n\n        // Handle comparison and special operators (Leaf comparisons)\n        const leftVal = this.resolveOperand(operands[0], context);\n        const rightVal = operands[1] ? this.resolveOperand(operands[1], context) : undefined;\n\n        switch (op) {\n            case \">\":\n                return leftVal > rightVal;\n            case \">=\":\n                return leftVal >= rightVal;\n            case \"<\":\n                return leftVal < rightVal;\n            case \"<=\":\n                return leftVal <= rightVal;\n            case \"==\":\n                return leftVal === rightVal;\n            case \"!=\":\n                return leftVal !== rightVal;\n            case \"ABS_APPROX\": {\n                // operands[0] = field, operands[1] = target, operands[2] = tolerance\n                const target = this.resolveOperand(operands[1], context);\n                const tolerance = this.resolveOperand(operands[2], context);\n                return Math.abs(leftVal - target) <= tolerance;\n            }\n            default:\n                return false;\n        }\n    }\n\n    /**\n     * Determines base regime by executing the ordered priority rule list.\n     * @param {Object} context \n     * @returns {string}\n     */\n    determineBaseRegime(context) {\n        for (const rule of this.regimeRules) {\n            if (this.evaluateNode(rule.condition, context)) {\n                return {\n                  \"regime_code\": rule.regime_code,\n                  \"state\": rule.state,\n                  \"description\": rule.description,\n                  \"conditions\": rule.condition,\n                  \"allocation\": this.allocationMatrixMap.get(rule.regime_code).allocation\n                };\n            }\n        }\n\n        let rule = undefined;\n        if (context.ad_slope_5 > 0) {\n          rule = this.regimeCodeMap.get(\"REGIME_1\");\n          rule.condition = {\n            \"operator\": \">\",\n            \"operands\": [\n              { \"field\": \"ad_slope_5\" },\n              { \"value\": 0 }\n            ]\n          }\n        } else if (context.ad_slope_5 == 0) {\n          rule = this.regimeCodeMap.get(\"REGIME_3\");\n          rule.condition = {\n            \"operator\": \"==\",\n            \"operands\": [\n              { \"field\": \"ad_slope_5\" },\n              { \"value\": 0 }\n            ]\n          }\n        } else if (context.ad_slope_5 < 0) {\n          rule = this.regimeCodeMap.get(\"REGIME_4\");\n          rule.condition = {\n            \"operator\": \"<\",\n            \"operands\": [\n              { \"field\": \"ad_slope_5\" },\n              { \"value\": 0 }\n            ]\n          }\n        }\n        return {\n          \"regime_code\": rule.regime_code,\n          \"state\": rule.state,\n          \"description\": rule.description,\n          \"conditions\": rule.condition,\n          \"allocation\": this.allocationMatrixMap.get(rule.regime_code).allocation\n        }\n    }\n\n    /**\n     * Executes the complete evaluation pipeline.\n     * @param {Object} rawMetrics \n     * @returns {Object}\n     */\n    evaluate(rawMetrics) {\n        let rAD = rawMetrics.declines === 0 ? rawMetrics.advances : rawMetrics.advances / rawMetrics.declines;\n        let dVN30 = rawMetrics.returnVN30 - rawMetrics.returnVNIndex;\n        let netMatchingValue = rawMetrics.allValue - rawMetrics.totalValuePT;\n\n        const context = {\n            ...rawMetrics,\n            r_ad: rAD,\n            d_vn30: dVN30,\n            net_matching_value: netMatchingValue\n        };\n\n        let regime = this.determineBaseRegime(context);\n        let activeOverrides = [];\n\n        for (const override of this.overrideRules) {\n            if (this.evaluateNode(override.condition, context)) {\n                activeOverrides.push(override.override_id);\n                if (override.actions.force_regime) {\n                    regime = override.actions.force_regime;\n                }\n            }\n        }\n\n        return {\n            classified_regime: regime,\n            triggered_overrides: activeOverrides,\n            evaluated_metrics: {\n                r_ad: rAD,\n                d_vn30: dVN30,\n                net_matching_value: netMatchingValue\n            }\n        };\n    }\n}\n\ninput = $input.first()?.json\n\nconst engine = new RegimeClassifyEngine(input.market_regime_rules, input.capital_allocation_decision_matrix);\n\nclassifiedResults = []\n\nfor (const context of input.data) {\n    result = engine.determineBaseRegime(context);\n    result.time = context.time;\n    result.baseline_index = 'VNINDEX';\n    result.largecap_index =  'VN30'\n    classifiedResults.push(result);\n}\n\nreturn classifiedResults.map(res => {\n    return {\n        json: {\n            ...res\n        }\n    };\n});"
+      },
+      "id": "85f32051-8cca-4ee8-a9c5-2e462238f2f9",
+      "name": "Market Regime Classify Engine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -820,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=INSERT INTO n8n_olap.fact_market_regime_histories FORMAT JSONEachRow  \n{{ $json.body }}",
+        "options": {}
+      },
+      "id": "28fa3ba9-dac0-4b5e-945c-f99b96f3e472",
+      "name": "Insert for record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -400,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
+      },
+      "id": "ffd99362-715f-4e06-b1f8-abdb61b27aa9",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $input.all();\n\nconst capitalAllocationMatrix = [\n    {\n      \"regime_code\": \"REGIME_1\",\n      \"allocation\": {\n        \"w_stock\": 80,\n        \"w_cash\": 20,\n        \"w_vn30/w_stock\": 40,\n        \"w_midcap/w_stock\": 60\n      }\n    },\n    {\n      \"regime_code\": \"REGIME_2\",\n      \"allocation\": {\n        \"w_stock\": 50,\n        \"w_cash\": 50,\n        \"w_vn30/w_stock\": 80,\n        \"w_midcap/w_stock\": 20\n      }\n    },\n    {\n      \"regime_code\": \"REGIME_3\",\n      \"allocation\": {\n        \"w_stock\": 50,\n        \"w_cash\": 50,\n        \"w_vn30/w_stock\": 50,\n        \"w_midcap/w_stock\": 50\n      }\n    },\n    {\n      \"regime_code\": \"REGIME_4\",\n      \"allocation\": {\n        \"w_stock\": 20,\n        \"w_cash\": 80,\n        \"w_vn30/w_stock\": 100,\n        \"w_midcap/w_stock\": 0\n      }\n    },\n    {\n      \"regime_code\": \"REGIME_5\",\n      \"description\": \"Allocate a minor position (w_stock* = 30%) for bottom-fishing strictly when momentum indicators (RSI/Stochastic) enter the oversold zone (< 20)\",\n      \"allocation\": {\n        \"w_stock\": 20,\n        \"w_cash\": 80,\n        \"w_stock*\": 30,\n        \"w_cash*\": 70,\n        \"w_vn30/w_stock\": 70,\n        \"w_midcap/w_stock\": 30\n      }\n    }\n  ];\n\nreturn inputItems.map(item => {\n  return {\n    json: {\n      ...item.json,\n      capital_allocation_decision_matrix: capitalAllocationMatrix\n    }\n  };\n});"
+      },
+      "id": "c5af8235-758f-4b3f-930a-4aaec42d3443",
+      "name": "Set Capital Allocation Matrix",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "66513c9d-8d2b-4add-88df-fcd8f8d1ea9f",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "e14e2618-0306-4bcd-902c-1e3430a2b8de",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -400,
+        440
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Set time range": {
+      "main": [
+        [
+          {
+            "node": "Get Market Regime context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Market Regime context": {
+      "main": [
+        [
+          {
+            "node": "Set Market Regime rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Market Regime Classify Engine": {
+      "main": [
+        [
+          {
+            "node": "Format",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format": {
+      "main": [
+        [
+          {
+            "node": "Insert for record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Market Regime rules": {
+      "main": [
+        [
+          {
+            "node": "Set Capital Allocation Matrix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Capital Allocation Matrix": {
+      "main": [
+        [
+          {
+            "node": "Market Regime Classify Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert for record": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "976b42ec-c7aa-420a-a686-f867e309cbc1",
+  "id": "1",
+  "meta": {
+    "instanceId": "990a94333b6e2ace928598b2add9c4e2a149a41a04dc4bd8f4bffa31d82cf0a6"
+  },
+  "tags": []
+}
