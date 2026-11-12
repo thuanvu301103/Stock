@@ -246,8 +246,11 @@ sys.stdin.reconfigure(encoding='utf-8')
 
 ### Seed data
 1. **dim_stock**: Import data from `clickhouse_seed_data\stock_seed_data.csv` to clickhouse
-2. **dim_date**: Run n8n workflow `n8n_workflows\Stock__Seed_Dim_Date.json`
-3. **fact_stock_prices**: Run n8n workflwo `n8n_workflows\Stock__Seed_Price_Data.json`
+2. **dim_date**: 
+    - The n8n workflow `n8n_workflows/Stock___Seed_Dim_Date.json` has a monthly schedule on the first day of each month at 12:00, using n8n's configured timezone (`GENERIC_TIMEZONE`; Docker Compose defaults to UTC). Ensure the workflow is active in n8n for the schedule to run. Each scheduled run inserts dates from the first day of the current month through the last day of the following two months, then optimizes the table to remove duplicate rows. 
+    - For initial setup or a custom range, send `POST /webhook/seed-dim-date` with `start_date` and `end_date` as `YYYY-MM-DD` form-data fields; if either field is omitted, the workflow uses its default range.
+    - `dim_date.is_trading_day` currently marks weekdays as trading days and weekends as non-trading days; it does not account for Vietnamese market holidays.
+3. **fact_stock_prices**: Run n8n workflow `n8n_workflows/Stock___Seed_Price_Data.json`
 
 ### Mine Stock data
 
@@ -299,11 +302,11 @@ Open Power Query Editor, select the query, and click **Refresh Preview** (or **A
 * **`optimal_weight`**: Target capital allocation percentage for each asset (sums to 1.0).
 * **`allocated_amount`**: Precise capital amount to spend on each stock:
 
-    $$\text{allocated\_amount} = \text{optimal\_weight} \times \text{TotalInvestment}$$
+    $$\text{allocated amount} = \text{optimal weight} \times \text{TotalInvestment}$$
 
 * **`suggested_shares`**: Recommended number of shares to purchase:
 
-    $$\text{suggested\_shares} = \left\lfloor \frac{\text{allocated\_amount}}{\text{close\_price}} \right\rfloor$$
+    $$\text{suggested shares} = \left\lfloor \frac{\text{allocated amount}}{\text{close price}} \right\rfloor$$
 
 ### Purge Cold data
 1. Run workflow in n8n `n8n_workflows\Stock__Purge_Data.json`

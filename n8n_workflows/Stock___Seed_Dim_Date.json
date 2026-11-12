@@ -2,17 +2,6 @@
   "name": "Stock___Seed_Dim_Date",
   "nodes": [
     {
-      "parameters": {},
-      "id": "d17e8dac-1f28-447e-8b4b-8356d20ddfc0",
-      "name": "When clicking \"Execute Workflow\"",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        140,
-        520
-      ]
-    },
-    {
       "parameters": {
         "method": "POST",
         "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=INSERT INTO n8n_olap.dim_date (date_key,year,quarter,month,day_of_week,is_weekend,is_trading_day) FORMAT JSONEachRow",
@@ -21,13 +10,13 @@
         "body": "={{ $json.body }}",
         "options": {}
       },
-      "id": "d3326c0b-b576-4431-ade6-2633d16eae99",
+      "id": "c04a6d18-70a6-4b67-bc82-daaab80bfdd3",
       "name": "Insert Date data",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        940,
-        520
+        1480,
+        280
       ]
     },
     {
@@ -36,13 +25,13 @@
         "url": "http://clickhouse:8123/?user=n8n&password=n8n_pass&query=OPTIMIZE TABLE n8n_olap.dim_date FINAL",
         "options": {}
       },
-      "id": "2f130f8e-dc7e-405b-979e-1e4d8e07ee15",
+      "id": "14493132-1c20-45d3-baa5-7dd42c1406a1",
       "name": "Remove duplication",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1160,
-        520
+        1680,
+        280
       ]
     },
     {
@@ -51,11 +40,11 @@
           "string": [
             {
               "name": "start_date",
-              "value": "={{$now.toFormat('yyyy-MM-dd')/*\"2026-08-17\"*/}}"
+              "value": "={{ $json.body.start_date }}"
             },
             {
               "name": "end_date",
-              "value": "={{/*$now.toFormat('yyyy-MM-dd')*/\"2026-12-31\"}}"
+              "value": "={{ $json.body.end_date }}"
             }
           ]
         },
@@ -63,55 +52,118 @@
           "dotNotation": true
         }
       },
-      "id": "8433b0bc-65c9-41a0-8da2-ab451d270c00",
+      "id": "1ffa3fdf-e853-46a0-8721-23151b4c9850",
       "name": "Set time range",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        340,
-        520
+        880,
+        180
       ]
     },
     {
       "parameters": {
         "jsCode": "const results = [];\n\nconst timeRange = $input.all()[0].json;\nconst startDate = new Date(timeRange['start_date']);\nconst endDate = new Date(timeRange['end_date']); // Fixed typo in key name 'end _date'\n\n// Set time to 00:00:00 to avoid daylight saving time offset issues\nstartDate.setHours(0, 0, 0, 0);\nendDate.setHours(0, 0, 0, 0);\n\nconst currentDate = new Date(startDate);\n\nwhile (currentDate <= endDate) {\n  const year = currentDate.getFullYear();\n  const month = currentDate.getMonth() + 1;\n  const dayOfWeek = currentDate.getDay() === 0 ? 7 : currentDate.getDay(); // Monday=1, Sunday=7\n  const quarter = Math.floor((month - 1) / 3) + 1;\n\n  const isWeekend = dayOfWeek === 6 || dayOfWeek === 7 ? 1 : 0;\n\n  // Format YYYY-MM-DD using local time\n  const dayStr = String(currentDate.getDate()).padStart(2, '0');\n  const monthStr = String(month).padStart(2, '0');\n  const dateKey = `${year}-${monthStr}-${dayStr}`;\n\n  results.push({\n    date_key: dateKey,\n    year,\n    quarter,\n    month,\n    day_of_week: dayOfWeek,\n    is_weekend: isWeekend,\n    is_trading_day: isWeekend ? 0 : 1\n  });\n\n  // Increment by 1 day\n  currentDate.setDate(currentDate.getDate() + 1);\n}\n\nreturn results.map(r => ({ json: r }));"
       },
-      "id": "89ddbe21-33e6-4f0a-84c5-a28faa325865",
+      "id": "a1f584c7-8024-4a8b-ab04-b67867dccb1c",
       "name": "Generate dim_date rows",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        540,
-        520
+        1100,
+        280
       ]
     },
     {
       "parameters": {
         "jsCode": "return [\n  {\n    json: {\n      body: items\n        .map(item => JSON.stringify(item.json))\n        .join('\\n')\n    }\n  }\n];\n"
       },
-      "id": "9ab33bcb-1e67-4ee2-9c17-7505ffb4e387",
+      "id": "09c44ded-7954-409a-bbfa-bac7c2efc2dc",
       "name": "Format",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        740,
-        520
+        1300,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "seed-dim-date",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "5cf65c43-f0b2-4848-8999-96be52df02f0",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        440,
+        380
+      ],
+      "webhookId": "6262b711-2ac2-42c5-afbe-d8bffddc44eb"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.body.start_date != undefined}}",
+              "value2": "={{ true }}"
+            },
+            {
+              "value1": "={{ $json.body.end_date != undefined}}",
+              "value2": "={{ true }}"
+            }
+          ]
+        }
+      },
+      "id": "516e1df2-79a9-4971-9d3d-f7c2708c1033",
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        660,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Define the temporal span parameter in months\nconst monthInterval = 3;\nconst currentDate = new Date();\n\n// Determine the initial boundary corresponding to the first day of the current month\nconst periodStartDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);\n\n// Determine the terminal boundary corresponding to the last day of the calculated end month\nconst periodEndDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + monthInterval, 0);\n\n// Serialize date object to ISO standard string representation (YYYY-MM-DD)\nconst formatDateToString = (dateInstance) => dateInstance.toISOString().split('T')[0];\n\n// Construct the structured JSON output for the n8n node execution pipeline\nreturn [{\n    json: {\n        start_date: formatDateToString(periodStartDate),\n        end_date: formatDateToString(periodEndDate)\n    }\n}];"
+      },
+      "id": "d130489d-43f7-4ac9-b7e4-2ad37d0829d2",
+      "name": "Default date range",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        880,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 12 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "2ecb78b9-1f8c-4311-8c94-5b1a598de76b",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        440,
+        180
       ]
     }
   ],
   "pinData": {},
   "connections": {
-    "When clicking \"Execute Workflow\"": {
-      "main": [
-        [
-          {
-            "node": "Set time range",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Insert Date data": {
       "main": [
         [
@@ -155,14 +207,68 @@
           }
         ]
       ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "Set time range",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Default date range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default date range": {
+      "main": [
+        [
+          {
+            "node": "Generate dim_date rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
-  "settings": {},
-  "versionId": "fd6e6ffd-c415-4099-9cc2-9666d7be0495",
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "8eb6fa61-842a-42aa-a87f-b797c6b4e146",
   "id": "3",
   "meta": {
-    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+    "instanceId": "990a94333b6e2ace928598b2add9c4e2a149a41a04dc4bd8f4bffa31d82cf0a6"
   },
   "tags": []
 }
