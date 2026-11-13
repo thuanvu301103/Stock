@@ -4,6 +4,19 @@ SELECT
     vnindex.index_id AS index_id,
     vnindex_flow.cumulative_ad AS cumulative_ad,
     vnindex_flow.ad_slope_5 AS ad_slope_5,
+    vnindex.change_percent AS return,
+    vnindex.all_value AS all_value,
+    if(
+        count() OVER (
+            ORDER BY vnindex.time
+            ROWS BETWEEN 20 PRECEDING AND 1 PRECEDING
+        ) = 20,
+        avg(vnindex.all_value) OVER (
+            ORDER BY vnindex.time
+            ROWS BETWEEN 20 PRECEDING AND 1 PRECEDING
+        ),
+        NULL
+    ) AS ma20_value,
     vnindex.advances AS advances,
     vnindex.declines AS declines,
     if(
@@ -20,6 +33,8 @@ FROM
     SELECT
         time,
         index_id,
+        change_percent,
+        all_value,
         advances,
         declines,
         ceiling,
