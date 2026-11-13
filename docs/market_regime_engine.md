@@ -1,6 +1,6 @@
 # Market Regime Engine
 
-This document combines the market regime classifier, its capital allocation matrix, and sample risk overrides. The rules and allocations are illustrative configurations, not investment recommendations or automatically executed trading instructions.
+This document combines the market regime classifier, its capital allocation matrix, and risk overrides. The rules and allocations are illustrative configurations, not investment recommendations or automatically executed trading instructions.
 
 ## 1. Market Regime Classification
 
@@ -107,4 +107,14 @@ The sample rules in [`market_risk_override_rules_sample.json`](../scripts/sample
 
 For `EDGE_CASE_2`, `all_value` is the current session's aggregate traded value and `ma20_value` is its 20-session moving average. Use the same market-wide value measure, units, and session convention for both. Although the sample description mentions positive A/D breadth, the condition does not check A/D breadth.
 
-**Implementation status:** The classifier currently has the override-rule hookup commented out in its constructor, while `evaluate()` still attempts to iterate `this.overrideRules`; as written, that method can fail unless the property is initialized elsewhere. Its action handling only checks an object property `actions.force_regime`; it does not dispatch the sample's `method`/`args` action arrays or execute `cap_w_stock_max`. Therefore, these sample overrides are not currently executable controls. Wire up the configuration, implement each action, and test the resulting allocation behavior before relying on them.
+**Implementation status:** The `Stock___Track_Market_Flow_Classification` n8n workflow now passes the two configured override rules into the classifier, registers `force_regime` and `cap_w_stock_max`, and evaluates overrides after base classification. Rules are evaluated by ascending priority and processing stops at the first matching override. `EDGE_CASE_1` changes the classified regime and uses that regime's allocation; `EDGE_CASE_2` caps `w_stock` at 50 and sets `w_cash` to the remaining percentage. These actions change the calculated result only; they do not place or cancel orders. The workflow is currently marked inactive in its exported JSON, and its behavior has not been runtime-verified here.
+
+## 4. n8n Workflow and History Storage
+
+The workflow reads `n8n_olap.v_market_regime_context` for the requested date range, evaluates base regime rules, applies at most one matching risk override, and formats the result for insertion into `n8n_olap.fact_market_regime_histories`. The view supplies the classifier inputs, including `return` (VNINDEX `change_percent`), `all_value`, `ma20_value`, `ratio_ad`, `ceiling`, `floor`, `ad_slope_5`, and the VN30–VNINDEX return differential. `ma20_value` is based on the 20 preceding sessions and is `NULL` when 20 prior observations are unavailable.
+
+The workflow accepts `start_date` and `end_date` as `YYYY-MM-DD` query parameters; each defaults to the current date when omitted. Its webhook path is `POST /webhook/track-market-flow-classification`. The export currently has `active: false`, so it must be activated in n8n before webhook requests can run.
+
+The history payload includes the base/final regime code, state, description and conditions; the matched override's ID, state, description, conditions and actions (empty values when no override matched); the resulting allocation; `time`; `baseline_index`; and `largecap_index`. The corresponding table definition is [`create_fact_market_regime_histories.sql`](../clickhouse_query/create_table/create_fact_market_regime_histories.sql). Its override metadata and allocation columns are stored as `String` fields. `CREATE TABLE IF NOT EXISTS` does not add columns to a table that already exists: apply the matching `ALTER TABLE` changes to existing ClickHouse installations before running the updated insert workflow.
+
+The workflow and schema changes have not been tested against a running n8n/ClickHouse instance. In particular, verify that the existing table has the new columns and that JSONEachRow values for the conditions, actions, and allocation are accepted by the deployed ClickHouse version before relying on persisted history.
