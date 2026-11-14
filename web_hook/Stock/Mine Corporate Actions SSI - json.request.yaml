@@ -1,0 +1,10 @@
+$kind: http-request
+url: http://localhost:5678/webhook/mine-corporate-actions-ssi-json
+method: POST
+body:
+  type: formdata
+  content:
+    - type: file
+      key: file
+      src: ""
+order: 2000

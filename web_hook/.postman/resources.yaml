@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 60d208a4-9e4d-427a-bab4-1ad8313a75d7
+
+localResources:
+  collections:
+    - ../Stock

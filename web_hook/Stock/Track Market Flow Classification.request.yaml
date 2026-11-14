@@ -1,0 +1,13 @@
+$kind: http-request
+url: http://localhost:5678/webhook/track-market-flow-classification
+method: POST
+queryParams:
+  - key: start_date
+    value: 2026-11-01
+    disabled: true
+    description: YYYY-MM-dd
+  - key: end_date
+    value: 2026-11-06
+    disabled: true
+    description: YYYY-MM-dd
+order: 8000

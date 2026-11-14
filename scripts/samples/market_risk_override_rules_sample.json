@@ -1,32 +1,41 @@
 {
   "risk_override_rules": [
     {
-      "override_id": "EDGE_CASE_1_BULL_ON_WEIGHT",
+      "override_id": "EDGE_CASE_1",
+      "priority": 1,
+      "state": "Bull on Weight",
+      "description": "Index value surges while the A/D Line falls, signaling a large-cap-driven Bull on Weight trap; force REGIME_2, reduce mid/small-cap exposure, and halt new buys outside large-cap.",
       "condition": {
         "operator": "AND",
         "operands": [
           {
             "operator": ">",
             "operands": [
-              { "field": "return_vnindex" },
-              { "value": 1.0 }
+              { "field": "return" },
+              { "value": 1.5 }
             ]
           },
           {
             "operator": "<",
             "operands": [
-              { "field": "r_ad" },
+              { "field": "ratio_ad" },
               { "value": 0.5 }
             ]
           }
         ]
       },
-      "actions": {
-        "force_regime": "REGIME_2"
-      }
+      "actions": [
+        {
+          "method": "force_regime",
+          "args": ["REGIME_2"]
+        }
+      ]
     },
     {
-      "override_id": "EDGE_CASE_2_LIQUIDITY_CRUNCH",
+      "override_id": "EDGE_CASE_2",
+      "priority": 2,
+      "state": "Liquidity Crunch",
+      "description": "Trading value falls below 60% of its 20-session average, signaling a liquidity crunch; cap stock allocation at 50% despite positive A/D breadth.",
       "condition": {
         "operator": "AND",
         "operands": [
@@ -40,7 +49,7 @@
           {
             "operator": "<",
             "operands": [
-              { "field": "net_matching_value" },
+              { "field": "all_value" },
               {
                 "operator": "*",
                 "operands": [
@@ -52,35 +61,12 @@
           }
         ]
       },
-      "actions": {
-        "cap_w_stock_max": 50.0
-      }
-    },
-    {
-      "override_id": "EDGE_CASE_4_BEARISH_DIVERGENCE",
-      "condition": {
-        "operator": "AND",
-        "operands": [
-          {
-            "operator": "==",
-            "operands": [
-              { "field": "vnindex_is_20_high" },
-              { "value": true }
-            ]
-          },
-          {
-            "operator": "<",
-            "operands": [
-              { "field": "ad_current" },
-              { "field": "ad_20_ago" }
-            ]
-          }
-        ]
-      },
-      "actions": {
-        "set_trailing_stop_pct": 4.0,
-        "reduce_stock_bounds": 10.0
-      }
+      "actions": [
+        {
+          "method": "cap_w_stock_max",
+          "args": [50.0]
+        }
+      ]
     }
   ]
 }

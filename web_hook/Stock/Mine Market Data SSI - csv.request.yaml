@@ -1,0 +1,15 @@
+$kind: http-request
+url: http://localhost:5678/webhook/mine-market-data-ssi
+method: POST
+body:
+  type: formdata
+  content:
+    - type: file
+      key: file
+      src: ""
+    - type: text
+      key: trade_date
+      value: 2026-10-01
+      description: YYYY-MM-dd
+      disabled: true
+order: 3000

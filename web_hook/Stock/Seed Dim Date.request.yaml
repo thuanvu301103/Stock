@@ -1,0 +1,15 @@
+$kind: http-request
+url: http://localhost:5678/webhook/seed-dim-date
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: start_date
+      value: 2026-11-01
+      description: YYYY-MM-dd
+    - type: text
+      key: end_date
+      value: 2026-12-01
+      description: YYYY-MM-dd
+order: 10000

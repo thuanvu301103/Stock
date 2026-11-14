@@ -44,6 +44,16 @@ services:
         soft: 262144
         hard: 262144
 
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+    ports:
+      - "8191:8191"
+    restart: always
+
   n8n:
     build: .
     image: n8n-python-custom

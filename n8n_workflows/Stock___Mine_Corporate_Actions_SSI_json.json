@@ -95,7 +95,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rawData = $input.first().json;\n\nlet stockList = [];\nif (rawData.data && Array.isArray(rawData.data)) {\n  stockList = rawData.data;\n} else if (Array.isArray(rawData) && rawData[0]?.data) {\n  stockList = rawData[0].data;\n}\n\nreturn stockList\n  .filter(item => Array.isArray(item.corporateEvents) && item.corporateEvents.length > 0)\n  .map(item => ({\n    json: {\n      stockSymbol: item.stockSymbol,\n      corporateEvents: item.corporateEvents\n    }\n  }));"
+        "jsCode": "const rawData = $input.first().json.marketData;\n\nlet stockList = [];\nif (rawData.data && Array.isArray(rawData.data)) {\n  stockList = rawData.data;\n} else if (Array.isArray(rawData) && rawData[0]?.data) {\n  stockList = rawData[0].data;\n}\n\nreturn stockList\n  .filter(item => Array.isArray(item.corporateEvents) && item.corporateEvents.length > 0)\n  .map(item => ({\n    json: {\n      stockSymbol: item.stockSymbol,\n      corporateEvents: item.corporateEvents\n    }\n  }));"
       },
       "id": "6d2b581c-c960-4be9-89db-f2947405e299",
       "name": "Read Action",
@@ -203,9 +203,10 @@
     "saveExecutionProgress": false,
     "saveManualExecutions": false,
     "callerPolicy": "workflowsFromSameOwner",
-    "saveDataSuccessExecution": "none"
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": -1
   },
-  "versionId": "e6dc6a9c-15aa-4fe7-b61d-21eda2e28d0c",
+  "versionId": "bb89a6d8-4315-4874-82c2-33b2d3635722",
   "id": "8",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
