@@ -1,0 +1,7 @@
+$kind: http-request
+url: http://localhost:5678/webhook-test/mine-corporate-actions-ssi
+method: POST
+body:
+  type: file
+  content: {}
+order: 1000

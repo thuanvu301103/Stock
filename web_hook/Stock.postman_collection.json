@@ -244,7 +244,7 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "http://localhost:5678/webhook-test/track-market-flow-classification",
+          "raw": "http://localhost:5678/webhook/track-market-flow-classification",
           "protocol": "http",
           "host": [
             "localhost"

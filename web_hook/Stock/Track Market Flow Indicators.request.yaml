@@ -1,0 +1,11 @@
+$kind: http-request
+url: http://localhost:5678/webhook/track-market-flow-indicators?start_date=2026-11-01&end_date=2026-11-06
+method: POST
+queryParams:
+  - key: start_date
+    value: 2026-11-01
+    description: YYYY-MM-dd
+  - key: end_date
+    value: 2026-11-06
+    description: YYYY-MM-dd
+order: 7000

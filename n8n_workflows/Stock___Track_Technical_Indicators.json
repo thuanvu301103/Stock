@@ -354,7 +354,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -480,
+        -660,
         220
       ],
       "webhookId": "b9ce9c2f-a690-4121-a6dc-76f8a885a7a9"
@@ -394,7 +394,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1,
       "position": [
-        -480,
+        -660,
         40
       ]
     },
@@ -410,6 +410,39 @@
         480,
         340
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.query.stocks != undefined}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "3f85145c-8557-4d9b-8871-8e90f612cabe",
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const stocksStr = $input.first().json.query.stocks;\n\nconst stocksArray = stocksStr\n  .split(',')\n  .map(s => ({ \"stock_key\": s.trim()}))\n  .filter(Boolean);\n\nreturn {\n  json: {\n    data: stocksArray\n  }\n};\n\n"
+      },
+      "id": "6d1b7e5c-20c0-41c7-8516-dd5e52f25b16",
+      "name": "Parse Stock symbols",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        440
+      ]
     }
   ],
   "pinData": {},
@@ -421,17 +454,6 @@
             "node": "Merge3",
             "type": "main",
             "index": 1
-          }
-        ]
-      ]
-    },
-    "Format stocks": {
-      "main": [
-        [
-          {
-            "node": "Split In Batches",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -632,7 +654,7 @@
             "index": 0
           },
           {
-            "node": "Get all Stock symbols",
+            "node": "IF",
             "type": "main",
             "index": 0
           }
@@ -676,6 +698,46 @@
           }
         ]
       ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "Parse Stock symbols",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get all Stock symbols",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Stock symbols": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Format stocks": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -686,7 +748,7 @@
     "saveDataSuccessExecution": "none",
     "saveDataErrorExecution": "none"
   },
-  "versionId": "fbd73393-c7e3-4b06-87c8-3a8c3ed77805",
+  "versionId": "823e2ae5-d779-4883-ad71-17884ef93b44",
   "id": "5",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

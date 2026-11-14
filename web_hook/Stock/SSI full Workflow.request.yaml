@@ -1,0 +1,25 @@
+$kind: http-request
+url: http://localhost:5678/webhook/ssi-full-workflow
+method: POST
+queryParams:
+  - key: start_date
+    value: 2026-11-06
+    disabled: true
+    description: YYYY-MM-dd (for technical calculation)
+  - key: end_date
+    value: 2026-11-06
+    disabled: true
+    description: YYYY-MM-dd (for technical calculation)
+body:
+  type: formdata
+  content:
+    - type: file
+      key: file
+      src: ""
+      description: Omit for default analyser only
+    - type: text
+      key: trade_date
+      value: 2026-11-06
+      description: YYYY-MM-dd (for mining data & actions logging)
+      disabled: true
+order: 9000
