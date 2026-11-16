@@ -44,16 +44,6 @@ services:
         soft: 262144
         hard: 262144
 
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: flaresolverr
-    environment:
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-    ports:
-      - "8191:8191"
-    restart: always
-
   n8n:
     build: .
     image: n8n-python-custom
@@ -85,9 +75,13 @@ services:
       N8N_BASIC_AUTH_PASSWORD: ${N8N_PASS:-admin@123456}
 
       N8N_BLOCK_ENV_VARS_FROM_EXPRESSIONS: "false"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: false
 
       PUID: 1000
       PGID: 1000
+
+      SSI_API_KEY: ${SSI_API_KEY:-ssiapikey}
+      SSI_API_SECRET: ${SSI_API_SECRET:-ssiapisecret}
 
     volumes:
       - ./n8n_data:/home/node/.n8n

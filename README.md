@@ -13,7 +13,8 @@ docker compose up -d
 flowchart LR
     subgraph Sources["Data sources"]
         VN["vnstock / market data providers"]
-        SSI["SSI exports or dashboard data"]
+        SSI["SSI market-data services / exports"]
+        FAST["SSI FastConnectAPI<br/>trade-order service"]
     end
 
     subgraph Compose["Docker Compose"]
@@ -40,7 +41,8 @@ flowchart LR
     end
 
     VN -->|"Vnstock workflows"| N8N
-    SSI -->|"SSI ingestion workflows"| N8N
+    SSI -->|"market-data ingestion"| N8N
+    N8N -.->|"order submission<br/>(workflow not complete)"| FAST
     CH --- TABLES
     VIEWS -->|"ODBC / SQL"| PBI
 
@@ -54,7 +56,8 @@ flowchart LR
 
 ### Component responsibilities
 
-- **n8n** orchestrates ingestion, seed, technical-indicator, and maintenance workflows. The workflows are versioned in `n8n_workflows/`.
+- **n8n** orchestrates ingestion, seed, technical-indicator, and maintenance workflows, and contains the SSI trade-order workflow scaffold. The workflows are versioned in `n8n_workflows/`.
+- **SSI / FastConnectAPI** has two separate roles: SSI supplies market data, while FastConnectAPI is the intended route for authenticated order submission. The current `n8n_workflows/Stock___SSI_Trade_Orders.json` is not yet an order-placement workflow: it is inactive, its webhook is disabled, and it currently requests OTP/token authentication without submitting an order. The dotted diagram arrow shows the intended integration, not a working live execution path.
 - **Python** runs in n8n's Python nodes for Vnstock-backed collection and processing; the custom image is based on `naskio/n8n-python` and installs dependencies from `requirements.txt`. It is not a separate Compose service.
 - **PostgreSQL** stores n8n application data. **Redis** is configured for n8n queue support.
 - **ClickHouse** is the analytical store. n8n sends queries and inserts to its HTTP endpoint on the Compose network; table and view DDL is maintained under `clickhouse_query/`.
@@ -241,6 +244,32 @@ sys.stdin.reconfigure(encoding='utf-8')
     - X-axis: `trade_date`
     - Y-axis: `close`, `ema`, `sma`, `rsi`, `cmf`, `volume`...
 2. **Filter Analysis**: Use Slicer to analyse which stock should be buy 
+
+## SSI Configuration
+
+SSI (SSI Securities Corporation) is a Vietnamese joint-stock securities company. In this project it has two distinct roles: SSI market-data services are a source for snapshots, exchange indices, and corporate-action data; SSI's FastConnectAPI is the intended brokerage interface for submitting trade orders. n8n coordinates these integrations, while ClickHouse stores data for analytics and reporting. SSI and FastConnectAPI are external services, not Docker services or databases in this stack.
+
+### FastConnectAPI trade-order workflow
+
+The new workflow, `n8n_workflows/Stock___SSI_Trade_Orders.json`, is currently an authentication scaffold rather than a complete order-placement flow. It reads `SSI_API_KEY` and `SSI_API_SECRET`, requests an OTP, and attempts token retrieval; it does not yet call an order-submission endpoint. Its webhook (`ssi-trade-order`) is disabled, and the workflow is inactive by default. Do not treat it as ready to place orders until order submission, input validation, and an appropriate confirmation step have been implemented and tested.
+
+
+### Setup API Key & Api Secret
+
+The Docker Compose configuration passes `SSI_API_KEY` and `SSI_API_SECRET` to the n8n container for SSI API authentication. Define both values in a `.env` file in the project root, alongside `docker-compose.yml`:
+
+```env
+SSI_API_KEY=your_ssi_api_key
+SSI_API_SECRET=your_ssi_api_secret
+```
+
+Then start or recreate the n8n container so it receives the values:
+
+```bash
+docker compose up -d n8n
+```
+
+Compose automatically reads the root `.env` file and substitutes these variables. If either variable is omitted, the Compose file uses its fallback value (`ssiapikey` or `ssiapisecret`), which is only a placeholder and should not be used for real SSI requests. Do not commit `.env` or share its credentials; keep it out of version control.
 
 ## Workflows
 

@@ -1,0 +1,212 @@
+{
+  "name": "Stock___SSI_Trade_Orders",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ssi-trade-order",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "54b54acb-5be9-46cd-98fe-868d63c47089",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        620,
+        200
+      ],
+      "webhookId": "61123979-35de-4e3a-9b19-1f8202a19534",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ssi.com.vn/api/v3/auth/requestOtp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "={{ $env.SSI_API_KEY }}"
+            },
+            {
+              "name": "apiSecret",
+              "value": "={{ $env.SSI_API_SECRET }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fb7858ba-a7d5-44e1-a24a-7876a4370db6",
+      "name": "Request OTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1400,
+        240
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "82b63384-2b90-48fe-9a13-db3f0815433c",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ssi.com.vn/api/v3/auth/token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "={{ $env.SSI_API_KEY }}"
+            },
+            {
+              "name": "apiSecret",
+              "value": "={{ $env.SSI_API_SECRET }}"
+            },
+            {
+              "name": "transactionId",
+              "value": "={{ $json.transactionId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c2e5c07e-4ff9-4ce8-aab2-3afba7a54515",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1620,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.code }}",
+              "value2": "={{ 401114 }}"
+            }
+          ]
+        }
+      },
+      "id": "95d3f4f9-3250-491b-a282-052eae4add29",
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "0396dd70-73d6-41b9-aa81-480fd276c80a",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        220
+      ],
+      "webhookId": "3663ee2c-c803-475a-a96f-d3b833f11896"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Request OTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request OTP": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "689ec6ad-a053-4c13-b6eb-e16103fc1058",
+  "id": "1",
+  "meta": {
+    "instanceId": "990a94333b6e2ace928598b2add9c4e2a149a41a04dc4bd8f4bffa31d82cf0a6"
+  },
+  "tags": []
+}
