@@ -3,23 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "path": "ssi-trade-order",
-        "responseMode": "lastNode",
-        "options": {}
-      },
-      "id": "54b54acb-5be9-46cd-98fe-868d63c47089",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [
-        620,
-        200
-      ],
-      "webhookId": "61123979-35de-4e3a-9b19-1f8202a19534",
-      "disabled": true
-    },
-    {
-      "parameters": {
         "method": "POST",
         "url": "https://api.ssi.com.vn/api/v3/auth/requestOtp",
         "sendHeaders": true,
@@ -92,7 +75,7 @@
             },
             {
               "name": "transactionId",
-              "value": "={{ $json.transactionId }}"
+              "value": "={{ $('Request OTP').item.json.transactionId }}"
             }
           ]
         },
@@ -129,7 +112,7 @@
     },
     {
       "parameters": {
-        "amount": 30,
+        "amount": 10,
         "unit": "seconds"
       },
       "id": "0396dd70-73d6-41b9-aa81-480fd276c80a",
@@ -137,7 +120,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1,
       "position": [
-        2000,
+        2020,
         220
       ],
       "webhookId": "3663ee2c-c803-475a-a96f-d3b833f11896"
@@ -203,7 +186,7 @@
   },
   "active": false,
   "settings": {},
-  "versionId": "689ec6ad-a053-4c13-b6eb-e16103fc1058",
+  "versionId": "5c6c531b-1680-420d-9e6b-4b614846f6d6",
   "id": "1",
   "meta": {
     "instanceId": "990a94333b6e2ace928598b2add9c4e2a149a41a04dc4bd8f4bffa31d82cf0a6"
