@@ -10,6 +10,10 @@ queryParams:
     value: 2026-11-06
     disabled: true
     description: YYYY-MM-dd (for technical calculation)
+  - key: stocks
+    value: MCH
+    disabled: true
+    description: MCH,ACB
 body:
   type: formdata
   content:
