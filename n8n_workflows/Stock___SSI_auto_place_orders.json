@@ -1,0 +1,191 @@
+{
+  "name": "Stock___SSI_auto_place_orders",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ssi-auto-place-orders",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "b2f76a92-d708-43ec-b7b1-23f63655b96e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        700,
+        280
+      ],
+      "webhookId": "7813615f-14e7-440e-aef4-77b480db623a"
+    },
+    {
+      "parameters": {
+        "workflowId": "20"
+      },
+      "id": "89bf7225-580f-491b-b3cf-76c7058d8930",
+      "name": "Execute Workflow - SSI Auth",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        920,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "18"
+      },
+      "id": "45b4e522-ca26-4d99-9d0f-adb535c575ba",
+      "name": "Execute Workflow - Optimize Buy Strategy",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        920,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "17"
+      },
+      "id": "71813997-d62c-4091-845c-42969dd4f07e",
+      "name": "Execute Workflow - SSI Trade Orders",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "9c5b48bd-6645-44ab-9e97-0a6389b50354",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1140,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve data from the previous node\nconst inputData = $input.first().json;\n\n// Extract the result array containing stock details\nconst results = inputData.result || [];\n\n// Transform each stock entry into the required order payload structure\nconst orders = results\n    .map(item => {\n        return {\n            symbol: item.symbol,\n            quantity: Math.round(item.suggested_shares),\n            price: String(Number((item.pivot_s1_plus_1).toFixed(1)*1000))\n        };\n    })\n    .filter(order => order.quantity !== 0);\n\n// Return the formatted output payload containing the orders array\nreturn [{\n    json: {\n        body: {\n          access_token: inputData.accessToken,\n          orders: orders\n        }\n    }\n}];"
+      },
+      "id": "2796d39b-0744-47f5-a7e1-f983836bd86f",
+      "name": "Format Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "92294f9c-4da4-4ea0-acc6-d6056138fd2f",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1360,
+        420
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - Optimize Buy Strategy",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Execute Workflow - SSI Auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - Optimize Buy Strategy": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - SSI Auth": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Format Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Orders": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - SSI Trade Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "3e582770-4b70-4e63-b1cb-ef9efa95fe1d",
+  "id": "19",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}

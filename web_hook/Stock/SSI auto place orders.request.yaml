@@ -1,0 +1,15 @@
+$kind: http-request
+url: http://localhost:5678/webhook-test/ssi-auto-place-orders
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"total_investment\": 300,\r
+
+    \    //\"selected_trade_date\": \"2026-11-17\", // optional\r
+
+    \    \"selected_symbols\": [\"VGS\",\"SZC\",\"MSB\",\"CTS\",\"SIP\"]\r
+
+    }"
+order: 14000

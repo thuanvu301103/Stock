@@ -1,12 +1,12 @@
 $kind: http-request
-url: http://localhost:5678/webhook-test/optimize-buy-strategy
+url: http://localhost:5678/webhook/optimize-buy-strategy
 method: POST
 body:
   type: json
   content: |-
     {
-        "total_investment": 1000,
-        "selected_trade_date": "2026-11-01",
-        "selected_symbols": ["MCH", "ACE"]
+        "total_investment": 300,
+        //"selected_trade_date": "2026-11-17", // optional
+        "selected_symbols": ["VGS","SZC","MSB","CTS","SIP"]
     }
 order: 12000

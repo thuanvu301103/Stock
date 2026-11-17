@@ -8,27 +8,27 @@
         "responseMode": "lastNode",
         "options": {}
       },
-      "id": "80107d8f-0f87-4a29-9424-03f3ec519c1f",
+      "id": "12f0f501-3a8b-433e-8cdc-579a62ef5874",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        540,
-        280
+        2320,
+        1220
       ],
       "webhookId": "ec9f03f2-dd05-4713-b41e-50acffba7231"
     },
     {
       "parameters": {
-        "functionCode": "import warnings\nwarnings.filterwarnings('ignore')\nimport os\nos.environ['PYTHONWARNINGS'] = 'ignore'\n\ntry:\n    import numpy as np\n    import pandas as pd\n    from scipy.optimize import minimize\n\n    DEFAULT_N_DAYS = 60\n\n    # --- Get data from Prev Node ---\n    input_items = items\n\n    if not input_items:\n        raise ValueError(\"No input items received from upstream nodes.\")\n\n    total_budget = None\n    raw_data = []\n\n    for item in input_items:\n        val = item.get(\"json\", item) if isinstance(item, dict) else item\n        \n        if isinstance(val, dict):\n            # Get checking total_investment\n            if \"total_investment\" in val and total_budget is None:\n                total_budget = float(val.get(\"total_investment\"))\n\n            # Get data \n            if \"data\" in val and isinstance(val[\"data\"], list):\n                raw_data.extend(val[\"data\"])\n            elif \"symbol\" in val and (\"close_price\" in val or \"trade_date\" in val):\n                raw_data.append(val)\n                \n        elif isinstance(val, list):\n            raw_data.extend(val)\n\n    if total_budget is None:\n        raise ValueError(\"Missing required field: 'total_investment' was not found in the input payload.\")\n\n    if not raw_data:\n        raise ValueError(\"Missing required data: No trade records or 'data' array found from upstream nodes.\")\n\n    df = pd.DataFrame(raw_data)\n\n    if df.empty or 'symbol' not in df.columns:\n        raise ValueError(\"DataFrame is empty or missing the 'symbol' column.\")\n\n    # --- Normalize columns and data ---\n    df.columns = [str(col).strip().lower() for col in df.columns]\n\n    date_col = next((c for c in df.columns if 'date' in c), 'trade_date')\n    symbol_col = next((c for c in df.columns if 'symbol' in c), 'symbol')\n    price_col = next((c for c in df.columns if 'price' in c or 'close' in c), 'close_price')\n    return_col = next((c for c in df.columns if 'expected' in c or 'return' in c), 'expected_return_t2_n20')\n    vol_col = next((c for c in df.columns if 'vol' in c), 'volatility_t2_n20')\n\n    df[date_col] = pd.to_datetime(df[date_col], errors='coerce')\n    df = df.dropna(subset=[date_col, symbol_col])\n\n    # --- Get N nearest session ---\n    unique_dates = sorted(df[date_col].unique(), reverse=True)\n    recent_dates = unique_dates[:DEFAULT_N_DAYS]\n    df_recent = df[df[date_col].isin(recent_dates)].copy()\n    del df \n\n    # --- Extract observation metrics for the specified date ---\n    latest_date = max(recent_dates) if len(recent_dates) > 0 else df_recent[date_col].max()\n    latest_df = df_recent[df_recent[date_col] == latest_date][[symbol_col, price_col, return_col, vol_col]].drop_duplicates(subset=[symbol_col], keep='last')\n\n    symbols = latest_df[symbol_col].values\n    returns = latest_df[return_col].values\n    prices = latest_df[price_col].values\n    volatilities = latest_df[vol_col].values\n    num_assets = len(symbols)\n\n    if num_assets == 0:\n        raise ValueError(\"No assets found for the latest trade date.\")\n    elif num_assets == 1:\n        weights = np.array([1.0])\n    else:\n        df_clean = df_recent.drop_duplicates(subset=[date_col, symbol_col], keep='last')\n        \n        pivot_returns = df_clean.pivot_table(\n            index=date_col,\n            columns=symbol_col,\n            values=return_col,\n            aggfunc='mean'\n        )[symbols].dropna()\n\n        if len(pivot_returns) >= 2:\n            cov_matrix = pivot_returns.cov().values\n        else:\n            cov_matrix = np.diag(volatilities**2)\n\n        def negative_sharpe(w):\n            port_return = np.sum(w * returns)\n            port_volatility = np.sqrt(np.dot(w.T, np.dot(cov_matrix, w)))\n            if port_volatility == 0:\n                return 0.0\n            return -(port_return / port_volatility)\n\n        min_w = min(0.05, 1.0 / num_assets)\n        max_w = 1.0 if num_assets < 3 else max(0.35, 1.0 / num_assets)\n        bounds = tuple((min_w, max_w) for _ in range(num_assets))\n        \n        constraints = ({'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0})\n        initial_weights = np.array(num_assets * [1.0 / num_assets])\n\n        optimization_result = minimize(\n            negative_sharpe,\n            initial_weights,\n            method='SLSQP',\n            bounds=bounds,\n            constraints=constraints\n        )\n        \n        raw_weights = optimization_result.x\n        sum_w = np.sum(raw_weights)\n        normalized_weights = raw_weights / sum_w if sum_w > 0 else initial_weights\n\n        weights = np.round(normalized_weights, 4)\n        weights[-1] = np.round(1.0 - np.sum(weights[:-1]), 4)\n\n    # --- Calculate investment amounts and share quantities ---\n    allocated_amount = np.round(weights * total_budget, 2)\n    suggested_shares = np.where(prices > 0, (allocated_amount / prices), 0).astype(float)\n\n    result_df = pd.DataFrame({\n        'calculated_for_date': [str(pd.to_datetime(latest_date).date())] * num_assets,\n        'symbol': symbols,\n        'close_price': prices,\n        'expected_return': returns,\n        'optimal_weight': weights,\n        'allocated_amount': allocated_amount,\n        'suggested_shares': suggested_shares\n    })\n    \n    output = result_df.to_dict(orient=\"records\")\n\nexcept Exception as e:\n    import traceback\n    # Return error as JSON\n    output = [{\n        \"status\": \"error\",\n        \"error_type\": type(e).__name__,\n        \"error_message\": str(e),\n        \"traceback\": traceback.format_exc()\n    }]\n\nreturn output"
+        "functionCode": "import warnings\nwarnings.filterwarnings('ignore')\nimport os\nos.environ['PYTHONWARNINGS'] = 'ignore'\n\ntry:\n    import numpy as np\n    import pandas as pd\n    from scipy.optimize import minimize\n\n    DEFAULT_N_DAYS = 60\n\n    # --- Get data from Prev Node ---\n    input_items = items\n\n    if not input_items:\n        raise ValueError(\"No input items received from upstream nodes.\")\n\n    total_budget = None\n    raw_data = []\n\n    for item in input_items:\n        val = item.get(\"json\", item) if isinstance(item, dict) else item\n        \n        if isinstance(val, dict):\n            # Get checking total_investment\n            if \"total_investment\" in val and total_budget is None:\n                total_budget = float(val.get(\"total_investment\"))\n\n            # Get data \n            if \"data\" in val and isinstance(val[\"data\"], list):\n                raw_data.extend(val[\"data\"])\n            elif \"symbol\" in val and (\"close_price\" in val or \"trade_date\" in val):\n                raw_data.append(val)\n                \n        elif isinstance(val, list):\n            raw_data.extend(val)\n\n    if total_budget is None:\n        raise ValueError(\"Missing required field: 'total_investment' was not found in the input payload.\")\n\n    if not raw_data:\n        raise ValueError(\"Missing required data: No trade records or 'data' array found from upstream nodes.\")\n\n    df = pd.DataFrame(raw_data)\n\n    if df.empty or 'symbol' not in df.columns:\n        raise ValueError(\"DataFrame is empty or missing the 'symbol' column.\")\n\n    # --- Normalize columns and data ---\n    df.columns = [str(col).strip().lower() for col in df.columns]\n\n    date_col = next((c for c in df.columns if 'date' in c), 'trade_date')\n    symbol_col = next((c for c in df.columns if 'symbol' in c), 'symbol')\n    price_col = next((c for c in df.columns if 'price' in c or 'close' in c), 'close_price')\n    return_col = 'expected_return_t2_n20'\n    vol_col = next((c for c in df.columns if 'vol' in c), 'volatility_t2_n20')\n\n    df[date_col] = pd.to_datetime(df[date_col], errors='coerce')\n    df = df.dropna(subset=[date_col, symbol_col])\n\n    # --- Get N nearest session ---\n    unique_dates = sorted(df[date_col].unique(), reverse=True)\n    recent_dates = unique_dates[:DEFAULT_N_DAYS]\n    df_recent = df[df[date_col].isin(recent_dates)].copy()\n    del df \n\n    # --- Extract observation metrics for the specified date ---\n    latest_date = max(recent_dates) if len(recent_dates) > 0 else df_recent[date_col].max()\n    latest_df = df_recent[df_recent[date_col] == latest_date][[symbol_col, price_col, return_col, vol_col]].drop_duplicates(subset=[symbol_col], keep='last')\n\n    symbols = latest_df[symbol_col].values\n    returns = latest_df[return_col].values\n    prices = latest_df[price_col].values\n    volatilities = latest_df[vol_col].values\n    num_assets = len(symbols)\n\n    if num_assets == 0:\n        raise ValueError(\"No assets found for the latest trade date.\")\n    elif num_assets == 1:\n        weights = np.array([1.0])\n    else:\n        df_clean = df_recent.drop_duplicates(subset=[date_col, symbol_col], keep='last')\n        \n        pivot_returns = df_clean.pivot_table(\n            index=date_col,\n            columns=symbol_col,\n            values=return_col,\n            aggfunc='mean'\n        )[symbols].dropna()\n\n        if len(pivot_returns) >= 2:\n            cov_matrix = pivot_returns.cov().values\n        else:\n            cov_matrix = np.diag(volatilities**2)\n\n        def negative_sharpe(w):\n            port_return = np.sum(w * returns)\n            port_volatility = np.sqrt(np.dot(w.T, np.dot(cov_matrix, w)))\n            if port_volatility == 0:\n                return 0.0\n            return -(port_return / port_volatility)\n\n        min_w = min(0.05, 1.0 / num_assets)\n        max_w = 1.0 if num_assets < 3 else max(0.35, 1.0 / num_assets)\n        bounds = tuple((min_w, max_w) for _ in range(num_assets))\n        \n        constraints = ({'type': 'eq', 'fun': lambda w: np.sum(w) - 1.0})\n        initial_weights = np.array(num_assets * [1.0 / num_assets])\n\n        optimization_result = minimize(\n            negative_sharpe,\n            initial_weights,\n            method='SLSQP',\n            bounds=bounds,\n            constraints=constraints\n        )\n        \n        raw_weights = optimization_result.x\n        sum_w = np.sum(raw_weights)\n        normalized_weights = raw_weights / sum_w if sum_w > 0 else initial_weights\n\n        weights = np.round(normalized_weights, 4)\n        weights[-1] = np.round(1.0 - np.sum(weights[:-1]), 4)\n\n    # --- Calculate investment amounts and share quantities ---\n    allocated_amount = np.round(weights * total_budget, 2)\n    suggested_shares = np.where(prices > 0, (allocated_amount / prices), 0).astype(float)\n\n    result_df = pd.DataFrame({\n        'calculated_for_date': [str(pd.to_datetime(latest_date).date())] * num_assets,\n        'symbol': symbols,\n        'close_price': prices,\n        'expected_return': returns,\n        'volatility': volatilities,\n        'optimal_weight': weights,\n        'allocated_amount': allocated_amount,\n        'suggested_shares': suggested_shares\n    })\n    \n    output = result_df.to_dict(orient=\"records\")\n\nexcept Exception as e:\n    import traceback\n    # Return error as JSON\n    output = [{\n        \"status\": \"error\",\n        \"error_type\": type(e).__name__,\n        \"error_message\": str(e),\n        \"traceback\": traceback.format_exc()\n    }]\n\nreturn output"
       },
-      "id": "23977c72-2474-432d-a536-4238f83a1d30",
+      "id": "b481c9b7-d41c-4f57-a393-66893787c18b",
       "name": "Process Optimize",
       "type": "n8n-nodes-python.pythonFunction",
       "typeVersion": 1,
       "position": [
-        1240,
-        280
+        3040,
+        1000
       ]
     },
     {
@@ -44,11 +44,11 @@
           "string": [
             {
               "name": "selected_trade_date",
-              "value": "={{ $json.body.selected_trade_date }}"
+              "value": "={{ $json.body.selected_trade_date || $now.toFormat('yyyy-MM-dd') }}"
             },
             {
               "name": "min_date",
-              "value": "={{ DateTime.fromISO($json.body.selected_trade_date).minus({ days: 90 }).toFormat('yyyy-MM-dd') }}"
+              "value": "={{ DateTime.fromISO($json.body.selected_trade_date || $now.toFormat('yyyy-MM-dd')).minus({ days: 90 }).toFormat('yyyy-MM-dd') }}"
             },
             {
               "name": "source",
@@ -64,13 +64,13 @@
           "dotNotation": false
         }
       },
-      "id": "4f9008b5-528e-4562-b85f-9292b1e5e715",
+      "id": "b1c7e338-cd2f-438d-80db-d4b052ded825",
       "name": "Set Params",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        800,
-        160
+        2580,
+        1000
       ]
     },
     {
@@ -93,16 +93,16 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/x-www-form-urlencoded",
-        "body": "=SELECT * \nFROM {{ $json.source }}\nWHERE symbol IN ('{{ $json.selected_symbols.join(\"','\") }}')\nAND trade_date >= '{{ $json.min_date }}'\nAND trade_date <= '{{ $json.selected_trade_date }}' \nFORMAT JSON\n",
+        "body": "=SELECT * \nFROM {{ $json.source }}\nWHERE symbol IN ('{{ $json.selected_symbols.join(\"','\") }}')\nAND trade_date >= '{{ $json.min_date }}'\nAND trade_date <= '{{ $json.selected_trade_date }}' \nORDER BY trade_date DESC\nFORMAT JSON\n",
         "options": {}
       },
-      "id": "3699ad4c-3c39-4b50-8c7f-9982cff1ed07",
+      "id": "79a41ca1-3afc-43f9-b000-b964879a3fb3",
       "name": "HTTP Request",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        800,
-        380
+        2580,
+        1220
       ]
     },
     {
@@ -111,13 +111,82 @@
         "combinationMode": "multiplex",
         "options": {}
       },
-      "id": "269eb1ec-d4ba-42fe-8d1b-aef5cfe0e798",
+      "id": "aaf45100-91ba-4677-8f8b-09372b9f08b1",
       "name": "Merge",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2.1,
       "position": [
-        1040,
-        280
+        2820,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { result: $input.all().map(i => i.json) } }];"
+      },
+      "id": "56968bde-d52d-4cfa-9b1f-e2d57201b662",
+      "name": "Format Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3240,
+        1000
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "14cc38fd-c8e3-477d-bcc9-6983a8297242",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT pivot_s1_plus_1, symbol, trade_date\nFROM n8n_olap.v_analytics_master_consolidated\nWHERE symbol IN ('{{ $json.selected_symbols.join(\"','\") }}')\nAND trade_date = '{{ $json.selected_trade_date }}'\nFORMAT JSON\n",
+        "options": {}
+      },
+      "id": "bc4188f3-eed2-4bd3-b37c-2b52103b6b8c",
+      "name": "Potential Prices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3040,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input1Data = $('Format Results').first().json.result;\nconst input2Data = $('Potential Prices').first().json.data;\n\nconst lookupMap = new Map();\ninput2Data.forEach(item => {\n    const key = `${item.symbol}_${item.calculated_for_date}`;\n    lookupMap.set(key, item);\n});\n\nconst result = input1Data.map(item1 => {\n    const key = `${item1.symbol}_${item1.trade_date}`;\n    const matchedData = lookupMap.get(key) || {};\n    \n    return {\n        ...item1,\n        ...matchedData\n    };\n});\n\nreturn [{ json: { result } }];"
+      },
+      "id": "afccd6fa-4e4a-4bce-81a9-96f1114c35b3",
+      "name": "Merge2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3460,
+        1100
       ]
     }
   ],
@@ -168,22 +237,70 @@
             "node": "Process Optimize",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Potential Prices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Optimize": {
+      "main": [
+        [
+          {
+            "node": "Format Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Results": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Potential Prices": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
+    "saveDataSuccessExecution": "none",
     "saveManualExecutions": false,
-    "callerPolicy": "workflowsFromSameOwner",
-    "saveDataErrorExecution": "none",
-    "saveDataSuccessExecution": "none"
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "54f1f4d4-4cb1-435c-b49f-52896021bd7a",
-  "id": "3",
+  "versionId": "5eb9174b-0927-4627-8b66-6de59c7779b3",
+  "id": "18",
   "meta": {
-    "instanceId": "990a94333b6e2ace928598b2add9c4e2a149a41a04dc4bd8f4bffa31d82cf0a6"
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
   },
   "tags": []
 }
