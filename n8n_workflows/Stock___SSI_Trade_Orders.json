@@ -75,15 +75,15 @@
     },
     {
       "parameters": {
-        "jsCode": "function generateUUIDv4() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nif (!global.__n8n_device_id) {\n  global.__n8n_device_id = generateUUIDv4();\n}\n\nconst currentDeviceId = global.__n8n_device_id;\n\nreturn items.map(item => {\n  return {\n    json: {\n      orders: item.json.body,\n      deviceId: currentDeviceId\n    }\n  };\n});"
+        "jsCode": "function generateUUIDv4() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nif (!global.__n8n_device_id) {\n  global.__n8n_device_id = generateUUIDv4();\n}\n\nconst currentDeviceId = global.__n8n_device_id;\n\nreturn items.map(item => {\n  return {\n    json: {\n      orders: item.json.body.orders,\n      deviceId: currentDeviceId\n    }\n  };\n});"
       },
       "id": "d2baa144-272a-4a15-a945-58352b50717c",
       "name": "Generate Device Id",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        2820,
-        680
+        2680,
+        620
       ]
     },
     {
@@ -98,8 +98,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        2620,
-        800
+        2460,
+        780
       ],
       "webhookId": "68ff0e9c-b59a-4daf-9347-ca0dfb0d431b"
     },
@@ -120,8 +120,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        3020,
-        680
+        2880,
+        620
       ]
     },
     {
@@ -133,8 +133,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        3220,
-        680
+        3080,
+        620
       ]
     },
     {
@@ -254,6 +254,48 @@
         3020,
         920
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.access_token != undefined }}",
+              "value2": "={{true}}"
+            }
+          ]
+        }
+      },
+      "id": "710e2e42-5ae1-44d9-a1d0-0e5c456fc76e",
+      "name": "IF have Access Token",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        2680,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "accessToken",
+              "value": "={{ $json.body.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "16c91bba-0aa3-476c-ac05-b8fb38b0ef7e",
+      "name": "Set",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        3220,
+        760
+      ]
     }
   ],
   "pinData": {},
@@ -302,12 +344,12 @@
       "main": [
         [
           {
-            "node": "Request OTP",
+            "node": "Generate Device Id",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Generate Device Id",
+            "node": "IF have Access Token",
             "type": "main",
             "index": 0
           }
@@ -379,9 +421,38 @@
           }
         ]
       ]
+    },
+    "IF have Access Token": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Request OTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "No-op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "saveManualExecutions": false,
     "callerPolicy": "workflowsFromSameOwner",
@@ -389,7 +460,7 @@
     "saveDataErrorExecution": "none",
     "saveDataSuccessExecution": "none"
   },
-  "versionId": "f2cfefee-b699-4fc6-b6c1-0426083387aa",
+  "versionId": "ae80b37d-91ca-49ef-9770-aa4b347d0397",
   "id": "1",
   "meta": {
     "instanceId": "990a94333b6e2ace928598b2add9c4e2a149a41a04dc4bd8f4bffa31d82cf0a6"

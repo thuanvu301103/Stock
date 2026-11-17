@@ -1,0 +1,4 @@
+$kind: http-request
+url: http://localhost:5678/webhook-test/ssi-auth
+method: GET
+order: 13000
