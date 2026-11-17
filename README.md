@@ -251,25 +251,26 @@ SSI (SSI Securities Corporation) is a Vietnamese joint-stock securities company.
 
 ### FastConnectAPI trade-order workflow
 
-The new workflow, `n8n_workflows/Stock___SSI_Trade_Orders.json`, is currently an authentication scaffold rather than a complete order-placement flow. It reads `SSI_API_KEY` and `SSI_API_SECRET`, requests an OTP, and attempts token retrieval; it does not yet call an order-submission endpoint. Its webhook (`ssi-trade-order`) is disabled, and the workflow is inactive by default. Do not treat it as ready to place orders until order submission, input validation, and an appropriate confirmation step have been implemented and tested.
+The workflow `n8n_workflows/Stock___SSI_Trade_Orders.json` now includes an order-submission path: it formats the submitted orders, adds a batch request ID and timestamp, signs the request, and calls SSI's batch-order endpoint. The workflow export is marked active. Its `POST /webhook/ssi-trade-order` webhook expects a JSON request body containing an `orders` array. The workflow can submit real orders, so configure valid SSI credentials and verify the request carefully before using it.
 
+### Configure SSI environment variables
 
-### Setup API Key & Api Secret
-
-The Docker Compose configuration passes `SSI_API_KEY` and `SSI_API_SECRET` to the n8n container for SSI API authentication. Define both values in a `.env` file in the project root, alongside `docker-compose.yml`:
+Docker Compose passes these four variables to the n8n container:
 
 ```env
 SSI_API_KEY=your_ssi_api_key
 SSI_API_SECRET=your_ssi_api_secret
+SSI_ACCOUNT_NO=your_ssi_account_number
+SSI_PRIVATE_KEY=your_ssi_private_key
 ```
 
-Then start or recreate the n8n container so it receives the values:
+`SSI_PRIVATE_KEY` accepts the PEM private key or the Base64-encoded RSA XML key provided by SSI. Put the values in the project-root `.env` file alongside `docker-compose.yml`. The Compose defaults (`ssiapikey`, `ssiapisecret`, `ssiaccountno`, and `ssiprivatekey`) are placeholders, not usable credentials. After changing the `.env` file, recreate n8n so the container receives the new values:
 
 ```bash
-docker compose up -d n8n
+docker compose up -d --force-recreate n8n
 ```
 
-Compose automatically reads the root `.env` file and substitutes these variables. If either variable is omitted, the Compose file uses its fallback value (`ssiapikey` or `ssiapisecret`), which is only a placeholder and should not be used for real SSI requests. Do not commit `.env` or share its credentials; keep it out of version control.
+Keep real credentials private; `.env` is ignored by Git and must not be committed.
 
 ## Workflows
 

@@ -40,53 +40,6 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.ssi.com.vn/api/v3/auth/token",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "apiKey",
-              "value": "={{ $env.SSI_API_KEY }}"
-            },
-            {
-              "name": "apiSecret",
-              "value": "={{ $env.SSI_API_SECRET }}"
-            },
-            {
-              "name": "transactionId",
-              "value": "={{ $('Request OTP').item.json.transactionId }}"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
-        }
-      },
-      "id": "98ec2d01-91cd-4ea2-a746-f9b8fa1d624a",
-      "name": "HTTP Request",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        3020,
-        920
-      ]
-    },
-    {
-      "parameters": {
         "amount": 10,
         "unit": "seconds"
       },
@@ -137,7 +90,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "ssi-trade-order",
-        "responseMode": "responseNode",
+        "responseMode": "lastNode",
         "options": {}
       },
       "id": "f4c0d8d4-ee82-4514-ae37-8c5e9491a08f",
@@ -231,7 +184,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const inputData = items[0].json;\nconst orders = inputData.orders || [];\n\n// 1. Tính batchRequestTime (thời gian hiện tại UTC milliseconds)\nconst batchRequestTime = Date.now();\n\n// 2. Hàm tạo chuỗi ngẫu nhiên an toàn không cần dùng thư viện crypto\nfunction generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\n// Tạo batchRequestId duy nhất trong ngày cho thao tác đặt lệnh (BUY)\nconst today = new Date().toISOString().slice(0, 10).replace(/-/g, '');\nconst batchRequestId = `BUY_${today}_${generateUUID()}`;\n\n// Gắn các tham số bảo mật và chống trùng lặp vào payload gửi đi\nconst payload = {\n  batchRequestId: batchRequestId,\n  batchRequestTime: batchRequestTime,\n  orders: orders\n};\n\nreturn [{ \n  json: {\n    body: payload,\n    accessToken: inputData.accessToken\n  }\n}];"
+        "jsCode": "const inputData = items[0].json;\nconst orders = inputData.orders || [];\n\nconst batchRequestTime = Date.now();\n\nfunction generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst today = new Date().toISOString().slice(0, 10).replace(/-/g, '');\nconst batchRequestId = `BUY_${today}_${generateUUID()}`;\n\nconst payload = {\n  batchRequestId: batchRequestId,\n  batchRequestTime: batchRequestTime,\n  orders: orders\n};\n\nreturn [{ \n  json: {\n    body: payload,\n    accessToken: inputData.accessToken\n  }\n}];"
       },
       "id": "7db7fb9e-c8ea-41a6-b1bb-375fd5090e86",
       "name": "Replay prevent & Idempotency",
@@ -254,6 +207,53 @@
         3840,
         760
       ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ssi.com.vn/api/v3/auth/token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "={{ $env.SSI_API_KEY }}"
+            },
+            {
+              "name": "apiSecret",
+              "value": "={{ $env.SSI_API_SECRET }}"
+            },
+            {
+              "name": "transactionId",
+              "value": "={{ $('Request OTP').item.json.transactionId }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "98ec2d01-91cd-4ea2-a746-f9b8fa1d624a",
+      "name": "Request Tokens",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3020,
+        920
+      ]
     }
   ],
   "pinData": {},
@@ -262,18 +262,7 @@
       "main": [
         [
           {
-            "node": "HTTP Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request": {
-      "main": [
-        [
-          {
-            "node": "IF Not Authorized",
+            "node": "Request Tokens",
             "type": "main",
             "index": 0
           }
@@ -284,7 +273,7 @@
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "Request Tokens",
             "type": "main",
             "index": 0
           }
@@ -379,11 +368,28 @@
           }
         ]
       ]
+    },
+    "Request Tokens": {
+      "main": [
+        [
+          {
+            "node": "IF Not Authorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
-  "settings": {},
-  "versionId": "247f0c13-4f27-47f1-b71e-51c12b89f5a6",
+  "active": true,
+  "settings": {
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 300,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  },
+  "versionId": "f2cfefee-b699-4fc6-b6c1-0426083387aa",
   "id": "1",
   "meta": {
     "instanceId": "990a94333b6e2ace928598b2add9c4e2a149a41a04dc4bd8f4bffa31d82cf0a6"

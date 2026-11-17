@@ -1,19 +1,14 @@
 $kind: http-request
-url: http://localhost:5678/webhook-test/ssi-trade-order
+url: http://localhost:5678/webhook/ssi-trade-order
 method: POST
 body:
   type: json
   content: |-
     [
         {
-            "symbol": "ACB",
-            "quantity": 1,
-            "price": "32.5"
-        },
-        {
             "symbol": "MCH",
             "quantity": 1,
-            "price": "32.5"
+            "price": "121000"
         }
     ]
 order: 11000
