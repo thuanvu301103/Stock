@@ -4,9 +4,13 @@ let
 
     // Filter data
     TargetDate = Date.From(SelectedTradeDate),
+    // Calculate lower bound date to cover at least 60 trading sessions (approx. 90 calendar days)
+    MinDate = Date.AddDays(TargetDate, -90),
     SymbolList = List.Transform(Text.Split(SelectedSymbols, ","), Text.Trim),
     FilteredData = Table.SelectRows(Source, each 
-        List.Contains(SymbolList, [symbol]) and [trade_date] <= TargetDate
+        List.Contains(SymbolList, [symbol]) 
+        and [trade_date] >= MinDate
+        and [trade_date] <= TargetDate
     ),
 
     // Run Python script

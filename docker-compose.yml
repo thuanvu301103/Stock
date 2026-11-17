@@ -53,6 +53,8 @@ services:
     ports:
       - "5678:5678"
     environment:
+      NODE_OPTIONS: "--max-old-space-size=3072"
+
       GENERIC_TIMEZONE: ${TIMEZONE:-UTC}
       TZ: ${TIMEZONE:-UTC}
 

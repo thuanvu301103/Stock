@@ -79,3 +79,9 @@ Generates a binary entry flag $\text{BuySignal}_t \in \{0, 1\}$ by combining bou
 $$\text{BuySignal}_t = \begin{cases} 1 & \text{if } 0.0100 \le \text{Volatility}_{T2, 20, t} \le 0.0450 \\ & \text{and } 0.0050 \le \text{ExpectedReturn}_{T2, 20, t} \le 0.0350 \\ & \text{and } \text{Sharpe}_{T2, 20, t} \ge 0.40 \\ 0 & \text{otherwise} \end{cases}$$
 
 > *Technical Constraint:* Determining a valid $\text{BuySignal}_t$ event requires a minimum of **22 consecutive sessions** of historical closing price data.
+
+---
+
+## Portfolio Optimization Consumers
+
+The Power Query and n8n buy-strategy optimizers read `fact_portfolio_return_metrics`. For each selected ticker and trade date, they use `close_price` for the allocation estimate, `expected_return_t2_n20` as the expected return, and `volatility_t2_n20` as the volatility input. The optimizer uses the recent available trading-date history (up to 60 sessions) to estimate the portfolio covariance and weights. See the [README optimization instructions](../README.md#optimize-investment) and the [table definition](../clickhouse_query/create_table/create_fact_portfolio_return_metrics.sql).

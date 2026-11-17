@@ -7,6 +7,7 @@ To spin up n8n with the pre-configured Python environment:
 docker compose build --no-cache
 docker compose up -d
 ```
+The n8n container is configured with a 3072 MB Node.js heap limit; make sure Docker has sufficient memory available.
 
 ## Architecture
 ```mermaid
@@ -321,22 +322,34 @@ Both standalone collectors use the current SSI responses when run; the date in t
 2. At tab `Home` -> group `Queries` -> `Refresh`
 
 ### Optimize Investment
-1. **Analyze and Select Assets (`SelectedSymbols`)**:
-Review technical and financial analysis to select a target pool of potential stocks. Enter the chosen tickers into the `SelectedSymbols` parameter, separated by commas (e.g., `HPG, FPT, SSI`).
-2. **Configure Input Parameters**:
-* **`SelectedTradeDate`**: Set the base trading date to retrieve historical data and expected metrics.
-* **`TotalInvestment`**: Input the total capital budget planned for execution (e.g., `100000000`).
-3. **Execute the Script**:
-Open Power Query Editor, select the query, and click **Refresh Preview** (or **Apply & Close**) to trigger the Python Sharpe ratio optimization model.
-4. **Interpret Output Metrics**:
-* **`optimal_weight`**: Target capital allocation percentage for each asset (sums to 1.0).
-* **`allocated_amount`**: Precise capital amount to spend on each stock:
+Portfolio allocation is available through Power BI's Power Query M query or the n8n webhook. Both use `fact_portfolio_return_metrics` in ClickHouse and optimize allocations against expected returns and volatility. The M query is used in Power BI Desktop; n8n uses its separate workflow and Python code.
 
-    $$\text{allocated amount} = \text{optimal weight} \times \text{TotalInvestment}$$
+#### Power BI (Power Query M)
+Use [optimize_portfolio_return_value_m_query.m](optimize_portfolio_return_value_scripts/optimize_portfolio_return_value_m_query.m) as the shared M query in Power BI Desktop's Power Query Editor. Configure these Power Query parameters:
 
-* **`suggested_shares`**: Recommended number of shares to purchase:
+- **`SelectedSymbols`**: Comma-separated tickers (for example, `HPG, FPT, SSI`).
+- **`SelectedTradeDate`**: The latest date to include.
+- **`TotalInvestment`**: The total budget (for example, `100000000`).
 
-    $$\text{suggested shares} = \left\lfloor \frac{\text{allocated amount}}{\text{close price}} \right\rfloor$$
+Refresh the query in Power BI's Power Query Editor. The query filters roughly 90 calendar days of source data and uses up to 60 recent trading dates for optimization.
+
+#### n8n webhook
+Import [Stock___Optimize_Buy_Strategy.json](n8n_workflows/Stock___Optimize_Buy_Strategy.json). It is inactive by default. For a test run, click **Test workflow** and send a `POST` to `http://localhost:5678/webhook-test/optimize-buy-strategy`. After activating the workflow, use `http://localhost:5678/webhook/optimize-buy-strategy`.
+
+The JSON request body uses `selected_symbols` as an array:
+
+```json
+{
+  "total_investment": 100000000,
+  "selected_trade_date": "YYYY-MM-DD",
+  "selected_symbols": ["HPG", "FPT", "SSI"]
+}
+```
+
+The matching request template is [Optimze Buy Strategy.request.yaml](web_hook/Stock/Optimze%20Buy%20Strategy.request.yaml). The workflow queries ClickHouse and passes the results to the Python optimizer in [optimize_portfolio_return_value_n8n_python.py](optimize_portfolio_return_value_scripts/optimize_portfolio_return_value_n8n_python.py). The Docker image installs its `scipy` dependency from `requirements.txt`; rebuild it after dependency changes.
+
+#### Results
+The optimizer returns `calculated_for_date`, `symbol`, `close_price`, `expected_return`, `optimal_weight`, `allocated_amount`, and `suggested_shares`. `optimal_weight` values sum to 1, and `allocated_amount` is the weight multiplied by `TotalInvestment`. `suggested_shares` is currently the allocation divided by close price and may be fractional; apply the exchange's lot-size and order rules before using it as an order quantity. These outputs are estimates, not trade orders.
 
 ### Purge Cold data
 1. Run workflow in n8n `n8n_workflows\Stock__Purge_Data.json`
