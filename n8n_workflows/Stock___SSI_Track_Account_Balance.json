@@ -29,13 +29,13 @@
         },
         "options": {}
       },
-      "id": "57f187a5-04b3-438f-9758-dc3a1c5b14be",
+      "id": "338931c3-8480-4de0-aeb9-25178d2dc470",
       "name": "Request OTP",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        2820,
-        920
+        3940,
+        1840
       ]
     },
     {
@@ -43,13 +43,13 @@
         "amount": 10,
         "unit": "seconds"
       },
-      "id": "b3c69670-fdde-4f8f-b4db-0f0384d6ee74",
+      "id": "0d9f53bd-84b3-4fa0-9527-4b1bd5a59f73",
       "name": "Wait",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1,
       "position": [
-        3440,
-        900
+        4560,
+        1820
       ],
       "webhookId": "2e8a274c-ded0-467d-86a4-43e07b75578f"
     },
@@ -64,13 +64,13 @@
           ]
         }
       },
-      "id": "f5df04c5-caf4-4f4b-bf66-74164bf6a082",
+      "id": "676b43c3-6414-46c2-8392-65ce1f0792a3",
       "name": "IF Not Authorized",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        3220,
-        920
+        4340,
+        1840
       ]
     },
     {
@@ -79,13 +79,13 @@
         "responseMode": "lastNode",
         "options": {}
       },
-      "id": "920833c7-5019-4e27-9c21-6a30969b9df0",
+      "id": "79210c9b-29b7-477b-8966-3c7b1dd20b66",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        2460,
-        780
+        3580,
+        1800
       ],
       "webhookId": "9566971a-e458-4ca1-aed3-8fb4f9d910ca"
     },
@@ -101,13 +101,13 @@
         },
         "options": {}
       },
-      "id": "6ad929f5-e3f4-4c45-9c92-1d950e823b45",
+      "id": "d849e5be-cfda-4978-a5d4-e949de7f588e",
       "name": "Set Account No",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        3440,
-        760
+        4560,
+        1680
       ]
     },
     {
@@ -148,13 +148,13 @@
           }
         }
       },
-      "id": "7f77bede-49ed-4b28-96ab-ba74eef1a4bb",
+      "id": "24480dcb-085d-4887-8315-33207799417f",
       "name": "Request Tokens",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        3020,
-        920
+        4140,
+        1840
       ]
     },
     {
@@ -168,13 +168,13 @@
           ]
         }
       },
-      "id": "bc625e98-4bbd-4d3c-a8bb-5770812d2b5e",
+      "id": "13552ad8-5635-423d-b5aa-5e2ec424a174",
       "name": "IF have Access Token",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        2680,
-        780
+        3800,
+        1700
       ]
     },
     {
@@ -190,13 +190,13 @@
         },
         "options": {}
       },
-      "id": "0551957a-a19e-4738-b5bf-4f2e251b205a",
+      "id": "6fe898f6-5412-4378-bb85-36dc2e252afc",
       "name": "Set",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        3220,
-        760
+        4340,
+        1680
       ]
     },
     {
@@ -226,13 +226,13 @@
         "body": "={{ $json.bodyString }}",
         "options": {}
       },
-      "id": "727cfd69-b47b-49f4-8bf5-3afa96077568",
+      "id": "4ad651ff-f653-45e9-a742-332d0bd8201b",
       "name": "Get Trade Position",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        3700,
-        660
+        4820,
+        1580
       ]
     },
     {
@@ -262,13 +262,13 @@
         "body": "={{ $json.bodyString }}",
         "options": {}
       },
-      "id": "2fa0c17e-0ff6-4055-897b-6b96f0e308ff",
+      "id": "044723d1-f8e1-451d-a19a-77d578ab5f04",
       "name": "Get Account Balance",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        3700,
-        860
+        4820,
+        1780
       ]
     },
     {
@@ -284,26 +284,26 @@
         },
         "options": {}
       },
-      "id": "33d75300-507d-4e34-834f-02f8cc8b39b4",
+      "id": "4700a096-0734-4e62-a181-115355c99237",
       "name": "Set2",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        3920,
-        860
+        5040,
+        1780
       ]
     },
     {
       "parameters": {
         "jsCode": "/**\n * Data Processing Node for Equity Portfolio Analysis\n * Extracts total stock value (stock_balance), stock list items, and key metrics (symbol, quantity, costPrice).\n */\n\n// Retrieve input items from n8n execution context\nconst inputItems = $input.all();\n\nconst processedOutput = inputItems.map(item => {\n  // Access the nested equity array from the input payload\n  const rawData = item.json;\n  \n  // Handle array or direct object structures safely\n  const equityData = Array.isArray(rawData) ? rawData : [rawData];\n  \n  let totalStockBalanceValue = 0;\n  let totalStockQuantity = 0;\n  let stockList = [];\n\n  equityData.forEach(entry => {\n    if (entry.equity && Array.isArray(entry.equity)) {\n      entry.equity.forEach(holding => {\n        const quantity = parseFloat(holding.quantity) || 0;\n        const costPrice = parseFloat(holding.costPrice) || 0;\n\n        // Calculate total monetary value for the current holding (quantity * costPrice)\n        const holdingValue = quantity * costPrice;\n\n        // Accumulate total portfolio stock balance (total monetary value)\n        totalStockBalanceValue += holdingValue;\n        \n        // Track total physical share count separately if needed\n        totalStockQuantity += quantity;\n\n        // Map required fields for the stock list items\n        stockList.push({\n          symbol: holding.symbol,\n          quantity: quantity,\n          costPrice: costPrice,\n          holding_value: holdingValue,\n          accountNo: holding.accountNo,\n          sellableQuantity: parseFloat(holding.sellableQuantity) || 0\n        });\n      });\n    }\n  });\n\n  return {\n    json: {\n      stock_balance: totalStockBalanceValue,\n      total_share_quantity: totalStockQuantity,\n      stock_list: stockList,\n      total_symbols: stockList.length,\n      timestamp: Date.now()\n    }\n  };\n});\n\nreturn processedOutput;"
       },
-      "id": "47e4fc7c-a40f-4f79-995c-3479782be96e",
+      "id": "72631f72-a619-472d-9290-f36cdae2b423",
       "name": "Code",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        3920,
-        660
+        5040,
+        1580
       ]
     },
     {
@@ -312,26 +312,110 @@
         "combinationMode": "multiplex",
         "options": {}
       },
-      "id": "518b0424-a90d-4408-9f5a-93e9930933e4",
+      "id": "9721f0e6-daf9-420a-af6e-77566418d742",
       "name": "Merge",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2.1,
       "position": [
-        4160,
-        760
+        5280,
+        1680
       ]
     },
     {
       "parameters": {
         "jsCode": "/**\n * Data Processing Node for Portfolio Asset Allocation\n * Calculates total_balance, w_cash, w_stock, and overrides stock_balance to represent total stock value.\n */\n\nconst inputItems = $input.all();\n\nconst processedOutput = inputItems.map(item => {\n  const data = item.json;\n  \n  // Parse cash balance safely\n  const cashBalance = parseFloat(data.cash_balance) || 0;\n  \n  // Calculate total stock value based on quantity and costPrice\n  let totalStockValue = 0;\n  if (Array.isArray(data.stock_list)) {\n    totalStockValue = data.stock_list.reduce((acc, stock) => {\n      const qty = parseFloat(stock.quantity) || 0;\n      const price = parseFloat(stock.costPrice) || 0;\n      return acc + (qty * price);\n    }, 0);\n  }\n\n  // Calculate total portfolio balance (stock value + cash balance)\n  const totalBalance = cashBalance + totalStockValue;\n\n  // Calculate allocation percentages rounded to 2 decimal places\n  const wCash = totalBalance > 0 ? Number(((cashBalance / totalBalance) * 100).toFixed(2)) : 0;\n  const wStock = totalBalance > 0 ? Number(((totalStockValue / totalBalance) * 100).toFixed(2)) : 0;\n\n  return {\n    json: {\n      ...data,\n      stock_balance: totalStockValue,\n      stock_value: totalStockValue,\n      total_balance: totalBalance,\n      w_cash: wCash,\n      w_stock: wStock\n    }\n  };\n});\n\nreturn processedOutput;"
       },
-      "id": "696a35a1-b727-4066-9b7a-05183b6fb100",
+      "id": "aea2ddf7-0a73-42b2-9c76-881a292c56a7",
       "name": "Percentage Balance",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [
-        4360,
-        760
+        5500,
+        1580
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "15778d6e-f7d8-4a34-a56e-bd674e9234a2",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        3580,
+        1580
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "SELECT stock_key FROM n8n_olap.dim_stock WHERE is_vn30 = 1",
+        "options": {}
+      },
+      "id": "fbe556c3-06d2-43b1-83bc-f92502804cce",
+      "name": "Get VN30 Stocks2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        5500,
+        1780
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process all incoming items from the n8n workflow execution\nreturn $input.all().map(item => {\n  const rawData = item.json.data || '';\n\n  // Separate the string by newline characters, remove whitespace, and filter empty lines\n  const stockSymbols = rawData\n    .split(/\\r?\\n/)\n    .map(symbol => symbol.trim())\n    .filter(symbol => symbol.length > 0);\n\n  // Return the structured output containing the array of symbols\n  return {\n    json: {\n      vn30_stock_symbols: stockSymbols\n    }\n  };\n});"
+      },
+      "id": "2e04ce5e-d58b-4f27-986f-814f60f18e9f",
+      "name": "Process VN30 Stock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        5700,
+        1780
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "ad4ea56b-fd22-44dc-abd9-34011f7e713f",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        5920,
+        1700
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const data = item.json;\n  const stockList = data.stock_list || [];\n  const vn30Symbols = new Set(data.vn30_stock_symbols || []);\n  \n  const stockValue = data.stock_value || stockList.reduce((sum, stock) => sum + (stock.holding_value || 0), 0);\n\n  let vn30TotalValue = 0;\n  let nonVn30TotalValue = 0;\n\n  stockList.forEach(stock => {\n    const holdingValue = stock.holding_value || 0;\n    if (vn30Symbols.has(stock.symbol)) {\n      vn30TotalValue += holdingValue;\n    } else {\n      nonVn30TotalValue += holdingValue;\n    }\n  });\n\n  const w_larg_cap = stockValue > 0 ? Number(((vn30TotalValue / stockValue) * 100).toFixed(2)) : 0;\n  const w_mid_cap = stockValue > 0 ? Number(((nonVn30TotalValue / stockValue) * 100).toFixed(2)) : 0;\n\n  return {\n    json: {\n      ...data,\n      w_larg_cap: w_larg_cap,\n      w_mid_cap: w_mid_cap,\n      vn30_holding_value: vn30TotalValue,\n      non_vn30_holding_value: nonVn30TotalValue\n    }\n  };\n});"
+      },
+      "id": "72bbe7d2-0d36-4024-96ff-62c426119859",
+      "name": "Complete",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        6120,
+        1700
       ]
     }
   ],
@@ -495,23 +579,82 @@
             "node": "Percentage Balance",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Get VN30 Stocks2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "IF have Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get VN30 Stocks2": {
+      "main": [
+        [
+          {
+            "node": "Process VN30 Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process VN30 Stock": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Percentage Balance": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Complete",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
     "saveManualExecutions": false,
-    "callerPolicy": "workflowsFromSameOwner",
-    "executionTimeout": 300,
-    "saveDataErrorExecution": "none",
-    "saveDataSuccessExecution": "none"
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "b4ea87eb-5756-4a88-8f9f-8176d532707d",
-  "id": "11",
+  "versionId": "81495e14-4b2e-4dff-8282-c134bac2629a",
+  "id": "21",
   "meta": {
-    "instanceId": "990a94333b6e2ace928598b2add9c4e2a149a41a04dc4bd8f4bffa31d82cf0a6"
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
   },
   "tags": []
 }
