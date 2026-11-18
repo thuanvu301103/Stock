@@ -1,5 +1,5 @@
 $kind: http-request
-url: http://localhost:5678/webhook-test/ssi-trade-order
+url: http://localhost:5678/webhook/ssi-trade-order
 method: POST
 body:
   type: json
@@ -7,11 +7,31 @@ body:
     {
         //"access_token": "{{json_web_token_0lx6}}",
         "orders": [
-        {
-            "symbol": "MCH",
-            "quantity": 1,
-            "price": "121000"
-        }
-    ]
+            {
+                "symbol": "VGS",
+                "quantity": 1,
+                "price": "19100"
+            },
+            {
+                "symbol": "SZC",
+                "quantity": 5,
+                "price": "19400"
+            },
+            {
+                "symbol": "CTS",
+                "quantity": 1,
+                "price": "22600"
+            },
+            {
+                "symbol": "SIP",
+                "quantity": 2,
+                "price": "49900"
+            },
+            {
+                "symbol": "MSB",
+                "quantity": 4,
+                "price": "16300"
+            }
+        ]
     }
 order: 11000

@@ -1,0 +1,517 @@
+{
+  "name": "Stock___SSI_Track_Account_Balance",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ssi.com.vn/api/v3/auth/requestOtp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "={{ $env.SSI_API_KEY }}"
+            },
+            {
+              "name": "apiSecret",
+              "value": "={{ $env.SSI_API_SECRET }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "57f187a5-04b3-438f-9758-dc3a1c5b14be",
+      "name": "Request OTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2820,
+        920
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "seconds"
+      },
+      "id": "b3c69670-fdde-4f8f-b4db-0f0384d6ee74",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        3440,
+        900
+      ],
+      "webhookId": "2e8a274c-ded0-467d-86a4-43e07b75578f"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ String($json.code) }}",
+              "value2": "401114"
+            }
+          ]
+        }
+      },
+      "id": "f5df04c5-caf4-4f4b-bf66-74164bf6a082",
+      "name": "IF Not Authorized",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        3220,
+        920
+      ]
+    },
+    {
+      "parameters": {
+        "path": "ssi-track-account-balance",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "920833c7-5019-4e27-9c21-6a30969b9df0",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        2460,
+        780
+      ],
+      "webhookId": "9566971a-e458-4ca1-aed3-8fb4f9d910ca"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "accountNo",
+              "value": "={{ $env.SSI_ACCOUNT_NO }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6ad929f5-e3f4-4c45-9c92-1d950e823b45",
+      "name": "Set Account No",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ssi.com.vn/api/v3/auth/token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "={{ $env.SSI_API_KEY }}"
+            },
+            {
+              "name": "apiSecret",
+              "value": "={{ $env.SSI_API_SECRET }}"
+            },
+            {
+              "name": "transactionId",
+              "value": "={{ $('Request OTP').item.json.transactionId }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "7f77bede-49ed-4b28-96ab-ba74eef1a4bb",
+      "name": "Request Tokens",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3020,
+        920
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.access_token != undefined }}",
+              "value2": "={{true}}"
+            }
+          ]
+        }
+      },
+      "id": "bc625e98-4bbd-4d3c-a8bb-5770812d2b5e",
+      "name": "IF have Access Token",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        2680,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "accessToken",
+              "value": "={{ $json.body.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0551957a-a19e-4738-b5bf-4f2e251b205a",
+      "name": "Set",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        3220,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.ssi.com.vn/api/v3/trading/position",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accountNo",
+              "value": "={{ $json.accountNo }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.accessToken }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.bodyString }}",
+        "options": {}
+      },
+      "id": "727cfd69-b47b-49f4-8bf5-3afa96077568",
+      "name": "Get Trade Position",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3700,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.ssi.com.vn/api/v3/trading/accountBalance",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "accountNo",
+              "value": "={{ $json.accountNo }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.accessToken }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.bodyString }}",
+        "options": {}
+      },
+      "id": "2fa0c17e-0ff6-4055-897b-6b96f0e308ff",
+      "name": "Get Account Balance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3700,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "number": [
+            {
+              "name": "cash_balance",
+              "value": "={{ $json.equity.accountBalance }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "33d75300-507d-4e34-834f-02f8cc8b39b4",
+      "name": "Set2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        3920,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Data Processing Node for Equity Portfolio Analysis\n * Extracts total stock value (stock_balance), stock list items, and key metrics (symbol, quantity, costPrice).\n */\n\n// Retrieve input items from n8n execution context\nconst inputItems = $input.all();\n\nconst processedOutput = inputItems.map(item => {\n  // Access the nested equity array from the input payload\n  const rawData = item.json;\n  \n  // Handle array or direct object structures safely\n  const equityData = Array.isArray(rawData) ? rawData : [rawData];\n  \n  let totalStockBalanceValue = 0;\n  let totalStockQuantity = 0;\n  let stockList = [];\n\n  equityData.forEach(entry => {\n    if (entry.equity && Array.isArray(entry.equity)) {\n      entry.equity.forEach(holding => {\n        const quantity = parseFloat(holding.quantity) || 0;\n        const costPrice = parseFloat(holding.costPrice) || 0;\n\n        // Calculate total monetary value for the current holding (quantity * costPrice)\n        const holdingValue = quantity * costPrice;\n\n        // Accumulate total portfolio stock balance (total monetary value)\n        totalStockBalanceValue += holdingValue;\n        \n        // Track total physical share count separately if needed\n        totalStockQuantity += quantity;\n\n        // Map required fields for the stock list items\n        stockList.push({\n          symbol: holding.symbol,\n          quantity: quantity,\n          costPrice: costPrice,\n          holding_value: holdingValue,\n          accountNo: holding.accountNo,\n          sellableQuantity: parseFloat(holding.sellableQuantity) || 0\n        });\n      });\n    }\n  });\n\n  return {\n    json: {\n      stock_balance: totalStockBalanceValue,\n      total_share_quantity: totalStockQuantity,\n      stock_list: stockList,\n      total_symbols: stockList.length,\n      timestamp: Date.now()\n    }\n  };\n});\n\nreturn processedOutput;"
+      },
+      "id": "47e4fc7c-a40f-4f79-995c-3479782be96e",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3920,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "518b0424-a90d-4408-9f5a-93e9930933e4",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        4160,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Data Processing Node for Portfolio Asset Allocation\n * Calculates total_balance, w_cash, w_stock, and overrides stock_balance to represent total stock value.\n */\n\nconst inputItems = $input.all();\n\nconst processedOutput = inputItems.map(item => {\n  const data = item.json;\n  \n  // Parse cash balance safely\n  const cashBalance = parseFloat(data.cash_balance) || 0;\n  \n  // Calculate total stock value based on quantity and costPrice\n  let totalStockValue = 0;\n  if (Array.isArray(data.stock_list)) {\n    totalStockValue = data.stock_list.reduce((acc, stock) => {\n      const qty = parseFloat(stock.quantity) || 0;\n      const price = parseFloat(stock.costPrice) || 0;\n      return acc + (qty * price);\n    }, 0);\n  }\n\n  // Calculate total portfolio balance (stock value + cash balance)\n  const totalBalance = cashBalance + totalStockValue;\n\n  // Calculate allocation percentages rounded to 2 decimal places\n  const wCash = totalBalance > 0 ? Number(((cashBalance / totalBalance) * 100).toFixed(2)) : 0;\n  const wStock = totalBalance > 0 ? Number(((totalStockValue / totalBalance) * 100).toFixed(2)) : 0;\n\n  return {\n    json: {\n      ...data,\n      stock_balance: totalStockValue,\n      stock_value: totalStockValue,\n      total_balance: totalBalance,\n      w_cash: wCash,\n      w_stock: wStock\n    }\n  };\n});\n\nreturn processedOutput;"
+      },
+      "id": "696a35a1-b727-4066-9b7a-05183b6fb100",
+      "name": "Percentage Balance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        4360,
+        760
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Request OTP": {
+      "main": [
+        [
+          {
+            "node": "Request Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Request Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Not Authorized": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Account No",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "IF have Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Account No": {
+      "main": [
+        [
+          {
+            "node": "Get Trade Position",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Account Balance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Tokens": {
+      "main": [
+        [
+          {
+            "node": "IF Not Authorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF have Access Token": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Request OTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "Set Account No",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Trade Position": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Account Balance": {
+      "main": [
+        [
+          {
+            "node": "Set2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Percentage Balance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 300,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  },
+  "versionId": "b4ea87eb-5756-4a88-8f9f-8176d532707d",
+  "id": "11",
+  "meta": {
+    "instanceId": "990a94333b6e2ace928598b2add9c4e2a149a41a04dc4bd8f4bffa31d82cf0a6"
+  },
+  "tags": []
+}
