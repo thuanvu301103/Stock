@@ -1,14 +1,14 @@
 $kind: http-request
-url: http://localhost:5678/webhook/ssi-full-workflow
+url: http://localhost:5678/webhook-test/ssi-full-workflow?start_date=2026-11-09&end_date=2026-11-09
 method: POST
 queryParams:
   - key: start_date
-    value: 2026-11-06
-    disabled: true
+    value: 2026-11-09
+    disabled: false
     description: YYYY-MM-dd (for technical calculation)
   - key: end_date
-    value: 2026-11-06
-    disabled: true
+    value: 2026-11-09
+    disabled: false
     description: YYYY-MM-dd (for technical calculation)
   - key: stocks
     value: MCH
@@ -19,11 +19,14 @@ body:
   content:
     - type: file
       key: file
-      src: ""
+      src:
+        - ""
+        - /C:/Users/acer/Downloads/stock_master_data_20261109.json
       description: Omit for default analyser only
+      disabled: false
     - type: text
       key: trade_date
-      value: 2026-11-06
+      value: 2026-11-09
       description: YYYY-MM-dd (for mining data & actions logging)
-      disabled: true
+      disabled: false
 order: 9000

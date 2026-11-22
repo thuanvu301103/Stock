@@ -98,10 +98,11 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        3540,
-        1780
+        3480,
+        2000
       ],
-      "webhookId": "68ff0e9c-b59a-4daf-9347-ca0dfb0d431b"
+      "webhookId": "68ff0e9c-b59a-4daf-9347-ca0dfb0d431b",
+      "disabled": true
     },
     {
       "parameters": {
@@ -304,7 +305,70 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1,
       "position": [
-        3540,
+        3480,
+        1780
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "triggerAtHour": 1,
+              "triggerAtMinute": 15
+            }
+          ]
+        }
+      },
+      "id": "cb96dda7-ae89-4d00-96ea-0f4825fcb93a",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        3020,
+        1620
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT * FROM order_items\nWHERE account_id = '{{ $env.SSI_ACCOUNT_NO }}'\nAND trade_type = 'BUY'\nAND trade_date = (\n      SELECT MAX(trade_date)\n      FROM order_items\n      WHERE account_id = '{{ $env.SSI_ACCOUNT_NO }}'\n        AND trade_type = 'BUY'\n  )",
+        "options": {}
+      },
+      "id": "03bb2c72-9d3b-46f0-b150-936f4eb769ea",
+      "name": "Postgres - Get Trade orders",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        3240,
+        1620
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "2",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const orders = $input.all().map(item => {\n  const data = item.json;\n  return {\n    symbol: data.symbol,\n    quantity: Number(data.quantity || 0),\n    price: String(Math.trunc(Number(data.price || 0)))\n  };\n});\n\nreturn {\n  json: {\n    body: { orders }\n  }\n};"
+      },
+      "id": "b0a8072f-e012-402c-9273-b9389843afaf",
+      "name": "Format Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3480,
         1620
       ]
     }
@@ -477,14 +541,53 @@
           }
         ]
       ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Get Trade orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Get Trade orders": {
+      "main": [
+        [
+          {
+            "node": "Format Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Request": {
+      "main": [
+        [
+          {
+            "node": "Generate Device Id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF have Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "saveManualExecutions": true,
-    "callerPolicy": "workflowsFromSameOwner"
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 1800
   },
-  "versionId": "816c8d7a-bb5e-46de-a21e-b01a60d30e1f",
+  "versionId": "a392f1ff-4ede-4867-b983-42e234502230",
   "id": "17",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

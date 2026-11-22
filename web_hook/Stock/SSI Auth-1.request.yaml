@@ -1,5 +1,5 @@
 $kind: http-request
 name: SSI Auth
-url: http://localhost:5678/webhook/ssi-auth
+url: http://localhost:5678/webhook-test/ssi-auth
 method: GET
 order: 13197

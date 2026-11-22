@@ -1,5 +1,5 @@
 {
-  "name": "Stock___SSI_auto_place_orders",
+  "name": "Stock___SSI_Registry_Order_Book",
   "nodes": [
     {
       "parameters": {
@@ -53,13 +53,13 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        3800,
-        660
+        4120,
+        580
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Retrieve data from the previous node\nconst inputData = $input.first().json;\n\n// Extract the result array containing stock details\nconst results = inputData.result || [];\n\n// Transform each stock entry into the required order payload structure\nconst orders = results\n    .map(item => {\n        return {\n            symbol: item.symbol,\n            quantity: Math.round(item.suggested_shares),\n            price: String(Number((item.pivot_s1_plus_1).toFixed(1)*1000))\n        };\n    })\n    .filter(order => order.quantity !== 0);\n\n// Return the formatted output payload containing the orders array\nreturn [{\n    json: {\n        body: {\n          access_token: inputData.accessToken,\n          orders: orders\n        }\n    }\n}];"
+        "jsCode": "// Retrieve data from the previous node\nconst inputData = $input.first().json;\n\n// Extract the result array containing stock details\nconst results = inputData.result || [];\n\n// Transform each stock entry into the required order payload structure\nconst orders = results\n    .map(item => {\n        return {\n            symbol: item.symbol,\n            quantity: Math.round(item.suggested_shares),\n            price: String(Number((item.pivot_s1_plus_1).toFixed(1)*1000))\n        };\n    })\n    .filter(order => order.quantity !== 0);\n\n// Return the formatted output payload containing the orders array\nreturn [{\n    json: {\n        body: {\n          access_token: inputData.accessToken,\n          orders: orders,\n          selected_trade_date: inputData.result[0].calculated_for_date\n        }\n    }\n}];"
       },
       "id": "2796d39b-0744-47f5-a7e1-f983836bd86f",
       "name": "Format Orders",
@@ -144,7 +144,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/x-www-form-urlencoded",
-        "body": "=SELECT allocation\nFROM n8n_olap.fact_market_regime_histories\nWHERE time = '{{ $json.body.selected_trade_date || new Date().toISOString().split('T')[0] }}'",
+        "body": "=SELECT allocation\nFROM n8n_olap.fact_market_regime_histories\nWHERE time = '{{ ($json && $json.body && $json.body.selected_trade_date) ? $json.body.selected_trade_date : new Date().toISOString().split(\"T\")[0] }}'",
         "options": {}
       },
       "id": "2bff9c88-d59b-44fe-a05f-9c483688f8b3",
@@ -217,7 +217,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/x-www-form-urlencoded",
-        "body": "=SELECT \n    symbol as stock_key,\n    trade_date as date_key,\n    sma_20_slope_k1,\n    sma_20_slope_k5,\n    sma_50_slope_k1,\n    sma_50_slope_k5,\n    signal_crossover_sma_20_50,\n    signal_crossover_sma_50_100,\n    expected_return_t2_n20,\n    volatility_t2_n20,\n    rsi_7,\n    rsi_14,\n    signal_volume_outlier,\n    days_since_volume_outlier\nFROM n8n_olap.v_analytics_master_consolidated\nWHERE date_key = '{{ $json.body.selected_trade_date || new Date().toISOString().split('T')[0] }}' \n    AND signal_crossover_sma_50_100 >= 0\n    AND rsi_14 BETWEEN 30 AND 70\n    AND volume >= 50000\n    AND sma_50_slope_k1 >= 0\n    AND sma_20_slope_k1 >= 0\n    AND sma_20_slope_k5 >= 0\n    AND sma_50_slope_k5 >= 0\n    AND volatility_t2_n20 BETWEEN 0.01 AND 0.05\n    AND expected_return_t2_n20 BETWEEN 0.002 AND 0.055\n    AND rsi_7 BETWEEN 40 AND 85\n    AND signal_crossover_sma_20_50 >= 0\n    AND signal_volume_outlier = 0\n    AND close >= 15\n    AND days_since_volume_outlier >= 4\nORDER BY \n    expected_return_t2_n20 DESC,\n    stock_key ASC,\n    date_key ASC,\n    sma_20_slope_k1 ASC,\n    sma_20_slope_k5 ASC,\n    sma_50_slope_k1 ASC,\n    sma_50_slope_k5 ASC,\n    signal_crossover_sma_20_50 ASC,\n    signal_crossover_sma_50_100 ASC,\n    volatility_t2_n20 ASC,\n    rsi_7 ASC,\n    rsi_14 ASC,\n    signal_volume_outlier ASC,\n    days_since_volume_outlier ASC\nLIMIT 501 FORMAT JSON;",
+        "body": "=SELECT \n    symbol as stock_key,\n    trade_date as date_key,\n    sma_20_slope_k1,\n    sma_20_slope_k5,\n    sma_50_slope_k1,\n    sma_50_slope_k5,\n    signal_crossover_sma_20_50,\n    signal_crossover_sma_50_100,\n    expected_return_t2_n20,\n    volatility_t2_n20,\n    rsi_7,\n    rsi_14,\n    signal_volume_outlier,\n    days_since_volume_outlier\nFROM n8n_olap.v_analytics_master_consolidated\nWHERE date_key = '{{ ($json && $json.body && $json.body.selected_trade_date) ? $json.body.selected_trade_date : new Date().toISOString().split(\"T\")[0] }}' \n    AND signal_crossover_sma_50_100 >= 0\n    AND rsi_14 BETWEEN 30 AND 70\n    AND volume >= 50000\n    AND sma_50_slope_k1 >= 0\n    AND sma_20_slope_k1 >= 0\n    AND sma_20_slope_k5 >= 0\n    AND sma_50_slope_k5 >= 0\n    AND volatility_t2_n20 BETWEEN 0.01 AND 0.05\n    AND expected_return_t2_n20 BETWEEN 0.002 AND 0.055\n    AND rsi_7 BETWEEN 40 AND 85\n    AND signal_crossover_sma_20_50 >= 0\n    AND signal_volume_outlier = 0\n    AND close >= 15\n    AND days_since_volume_outlier >= 4\nORDER BY \n    expected_return_t2_n20 DESC,\n    stock_key ASC,\n    date_key ASC,\n    sma_20_slope_k1 ASC,\n    sma_20_slope_k5 ASC,\n    sma_50_slope_k1 ASC,\n    sma_50_slope_k5 ASC,\n    signal_crossover_sma_20_50 ASC,\n    signal_crossover_sma_50_100 ASC,\n    volatility_t2_n20 ASC,\n    rsi_7 ASC,\n    rsi_14 ASC,\n    signal_volume_outlier ASC,\n    days_since_volume_outlier ASC\nLIMIT 501 FORMAT JSON;",
         "options": {}
       },
       "id": "a1379249-a8ff-442e-ba34-a6704a4ad322",
@@ -337,7 +337,7 @@
           "string": [
             {
               "name": "selected_trade_date",
-              "value": "={{ $json.body.selected_trade_date || new Date().toISOString().split('T')[0] }}"
+              "value": "={{ ($json && $json.body && $json.body.selected_trade_date) ? $json.body.selected_trade_date : new Date().toISOString().split(\"T\")[0] }}"
             }
           ]
         },
@@ -396,26 +396,6 @@
     },
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "triggerAtHour": 18,
-              "triggerAtMinute": 10
-            }
-          ]
-        }
-      },
-      "id": "ce5ba9d7-9540-4c15-939c-f53ba5f22917",
-      "name": "Schedule Trigger",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
-      "position": [
-        340,
-        780
-      ]
-    },
-    {
-      "parameters": {
         "jsCode": "// Pass all incoming items directly to the output without modification\nreturn $input.all();"
       },
       "id": "ae4fd34b-26db-4669-bdf8-5e632c9fcd45",
@@ -425,6 +405,38 @@
       "position": [
         580,
         900
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=BEGIN;\n\nWITH upserted_order AS (\n    INSERT INTO orders (account_id, trade_date, trade_type)\n    VALUES ('{{ $env.SSI_ACCOUNT_NO }}', '{{ $json.body.selected_trade_date }}'::DATE, 'BUY')\n    ON CONFLICT (account_id, trade_date, trade_type) DO UPDATE\n    SET created_at = EXCLUDED.created_at\n    RETURNING account_id, trade_date, trade_type\n),\norder_line_items AS (\n    SELECT\n        item.symbol::VARCHAR(20) AS symbol,\n        item.quantity::BIGINT AS quantity,\n        item.price::NUMERIC(18, 2) AS price\n    FROM jsonb_to_recordset('{{ JSON.stringify($json.body.orders || []) }}'::JSONB) AS item(\n        symbol TEXT,\n        quantity BIGINT,\n        price TEXT\n    )\n)\nINSERT INTO order_items (account_id, trade_date, trade_type, symbol, quantity, price)\nSELECT\n    uo.account_id,\n    uo.trade_date,\n    uo.trade_type,\n    oli.symbol,\n    oli.quantity,\n    oli.price::NUMERIC(18, 2)\nFROM upserted_order uo\nCROSS JOIN order_line_items oli\nON CONFLICT (account_id, trade_date, trade_type, symbol) DO UPDATE\nSET\n    quantity = EXCLUDED.quantity,\n    price = EXCLUDED.price;\n\nCOMMIT;",
+        "options": {}
+      },
+      "id": "8106841c-7970-4b73-9aab-302cefa849b7",
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        3820,
+        660
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "2",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "3eac83a7-41a4-4043-bb08-10b453f8559f",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        340,
+        800
       ]
     }
   ],
@@ -483,7 +495,7 @@
       "main": [
         [
           {
-            "node": "Execute Workflow - SSI Trade Orders",
+            "node": "Postgres",
             "type": "main",
             "index": 0
           }
@@ -688,28 +700,6 @@
         ]
       ]
     },
-    "Execute Workflow - SSI Trade Orders": {
-      "main": [
-        [
-          {
-            "node": "Split In Batches",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule Trigger": {
-      "main": [
-        [
-          {
-            "node": "No-op",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "No-op": {
       "main": [
         [
@@ -740,11 +730,37 @@
           }
         ]
       ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "No-op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
-  "settings": {},
-  "versionId": "423f1994-41dc-4d99-88b2-9716697a49b4",
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 1800
+  },
+  "versionId": "81dd0b8e-8679-43ff-9f91-a70f2f0b27ff",
   "id": "19",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

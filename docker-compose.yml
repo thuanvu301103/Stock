@@ -5,6 +5,8 @@ services:
     image: postgres:15-alpine
     container_name: postgres
     restart: always
+    ports:
+    - "5432:5432"
     environment:
       POSTGRES_USER: ${DB_USER:-n8n}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-n8n_pass}
@@ -21,6 +23,8 @@ services:
     image: redis:7-alpine
     container_name: redis
     restart: always
+    ports:
+    - "6379:6379"
     command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redis_data:/data
