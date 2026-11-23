@@ -144,7 +144,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/x-www-form-urlencoded",
-        "body": "=SELECT allocation\nFROM n8n_olap.fact_market_regime_histories\nWHERE time = '{{ ($json && $json.body && $json.body.selected_trade_date) ? $json.body.selected_trade_date : new Date().toISOString().split(\"T\")[0] }}'",
+        "body": "=SELECT allocation\nFROM n8n_olap.fact_market_regime_histories FINAL\nWHERE time = '{{ ($json && $json.body && $json.body.selected_trade_date) ? $json.body.selected_trade_date : new Date().toISOString().split(\"T\")[0] }}'",
         "options": {}
       },
       "id": "2bff9c88-d59b-44fe-a05f-9c483688f8b3",
@@ -760,7 +760,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "executionTimeout": 1800
   },
-  "versionId": "81dd0b8e-8679-43ff-9f91-a70f2f0b27ff",
+  "versionId": "622f7d5d-4f69-4050-ba26-63b95d3fb2fb",
   "id": "19",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
