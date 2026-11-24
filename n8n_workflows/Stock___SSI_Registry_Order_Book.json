@@ -4,8 +4,8 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "ssi-auto-place-orders",
-        "responseMode": "lastNode",
+        "path": "ssi-registry-order-book",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "b2f76a92-d708-43ec-b7b1-23f63655b96e",
@@ -53,21 +53,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        4120,
-        580
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Retrieve data from the previous node\nconst inputData = $input.first().json;\n\n// Extract the result array containing stock details\nconst results = inputData.result || [];\n\n// Transform each stock entry into the required order payload structure\nconst orders = results\n    .map(item => {\n        return {\n            symbol: item.symbol,\n            quantity: Math.round(item.suggested_shares),\n            price: String(Number((item.pivot_s1_plus_1).toFixed(1)*1000))\n        };\n    })\n    .filter(order => order.quantity !== 0);\n\n// Return the formatted output payload containing the orders array\nreturn [{\n    json: {\n        body: {\n          access_token: inputData.accessToken,\n          orders: orders,\n          selected_trade_date: inputData.result[0].calculated_for_date\n        }\n    }\n}];"
-      },
-      "id": "2796d39b-0744-47f5-a7e1-f983836bd86f",
-      "name": "Format Orders",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 1,
-      "position": [
-        3580,
-        660
+        4200,
+        540
       ]
     },
     {
@@ -94,7 +81,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        1360,
+        1380,
         620
       ]
     },
@@ -408,13 +395,24 @@
       ]
     },
     {
+      "parameters": {},
+      "id": "3eac83a7-41a4-4043-bb08-10b453f8559f",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        340,
+        800
+      ]
+    },
+    {
       "parameters": {
         "operation": "executeQuery",
         "query": "=BEGIN;\n\nWITH upserted_order AS (\n    INSERT INTO orders (account_id, trade_date, trade_type)\n    VALUES ('{{ $env.SSI_ACCOUNT_NO }}', '{{ $json.body.selected_trade_date }}'::DATE, 'BUY')\n    ON CONFLICT (account_id, trade_date, trade_type) DO UPDATE\n    SET created_at = EXCLUDED.created_at\n    RETURNING account_id, trade_date, trade_type\n),\norder_line_items AS (\n    SELECT\n        item.symbol::VARCHAR(20) AS symbol,\n        item.quantity::BIGINT AS quantity,\n        item.price::NUMERIC(18, 2) AS price\n    FROM jsonb_to_recordset('{{ JSON.stringify($json.body.orders || []) }}'::JSONB) AS item(\n        symbol TEXT,\n        quantity BIGINT,\n        price TEXT\n    )\n)\nINSERT INTO order_items (account_id, trade_date, trade_type, symbol, quantity, price)\nSELECT\n    uo.account_id,\n    uo.trade_date,\n    uo.trade_type,\n    oli.symbol,\n    oli.quantity,\n    oli.price::NUMERIC(18, 2)\nFROM upserted_order uo\nCROSS JOIN order_line_items oli\nON CONFLICT (account_id, trade_date, trade_type, symbol) DO UPDATE\nSET\n    quantity = EXCLUDED.quantity,\n    price = EXCLUDED.price;\n\nCOMMIT;",
         "options": {}
       },
       "id": "8106841c-7970-4b73-9aab-302cefa849b7",
-      "name": "Postgres",
+      "name": "Postgres - Save BUY orders",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2,
       "position": [
@@ -429,14 +427,166 @@
       }
     },
     {
-      "parameters": {},
-      "id": "3eac83a7-41a4-4043-bb08-10b453f8559f",
-      "name": "Execute Workflow Trigger",
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "parameters": {
+        "options": {}
+      },
+      "id": "ca474660-f07c-45a0-bafe-034a4351f1de",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        340,
-        800
+        4420,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT symbol, trade_date, close * 1000 AS close\nFROM n8n_olap.fact_stock_prices FINAL\nWHERE trade_date = '{{ ($json && $json.selected_trade_date) ? $json.selected_trade_date : new Date().toISOString().split(\"T\")[0] }}'\nAND symbol IN (\n    '{{ $json.holding_symbols.join(\"','\") }}'\n)\nORDER BY symbol\nFORMAT JSON",
+        "options": {}
+      },
+      "id": "d068d0c7-4be8-4a4d-acf9-896ddb3c4d60",
+      "name": "Get Close Prices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2040,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "336e82a3-ef05-4a9d-8a33-3fcef293a8b1",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1600,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n\n  const symbols = Array.isArray(data.stock_list)\n    ? data.stock_list\n        .map(stock => stock.symbol)\n        .filter(symbol => typeof symbol === 'string' && symbol.trim() !== '')\n    : [];\n\n  return {\n    json: {\n      ...data,\n      holding_symbols: symbols\n    }\n  };\n});\n"
+      },
+      "id": "7eb41a8c-0eff-48be-a68e-36117e5f5938",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "cf0360ad-cbc2-4c5d-a68d-d6c1b5b366da",
+      "name": "Merge6",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2280,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $input.first().json;\n\n// Create a lookup map for closing prices by stock symbol\nconst closeMap = new Map(\n  (input.data || []).map(item => [\n    item.symbol,\n    Number(item.close)\n  ])\n);\n\n// Calculate price changes for each stock in the portfolio\nconst results = (input.stock_list || []).map(stock => {\n  const costPrice = Number(stock.costPrice);\n  const close = closeMap.get(stock.symbol);\n\n  const quantity = Number(stock.quantity || 0);\n  const sellableQuantity = Number(stock.sellableQuantity || 0);\n\n  // Handle stocks with missing closing prices\n  if (close === undefined || !Number.isFinite(close)) {\n    return {\n      symbol: stock.symbol,\n      quantity,\n      sellableQuantity,\n      close: null,\n      costPrice,\n      changePercent: null,\n      status: \"missing_close\"\n    };\n  }\n\n  // Calculate percentage change relative to the cost price\n  const changePercent = costPrice > 0\n    ? ((close - costPrice) / costPrice) * 100\n    : null;\n\n  return {\n    symbol: stock.symbol,\n    quantity,\n    sellableQuantity,\n    close,\n    costPrice,\n    changePercent: changePercent === null\n      ? null\n      : Number(changePercent.toFixed(2)),\n    status: costPrice <= 0\n      ? \"invalid_cost\"\n      : changePercent > 0\n        ? \"profit\"\n        : changePercent < 0\n          ? \"loss\"\n          : \"breakeven\"\n  };\n});\n\n// Return the portfolio price analysis\nreturn [\n  {\n    json: {\n      selected_trade_date: input.selected_trade_date,\n      total_symbols: results.length,\n      matched_symbols: results.filter(item => item.close !== null).length,\n      results\n    }\n  }\n];\n"
+      },
+      "id": "790971d5-0f7c-4cad-8d5a-b00d61ed6b3a",
+      "name": "Gen Holding Stocks Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2500,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $input.first().json;\n\nconst CONFIG = {\n  MIN_CHANGE_PERCENT: 2,\n  MIN_SELLABLE_QUANTITY: 0,\n  PRICE_ROUNDING: \"ROUND\",\n  SELL_RATIO: 1,\n  INCLUDE_ZERO_PRICE: false,\n};\n\nfunction roundPrice(price) {\n  switch (CONFIG.PRICE_ROUNDING) {\n    case \"FLOOR\":\n      return Math.floor(price);\n    case \"CEIL\":\n      return Math.ceil(price);\n    case \"ROUND\":\n    default:\n      return Math.round(price);\n  }\n}\n\nconst orders = (input.results || [])\n  .filter(stock =>\n    stock.changePercent !== null &&\n    Number(stock.changePercent) >= CONFIG.MIN_CHANGE_PERCENT &&\n    Number(stock.sellableQuantity) > CONFIG.MIN_SELLABLE_QUANTITY\n  )\n  .map(stock => {\n    const quantity = Math.floor(\n      Number(stock.sellableQuantity) * CONFIG.SELL_RATIO\n    );\n\n    const price = Number(stock.close).toFixed(0);\n\n    return {\n      symbol: stock.symbol,\n      quantity,\n      price: String(price)\n    };\n  })\n  .filter(order =>\n    order.quantity > 0 &&\n    (CONFIG.INCLUDE_ZERO_PRICE || Number(order.price) > 0)\n  );\n\nreturn [\n  {\n    json: {\n      orders,\n      selected_trade_date: input.selected_trade_date\n    }\n  }\n];\n"
+      },
+      "id": "720cc124-fad4-4dae-a438-65300dc382b1",
+      "name": "Format Sell Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2740,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve data from the previous node\nconst inputData = $input.first().json;\n\n// Extract the result array containing stock details\nconst results = inputData.result || [];\n\n// Transform each stock entry into the required order payload structure\nconst orders = results\n    .map(item => {\n        return {\n            symbol: item.symbol,\n            quantity: Math.round(item.suggested_shares),\n            price: String(Number((item.pivot_s1_plus_1).toFixed(1)*1000))\n        };\n    })\n    .filter(order => order.quantity !== 0);\n\n// Return the formatted output payload containing the orders array\nreturn [{\n    json: {\n        body: {\n          access_token: inputData.accessToken,\n          orders: orders,\n          selected_trade_date: inputData.result[0].calculated_for_date\n        }\n    }\n}];"
+      },
+      "id": "2796d39b-0744-47f5-a7e1-f983836bd86f",
+      "name": "Format Buy Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3580,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=BEGIN;\n\nWITH upserted_order AS (\n    INSERT INTO orders (account_id, trade_date, trade_type)\n    VALUES ('{{ $env.SSI_ACCOUNT_NO }}', '{{ $json.selected_trade_date }}'::DATE, 'SELL')\n    ON CONFLICT (account_id, trade_date, trade_type) DO UPDATE\n    SET created_at = EXCLUDED.created_at\n    RETURNING account_id, trade_date, trade_type\n),\norder_line_items AS (\n    SELECT\n        item.symbol::VARCHAR(20) AS symbol,\n        item.quantity::BIGINT AS quantity,\n        item.price::NUMERIC(18, 2) AS price\n    FROM jsonb_to_recordset('{{ JSON.stringify($json.orders || []) }}'::JSONB) AS item(\n        symbol TEXT,\n        quantity BIGINT,\n        price TEXT\n    )\n)\nINSERT INTO order_items (account_id, trade_date, trade_type, symbol, quantity, price)\nSELECT\n    uo.account_id,\n    uo.trade_date,\n    uo.trade_type,\n    oli.symbol,\n    oli.quantity,\n    oli.price::NUMERIC(18, 2)\nFROM upserted_order uo\nCROSS JOIN order_line_items oli\nON CONFLICT (account_id, trade_date, trade_type, symbol) DO UPDATE\nSET\n    quantity = EXCLUDED.quantity,\n    price = EXCLUDED.price;\n\nCOMMIT;",
+        "options": {}
+      },
+      "id": "7fd190ac-e146-4b42-acce-3a5522cf8910",
+      "name": "Postgres - Save SELL orders",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        2980,
+        360
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "2",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "de3714c2-3803-4244-bbb8-8db94c8e720d",
+      "name": "Merge7",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        4220,
+        740
       ]
     }
   ],
@@ -484,18 +634,7 @@
       "main": [
         [
           {
-            "node": "Format Orders",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Format Orders": {
-      "main": [
-        [
-          {
-            "node": "Postgres",
+            "node": "Format Buy Orders",
             "type": "main",
             "index": 0
           }
@@ -529,6 +668,11 @@
         [
           {
             "node": "Format Request2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -663,6 +807,11 @@
             "node": "Merge5",
             "type": "main",
             "index": 1
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
           }
         ]
       ]
@@ -685,6 +834,13 @@
             "node": "Format Request3",
             "type": "main",
             "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 1
           }
         ]
       ]
@@ -731,7 +887,18 @@
         ]
       ]
     },
-    "Postgres": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "No-op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Save BUY orders": {
       "main": [
         [
           {
@@ -742,11 +909,104 @@
         ]
       ]
     },
-    "Execute Workflow Trigger": {
+    "Merge": {
       "main": [
         [
           {
-            "node": "No-op",
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Get Close Prices",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Close Prices": {
+      "main": [
+        [
+          {
+            "node": "Merge6",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge6": {
+      "main": [
+        [
+          {
+            "node": "Gen Holding Stocks Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gen Holding Stocks Info": {
+      "main": [
+        [
+          {
+            "node": "Format Sell Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Buy Orders": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Save BUY orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sell Orders": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Save SELL orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Save SELL orders": {
+      "main": [
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge7": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }
@@ -760,7 +1020,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "executionTimeout": 1800
   },
-  "versionId": "622f7d5d-4f69-4050-ba26-63b95d3fb2fb",
+  "versionId": "5ffc5e81-23be-4546-ab5b-54c907751ddd",
   "id": "19",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

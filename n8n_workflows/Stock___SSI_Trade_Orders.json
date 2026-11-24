@@ -99,7 +99,7 @@
       "typeVersion": 1,
       "position": [
         3480,
-        2000
+        1960
       ],
       "webhookId": "68ff0e9c-b59a-4daf-9347-ca0dfb0d431b",
       "disabled": true
@@ -127,7 +127,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Retrieve data from the single input item\nconst inputData = items[0].json;\nconst orders = inputData.orders || [];\nconst deviceId = inputData.deviceId;\nconst accountNo = inputData.accountNo;\n\nconst newBuyOrders = [];\n\n// Iterate through the orders array and append contextual metadata\nfor (const order of orders) {\n  newBuyOrders.push({\n    ...order,\n    side: order.side || \"B\",\n    orderType: \"LO\",\n    deviceId: deviceId,\n    accountNo: accountNo\n  });\n}\n\nreturn [{\n  json: {\n    orders: newBuyOrders\n  }\n}];"
+        "jsCode": "// Retrieve data from the single input item\nconst inputData = items[0].json;\nconst orders = inputData.orders || [];\nconst deviceId = inputData.deviceId;\nconst accountNo = inputData.accountNo;\n\nconst newBuyOrders = [];\n\n// Iterate through the orders array and append contextual metadata\nfor (const order of orders) {\n  newBuyOrders.push({\n    ...order,\n    side: order.tradeType === \"SELL\" ? \"S\" : \"B\",\n    orderType: \"LO\",\n    deviceId: deviceId,\n    accountNo: accountNo\n  });\n}\n\nreturn [{\n  json: {\n    orders: newBuyOrders\n  }\n}];"
       },
       "id": "47f4ffcd-57fb-47b0-854e-9232c1d8665c",
       "name": "Format Orders",
@@ -361,7 +361,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const orders = $input.all().map(item => {\n  const data = item.json;\n  return {\n    symbol: data.symbol,\n    quantity: Number(data.quantity || 0),\n    price: String(Math.trunc(Number(data.price || 0)))\n  };\n});\n\nreturn {\n  json: {\n    body: { orders }\n  }\n};"
+        "jsCode": "const orders = $input.all().map(item => {\n  const data = item.json;\n  return {\n    symbol: data.symbol,\n    quantity: Number(data.quantity || 0),\n    tradeType: data.trade_type,\n    price: String(Math.trunc(Number(data.price || 0)))\n  };\n});\n\nreturn {\n  json: {\n    body: { orders }\n  }\n};"
       },
       "id": "b0a8072f-e012-402c-9273-b9389843afaf",
       "name": "Format Request",
@@ -587,7 +587,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "executionTimeout": 1800
   },
-  "versionId": "a392f1ff-4ede-4867-b983-42e234502230",
+  "versionId": "5e5578a3-ebd8-40e6-9f12-1dbc1eb62115",
   "id": "17",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
