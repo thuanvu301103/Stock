@@ -93,6 +93,8 @@ services:
       SSI_PRIVATE_KEY: ${SSI_PRIVATE_KEY:-ssiprivatekey}
       SSI_ACCOUNT_NO: ${SSI_ACCOUNT_NO:-ssiaccountno}
 
+      TELEGRAM_BOT_CHAT_ID: ${TELEGRAM_BOT_CHAT_ID:-chatId}
+
     volumes:
       - ./n8n_data:/home/node/.n8n
       - ./local_files:/data/files

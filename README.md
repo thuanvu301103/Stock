@@ -57,8 +57,9 @@ flowchart LR
 
 ### Component responsibilities
 
-- **n8n** orchestrates ingestion, seed, technical-indicator, and maintenance workflows, and contains the SSI trade-order workflow scaffold. The workflows are versioned in `n8n_workflows/`.
-- **SSI / FastConnectAPI** has two separate roles: SSI supplies market data, while FastConnectAPI is the intended route for authenticated order submission. The current `n8n_workflows/Stock___SSI_Trade_Orders.json` is not yet an order-placement workflow: it is inactive, its webhook is disabled, and it currently requests OTP/token authentication without submitting an order. The dotted diagram arrow shows the intended integration, not a working live execution path.
+- **n8n** orchestrates ingestion, seed, technical-indicator, market-flow, market-regime, portfolio, and maintenance workflows. The workflow exports are versioned in `n8n_workflows/`.
+- **Telegram notifications** are optional through `Stock___Notification.json`; the workflow sends reports for ClickHouse and PostgreSQL data but is not required for trading or analytics.
+- **SSI / FastConnectAPI** has two separate roles: SSI supplies market data, corporate actions, exchange indices, and account APIs, while FastConnectAPI provides the brokerage order APIs. The project includes an active equity order workflow and a separate FCO order workflow. Both can submit real orders, so valid credentials and careful request validation are required.
 - **Python** runs in n8n's Python nodes for Vnstock-backed collection and processing; the custom image is based on `naskio/n8n-python` and installs dependencies from `requirements.txt`. It is not a separate Compose service.
 - **PostgreSQL** stores n8n application data. **Redis** is configured for n8n queue support.
 - **ClickHouse** is the analytical store. n8n sends queries and inserts to its HTTP endpoint on the Compose network; table and view DDL is maintained under `clickhouse_query/`.
@@ -69,23 +70,24 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    SCHED["Weekday schedule<br/>12:30 VN time"] --> PULL["SSI data puller"]
-    WEBHOOK["POST webhook"] --> FILE{"File attached?"}
-    FILE -->|Yes| INGEST
-    FILE -->|No| ANALYZE
-    PULL --> INGEST["Ingest market data,<br/>corporate actions & indices"]
+    SOURCES["SSI / Vnstock / uploaded files"] --> INGEST["n8n ingestion workflows"]
+    SCHED["Weekday schedule"] --> INGEST
+    WEBHOOK["SSI full-workflow webhook"] --> INGEST
 
-    INGEST --> TECH["Technical indicators"]
-    INGEST --> FLOW["Market flow & regime"]
-    TECH --> CH["ClickHouse<br/>tables & analytics views"]
-    FLOW --> CH
-    INGEST --> CH
-    CH --> ANALYZE["Analyze stocks<br/>by trade date"]
-    ANALYZE --> RESPONSE["Webhook response"]
-    CH --> PBI["Power BI<br/>ODBC refresh"] --> REPORT["Reports"]
+    INGEST --> CH["ClickHouse n8n_olap"]
+    INGEST --> ANALYTICS["Technical indicators<br/>Market flow & regime"]
+    ANALYTICS --> CH
+
+    CH --> PBI["Power BI Desktop"]
+    CH --> ANALYZE["Stock analysis"]
+    ANALYZE --> STRATEGY["Portfolio optimizer"]
+    STRATEGY --> ORDERS["SSI order workflows"]
+    ORDERS -. "valid credentials required" .-> FAST["FastConnectAPI"]
+    CH -. "optional report" .-> NOTIFY["Telegram notification workflow"]
+    PG[("PostgreSQL")] -. "orders / account state" .-> NOTIFY
 ```
 
-Activate the workflow before using it. The webhook can analyze a supplied file or, without a file, run analysis for `trade_date` (defaults to today). Power BI continues to refresh from ClickHouse via ODBC. Vnstock, SSI CSV, and standalone collectors are alternative data sources.
+The SSI full workflow runs on a weekday schedule or through its production webhook. It ingests market data, corporate actions and exchange indices, then calculates analytical indicators and stores results in ClickHouse. Analysis data is used by Power BI and the portfolio/order strategy. The optional Notification workflow sends market overview, watchlist and order-book reports to Telegram; it does not affect ingestion or order execution. Order submission requires valid SSI credentials.
 
 ## Clickhouse Setup
 
@@ -143,7 +145,32 @@ python test_bench.py
 ```
 
 ### Import workflows
-Import all workflows in folder `n8n_workflows`
+Import the workflow JSON files from `n8n_workflows/` into n8n. n8n workflow IDs used by `Execute Workflow` nodes are local to an instance, so update sub-workflow references after import if n8n assigns different IDs.
+
+The exports currently expose the following active state:
+
+| Workflow export | Active in export | Entry point / trigger |
+|---|---:|---|
+| `Stock___SSI_full_workflow.json` | Yes | Schedule on weekdays at 12:00 and `POST /webhook/ssi-full-workflow` |
+| `Stock___Mine_Market_Data_SSI_json.json` | Yes | `POST /webhook/mine-market-data-ssi-json` |
+| `Stock___Mine_Market_Data_SSI_csv.json` | Yes | `POST /webhook/mine-market-data-ssi` |
+| `Stock___Mine_Corporate_Actions_SSI_json.json` | Yes | `POST /webhook/mine-corporate-actions-ssi-json` |
+| `Stock___Mine_Corporate_Actions_SSI_xlsx.json` | Yes | `POST /webhook/mine-corporate-actions-ssi` |
+| `Stock___Mine_Exchange_Indices_Data_SSI_json.json` | Yes | `POST /webhook/mine-exchange-indices-data-ssi-json` |
+| `Stock___Seed_Dim_Date.json` | Yes | Monthly cron on the first day at 12:00 and `POST /webhook/seed-dim-date` |
+| `Stock___Track_Technical_Indicators.json` | Yes | `POST /webhook/track-technical-indicators` |
+| `Stock___Track_Market_Flow_Indicators.json` | Yes | `POST /webhook/track-market-flow-indicators` |
+| `Stock___Optimize_Buy_Strategy.json` | Yes | `POST /webhook/optimize-buy-strategy` |
+| `Stock___SSI_Auth.json` | No | `POST /webhook/ssi-auth` |
+| `Stock___SSI_Track_Account_Balance.json` | Yes | `POST /webhook/ssi-track-account-balance` |
+| `Stock___SSI_Trade_Orders.json` | Yes | `POST /webhook/ssi-trade-order`; weekday schedule at 01:15 |
+| `Stock___SSI_Trade_Orders_FCO.json` | Yes | `POST /webhook/ssi-trade-order` |
+| `Stock___SSI_Registry_Order_Book.json` | Yes | `POST /webhook/ssi-registry-order-book` |
+| `Stock___Notification.json` | Yes | `POST /webhook/notification`; optional weekday schedule at 14:00 |
+| `Stock___Track_Market_Flow_Classification.json` | No | `POST /webhook/track-market-flow-classification` |
+| `Stock___Mine_Market_Data_Vnstock.json` | No | Legacy/manual execution |
+| `Stock___Seed_Price_Data.json` | No | Legacy/manual execution |
+| `Stock___Purge_Data.json` | No | Manual execution |
 
 ### Preventing JSON Output Corruption in n8n Python Scripts
 
@@ -252,7 +279,11 @@ SSI (SSI Securities Corporation) is a Vietnamese joint-stock securities company.
 
 ### FastConnectAPI trade-order workflow
 
-The workflow `n8n_workflows/Stock___SSI_Trade_Orders.json` now includes an order-submission path: it formats the submitted orders, adds a batch request ID and timestamp, signs the request, and calls SSI's batch-order endpoint. The workflow export is marked active. Its `POST /webhook/ssi-trade-order` webhook expects a JSON request body containing an `orders` array. The workflow can submit real orders, so configure valid SSI credentials and verify the request carefully before using it.
+The equity workflow `n8n_workflows/Stock___SSI_Trade_Orders.json` formats submitted orders, adds a batch request ID and timestamp, signs the request, and calls SSI's batch stock-order endpoint. Its export is active and exposes `POST /webhook/ssi-trade-order`; it also has a weekday schedule at 01:15.
+
+A separate `n8n_workflows/Stock___SSI_Trade_Orders_FCO.json` export also uses `POST /webhook/ssi-trade-order` and submits to SSI's FCO order endpoint. It is active in the export and must not be enabled alongside the equity workflow when both produce the same local webhook path.
+
+Both order workflows can submit real orders. Configure valid SSI credentials and verify the payload, account number, side, quantity, price, and market-specific rules before activation.
 
 ### Configure SSI environment variables
 
@@ -273,6 +304,31 @@ docker compose up -d --force-recreate n8n
 
 Keep real credentials private; `.env` is ignored by Git and must not be committed.
 
+## Optional Telegram Notifications
+
+The `Stock___Notification.json` workflow is optional. It sends a stock report containing market indices, market regime and allocation, the default-analyser watchlist, recorded orders, and the corporate-actions calendar.
+
+It has both entry points:
+
+- `POST /webhook/notification` for an on-demand report.
+- A weekday schedule at 14:00 in n8n's configured timezone.
+
+Configure the Telegram chat ID in the project-root `.env` file:
+
+```env
+TELEGRAM_BOT_CHAT_ID=your_personal_or_group_chat_id
+```
+
+Docker Compose passes this value to n8n as `TELEGRAM_BOT_CHAT_ID`. Create a Telegram credential in n8n with the bot access token from `@BotFather`, then keep or replace the workflow's **Telegram account** credential reference.
+
+The workflow also reads ClickHouse and PostgreSQL data. Recreate n8n after changing `.env`:
+
+```bash
+docker compose up -d --force-recreate n8n
+```
+
+For bot creation, `/getUpdates`, chat-ID lookup, credential setup and testing, see [Set Up Telegram Notifications](docs/setup_telegram_notification_bot.md).
+
 ## Workflows
 
 ### Seed data
@@ -281,12 +337,12 @@ Keep real credentials private; `.env` is ignored by Git and must not be committe
     - The n8n workflow `n8n_workflows/Stock___Seed_Dim_Date.json` has a monthly schedule on the first day of each month at 12:00, using n8n's configured timezone (`GENERIC_TIMEZONE`; Docker Compose defaults to UTC). Ensure the workflow is active in n8n for the schedule to run. Each scheduled run inserts dates from the first day of the current month through the last day of the following two months, then optimizes the table to remove duplicate rows. 
     - For initial setup or a custom range, send `POST /webhook/seed-dim-date` with `start_date` and `end_date` as `YYYY-MM-DD` form-data fields; if either field is omitted, the workflow uses its default range.
     - `dim_date.is_trading_day` currently marks weekdays as trading days and weekends as non-trading days; it does not account for Vietnamese market holidays.
-3. **fact_stock_prices**: Run n8n workflow `n8n_workflows/Stock___Seed_Price_Data.json`
+3. **fact_market_data**: Legacy seed workflow `n8n_workflows/Stock___Seed_Price_Data.json` writes to `fact_stock_prices`; prefer the active SSI JSON/CSV ingestion workflows for current data.
 
 ### Mine Stock data
 
 #### Vnstock as Data source (Deprecated)
-1. Run workflow in n8n: `n8n_workflows\Stock__Mine_Market_Data_Vnstock.json`
+1. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_Vnstock.json`
 2. If there is error, re-run the workflow with option `Retry with curently saved workflow (from node with error)`
 
 - Primary Use Case: Historical data backfilling and backup source.
@@ -296,9 +352,9 @@ Keep real credentials private; `.env` is ignored by Git and must not be committe
 1. Download market data *csv files from SSI
 2. Run workflow in n8n: `n8n_workflows\Stock___Mine_Market_Data_SSI_csv.json`
 
-For an integrated SSI ingestion and analysis run, import [Stock___SSI_full_workflow.json](n8n_workflows/Stock___SSI_full_workflow.json) into n8n. The exported workflow is inactive by default; activate it to use its scheduled trigger or production webhook. It has two entry points:
+For an integrated SSI ingestion and analysis run, import [Stock___SSI_full_workflow.json](n8n_workflows/Stock___SSI_full_workflow.json) into n8n. The exported workflow is active. It has two entry points:
 
-1. **Schedule:** after activation, it starts on weekdays at 12:30 in the `Asia/Ho_Chi_Minh` timezone. Its embedded SSI data-puller node gathers a current snapshot, then the workflow fans out to invoke its corporate-actions, market-data, and exchange-index subworkflows. Other branches calculate technical indicators, track market-flow indicators and market regime, and run the analyzer.
+1. **Schedule:** it starts on weekdays at 12:00 in n8n's configured timezone. Its embedded SSI data-puller gathers a current snapshot, then the workflow invokes the corporate-actions, market-data, and exchange-index subworkflows. It then calculates technical indicators and market-flow indicators, tracks market regime, runs the default analyzer, and invokes the SSI registry/order-book workflow.
 2. **Webhook:** send a `POST` to the workflow's `ssi-full-workflow` webhook path. An uploaded binary file under the `file` field takes the ingestion path. Without that field, the workflow uses `trade_date` from the request body or defaults to the current date, then runs the default analyzer path. The webhook response is sent after the response node is reached.
 
 The standalone JavaScript collectors below are useful when you only need the SSI snapshot or want to reuse collection code; the full workflow already has its own embedded SSI data-puller node.
@@ -317,6 +373,18 @@ Both standalone collectors use the current SSI responses when run; the date in t
 - Primary Use Case: Daily real-time data extraction.
 - Technical Constraint: Restricted to current-day data only, requiring immediate daily processing for high throughput.
 
+### Track market flow and market regime
+
+- `Stock___Track_Market_Flow_Indicators.json` is active in the export and accepts `start_date` and `end_date` query parameters at `POST /webhook/track-market-flow-indicators`. When omitted, both default to the current date.
+- `Stock___Track_Market_Flow_Classification.json` exposes `POST /webhook/track-market-flow-classification` with the same optional date parameters, but its export is inactive. Activate it after confirming the `fact_market_regime_histories` schema includes all allocation and override columns.
+- `Stock___Track_Technical_Indicators.json` is active and exposes `POST /webhook/track-technical-indicators`.
+
+### SSI account and order-book workflows
+
+- `Stock___SSI_Auth.json` provides SSI OTP/token authentication as a subworkflow and is inactive in the export.
+- `Stock___SSI_Track_Account_Balance.json` exposes `POST /webhook/ssi-track-account-balance` and is active in the export.
+- `Stock___SSI_Registry_Order_Book.json` exposes `POST /webhook/ssi-registry-order-book`, invokes SSI authentication, retrieves account balance and target allocation, calculates a buy strategy, and can invoke the stock-order workflow.
+
 ### Visualize data
 1. Open one of the Power BI reports in `power_bi_visual/`.
 2. At tab `Home` -> group `Queries` -> `Refresh`
@@ -334,7 +402,7 @@ Use [optimize_portfolio_return_value_m_query.m](optimize_portfolio_return_value_
 Refresh the query in Power BI's Power Query Editor. The query filters roughly 90 calendar days of source data and uses up to 60 recent trading dates for optimization.
 
 #### n8n webhook
-Import [Stock___Optimize_Buy_Strategy.json](n8n_workflows/Stock___Optimize_Buy_Strategy.json). It is inactive by default. For a test run, click **Test workflow** and send a `POST` to `http://localhost:5678/webhook-test/optimize-buy-strategy`. After activating the workflow, use `http://localhost:5678/webhook/optimize-buy-strategy`.
+Import [Stock___Optimize_Buy_Strategy.json](n8n_workflows/Stock___Optimize_Buy_Strategy.json). The exported workflow is active. For a test run, click **Test workflow** and send a `POST` to `http://localhost:5678/webhook-test/optimize-buy-strategy`. After activating the workflow, use `http://localhost:5678/webhook/optimize-buy-strategy`.
 
 The JSON request body uses `selected_symbols` as an array:
 
@@ -352,5 +420,5 @@ The matching request template is [Optimze Buy Strategy.request.yaml](web_hook/St
 The optimizer returns `calculated_for_date`, `symbol`, `close_price`, `expected_return`, `optimal_weight`, `allocated_amount`, and `suggested_shares`. `optimal_weight` values sum to 1, and `allocated_amount` is the weight multiplied by `TotalInvestment`. `suggested_shares` is currently the allocation divided by close price and may be fractional; apply the exchange's lot-size and order rules before using it as an order quantity. These outputs are estimates, not trade orders.
 
 ### Purge Cold data
-1. Run workflow in n8n `n8n_workflows\Stock__Purge_Data.json`
-2. Check data in `dim_date` and `fact_stock_prices` tables
+1. Run workflow in n8n `n8n_workflows\Stock___Purge_Data.json`
+2. Check data in `dim_date` and `fact_market_data`/legacy `fact_stock_prices` tables as applicable

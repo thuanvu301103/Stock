@@ -18,6 +18,6 @@ CREATE TABLE order_items (
     total_amount NUMERIC(20, 2) GENERATED ALWAYS AS (quantity * price) STORED,
     PRIMARY KEY (account_id, trade_date, trade_type, symbol),
     FOREIGN KEY (account_id, trade_date, trade_type)
-        REFERENCES stock_orders (account_id, trade_date, trade_type)
+        REFERENCES orders (account_id, trade_date, trade_type)
         ON DELETE CASCADE
 );

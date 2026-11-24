@@ -1,0 +1,785 @@
+{
+  "name": "Stock___Notification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "notification",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "db33ff3b-ca98-4f62-8595-82d8349d9ac5",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ],
+      "webhookId": "1b0820b7-3455-4a15-8b9c-ea4a1c9d4ade"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "trade_date",
+              "value": "={{ ($json.body && $json.body.trade_date) ? $json.body.trade_date : new Date().toISOString().split(\"T\")[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bc97ae91-72e9-40ad-a3e8-e70a2285f1fb",
+      "name": "Set trade_date",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        540,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_BOT_CHAT_ID }}",
+        "text": "=<b>STOCK REPORT</b>\n<i>Generated on: {{ $json.trade_date }}</i>",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "6a6211e0-a671-4303-bdaa-c4e1e035355e",
+      "name": "Telegram - Send mess Date",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        540,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "3",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT *\nFROM n8n_olap.fact_exchange_index_histories\nWHERE time = '{{ $json.trade_date }}'\nAND index_id IN ('VN30', 'VNINDEX')\nFORMAT JSON;",
+        "options": {}
+      },
+      "id": "354015c4-5bc1-417e-9cb3-468db7a0ecbd",
+      "name": "Get Exchange Indices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        820,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_BOT_CHAT_ID }}",
+        "text": "={{ $json.market_overview_html }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "44f8155f-5c9d-48ce-94fb-2abc3d104b48",
+      "name": "Telegram - Send mess Market Overview",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        20
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "3",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT *\nFROM n8n_olap.fact_market_regime_histories\nWHERE time = '{{ $json.trade_date }}'\nFORMAT JSON;",
+        "options": {}
+      },
+      "id": "a56b7bbb-5517-4b57-b980-f5ab4ecbc077",
+      "name": "Get Market Regime",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        820,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "6ae1a3b6-3929-4d23-9f4e-bf3afffaf29f",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1260,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "exchange_index_data",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "68696c72-e115-4102-a49b-ecd0906c373d",
+      "name": "Set Exchange Index Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "market_regime_data",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fff52c23-03b0-4041-97f9-b8b799a4d820",
+      "name": "Set Market Regime Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse incoming payload from the previous node\nconst payload = $input.first().json;\nconst indices = payload.exchange_index_data || [];\nconst regime = (payload.market_regime_data || [])[0] || {};\n\n// Escape HTML special characters for Telegram HTML parse mode\nconst escapeHtml = (str) => String(str ?? '')\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;');\n\n// Format numeric values with thousand separators and fixed decimals\nconst fmtNum = (val, decimals = 2) => {\n  if (val === undefined || val === null || isNaN(Number(val))) return 'N/A';\n  return Number(val).toLocaleString('en-US', {\n    minimumFractionDigits: decimals,\n    maximumFractionDigits: decimals\n  });\n};\n\n// Order VNINDEX first, followed by VN30\nconst sortedIndices = [...indices].sort((a, b) => {\n  if (a.index_id === 'VNINDEX') return -1;\n  if (b.index_id === 'VNINDEX') return 1;\n  return 0;\n});\n\n// Build formatted blocks for each index\nconst indexBlocks = sortedIndices.map(idx => {\n  const sign = Number(idx.change) >= 0 ? '+' : '';\n  const totalValueBillion = Math.round((Number(idx.all_value) || 0) / 1e9).toLocaleString('en-US');\n\n  return [\n    `• <b>${escapeHtml(idx.index_id)}:</b> <code>${fmtNum(idx.index_value)}</code> (<b>${sign}${fmtNum(idx.change)}</b> | <b>${sign}${fmtNum(idx.change_percent)}%</b>)`,\n    `  └ Range: ${fmtNum(idx.chart_low)} – ${fmtNum(idx.chart_high)} | Total Value: ${totalValueBillion}B VND`,\n    `  └ Breadth: 🟢 ${idx.advances} (${idx.ceiling} ceiling) | 🔴 ${idx.declines} (${idx.floor} floor) | 🟡 ${idx.nochanges}`\n  ].join('\\n');\n}).join('\\n');\n\n// Safely parse stringified allocation object\nlet allocText = 'N/A';\ntry {\n  const alloc = typeof regime.allocation === 'string'\n    ? JSON.parse(regime.allocation)\n    : (regime.allocation || {});\n  allocText = `Equity <b>${alloc.w_stock ?? 0}%</b> (VN30: ${alloc['w_vn30/w_stock'] ?? 0}%, MidCap: ${alloc['w_midcap/w_stock'] ?? 0}%) | Cash <b>${alloc.w_cash ?? 0}%</b>`;\n} catch (error) {\n  allocText = escapeHtml(regime.allocation);\n}\n\nconst reportDate = regime.time || (sortedIndices[0] && sortedIndices[0].time) || '';\nconst regimeCode = escapeHtml(regime.market_regime_code || 'N/A');\nconst regimeState = escapeHtml(regime.market_state || 'N/A');\nconst regimeDesc = escapeHtml(regime.market_description || '');\n\nconst marketOverviewHtml = [\n  `<b>1. MARKET OVERVIEW</b>`,\n  ``,\n  `<b>Market Indices:</b>`,\n  indexBlocks,\n  ``,\n  `<b>Market Regime:</b>`,\n  `• <b>State:</b> <code>${regimeCode}</code> — <b>${regimeState}</b>`,\n  `• <b>Target Allocation:</b> ${allocText}`,\n  `• <b>Description:</b> ${regimeDesc}`\n].join('\\n');\n\nreturn [{\n  json: {\n    market_overview_html: marketOverviewHtml\n  }\n}];"
+      },
+      "id": "19a63ff8-4047-4e04-8813-1024e292976e",
+      "name": "Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT \n    symbol as stock_key,\n    trade_date as date_key,\n    sma_20_slope_k1,\n    sma_20_slope_k5,\n    sma_50_slope_k1,\n    sma_50_slope_k5,\n    signal_crossover_sma_20_50,\n    signal_crossover_sma_50_100,\n    expected_return_t2_n20,\n    volatility_t2_n20,\n    rsi_7,\n    rsi_14,\n    signal_volume_outlier,\n    pivot_s1_plus_1,\n    days_since_volume_outlier\nFROM n8n_olap.v_analytics_master_consolidated\nWHERE date_key = '{{ ($json && $json.trade_date) ? $json.trade_date : new Date().toISOString().split(\"T\")[0] }}' \n    AND signal_crossover_sma_50_100 >= 0\n    AND rsi_14 BETWEEN 30 AND 70\n    AND volume >= 50000\n    AND sma_50_slope_k1 >= 0\n    AND sma_20_slope_k1 >= 0\n    AND sma_20_slope_k5 >= 0\n    AND sma_50_slope_k5 >= 0\n    AND volatility_t2_n20 BETWEEN 0.01 AND 0.05\n    AND expected_return_t2_n20 BETWEEN 0.002 AND 0.055\n    AND rsi_7 BETWEEN 40 AND 85\n    AND signal_crossover_sma_20_50 >= 0\n    AND signal_volume_outlier = 0\n    AND close >= 15\n    AND days_since_volume_outlier >= 4\nORDER BY \n    expected_return_t2_n20 DESC,\n    stock_key ASC,\n    date_key ASC,\n    sma_20_slope_k1 ASC,\n    sma_20_slope_k5 ASC,\n    sma_50_slope_k1 ASC,\n    sma_50_slope_k5 ASC,\n    signal_crossover_sma_20_50 ASC,\n    signal_crossover_sma_50_100 ASC,\n    volatility_t2_n20 ASC,\n    rsi_7 ASC,\n    rsi_14 ASC,\n    signal_volume_outlier ASC,\n    days_since_volume_outlier ASC\nLIMIT 501 FORMAT JSON;",
+        "options": {}
+      },
+      "id": "fefec441-f36e-49d5-b77e-5ef829584418",
+      "name": "Default Analyser",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1920,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "input2"
+      },
+      "id": "282ef308-1996-44d4-87c8-731e769e1208",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1720,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve watchlist rows from previous node\nconst rawInput = $input.first().json;\nconst rows = rawInput.data || [];\n\n// Optional: map pivot_s1_plus_1 by stock_key if sourced from a separate array/node\n// Example: const pivotMap = new Map((otherNodeData || []).map(x => [x.stock_key, x.pivot_s1_plus_1]));\nconst pivotMap = new Map();\n\n// Optional buffer below S1 (set to 0 to use exact pivot_s1_plus_1)\nconst buyBufferPct = 0.0; // Example: 0.005 for 0.5% below S1\n\nconst escapeHtml = (str) => String(str ?? '')\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;');\n\nconst fmtPrice = (val) => {\n  if (val === undefined || val === null || val === '' || isNaN(Number(val))) return 'N/A';\n  return Number(val).toLocaleString('en-US', {\n    minimumFractionDigits: 2,\n    maximumFractionDigits: 2\n  });\n};\n\n// Deduplicate by stock_key (keeps the latest record)\nconst uniqueMap = new Map();\nfor (const row of rows) {\n  if (row.stock_key) {\n    uniqueMap.set(row.stock_key, row);\n  }\n}\n\n// Sort descending by expected return T+2\nconst candidates = Array.from(uniqueMap.values()).sort(\n  (a, b) => (Number(b.expected_return_t2_n20) || 0) - (Number(a.expected_return_t2_n20) || 0)\n);\n\nif (candidates.length === 0) {\n  return [{\n    json: {\n      watchlist_html: `<b>2. BUY WATCHLIST</b>\\n<i>No candidate tickers matched the screening criteria.</i>`\n    }\n  }];\n}\n\nconst reportDate = candidates[0].date_key || '';\n\n// Enrich each candidate with pivot_s1_plus_1 and potential_buy_price\nconst enriched = candidates.map(item => {\n  const rawS1 = item.pivot_s1_plus_1 ?? pivotMap.get(item.stock_key);\n  const s1Num = (rawS1 !== undefined && rawS1 !== null && rawS1 !== '' && !isNaN(Number(rawS1)))\n    ? Number(rawS1)\n    : null;\n  const potentialBuyPrice = s1Num !== null\n    ? s1Num * (1 - buyBufferPct)\n    : null;\n\n  return {\n    ...item,\n    pivot_s1_plus_1: s1Num,\n    potential_buy_price: potentialBuyPrice\n  };\n});\n\n// Build fixed-width table\nconst header = 'Ticker | Buy Price | E[R] T+2 | RSI(7/14)';\nconst divider = '-'.repeat(header.length);\n\nconst tableLines = enriched.map(item => {\n  const ticker = String(item.stock_key).padEnd(6, ' ');\n  const buyStr = fmtPrice(item.potential_buy_price).padStart(9, ' ');\n\n  const erVal = (Number(item.expected_return_t2_n20) || 0) * 100;\n  const erStr = `${erVal >= 0 ? '+' : ''}${erVal.toFixed(2)}%`.padStart(8, ' ');\n\n  const rsi7 = Math.round(Number(item.rsi_7) || 0);\n  const rsi14 = Math.round(Number(item.rsi_14) || 0);\n  const rsiStr = `${rsi7} / ${rsi14}`.padStart(9, ' ');\n\n  return `${ticker} | ${buyStr} | ${erStr} | ${rsiStr}`;\n});\n\n// Build detailed execution & indicator lines\nconst detailLines = enriched.map(item => {\n  const ticker = escapeHtml(item.stock_key);\n  const buyFormatted = fmtPrice(item.potential_buy_price);\n  const s1Formatted = fmtPrice(item.pivot_s1_plus_1);\n  const s20 = Number(item.sma_20_slope_k1) || 0;\n  const rsi7 = Number(item.rsi_7) || 0;\n\n  const s20Str = `${s20 >= 0 ? '+' : ''}${s20.toFixed(2)}`;\n  const rsiTag = rsi7 >= 70 ? ' (Overbought)' : (rsi7 <= 30 ? ' (Oversold)' : '');\n\n  return `• <b>${ticker}:</b> Potential Buy <code>${buyFormatted}</code> (S1: <code>${s1Formatted}</code>) | SMA20 Slope <code>${s20Str}</code> | RSI7 <code>${rsi7.toFixed(1)}</code>${rsiTag}`;\n});\n\nconst watchlistHtml = [\n  `<b>2. BUY WATCHLIST</b>`,\n  ``,\n  `<pre><code class=\"language-text\">${escapeHtml(header)}\\n${divider}\\n${escapeHtml(tableLines.join('\\n'))}</code></pre>`,\n  ``,\n  `<b>Execution &amp; Momentum Details:</b>`,\n  detailLines.join('\\n')\n].join('\\n');\n\nreturn [{\n  json: {\n    candidates: enriched,\n    watchlist_html: watchlistHtml\n  }\n}];"
+      },
+      "id": "02bab369-5b96-43da-a82f-d64717f4bbf3",
+      "name": "Format1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_BOT_CHAT_ID }}",
+        "text": "={{ $json.watchlist_html }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "bf4cf76f-b24c-4a6d-bb26-c28ac33252c3",
+      "name": "Telegram - Send mess BUY Watchlist",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "3",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "input2"
+      },
+      "id": "1487e11e-842c-4d08-ac1f-4f5fd4ee7c5c",
+      "name": "Merge2",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2380,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=-- Retrieve all orders and their corresponding items for a specific local date\nSELECT\n    o.account_id,\n    o.trade_date,\n    o.trade_type,\n    o.created_at,\n    oi.symbol,\n    oi.quantity,\n    oi.price,\n    oi.total_amount\nFROM orders AS o\nINNER JOIN order_items AS oi\n    ON o.account_id = oi.account_id\n    AND o.trade_date = oi.trade_date\n    AND o.trade_type = oi.trade_type\nWHERE o.trade_date = '{{ $json.trade_date }}'\nORDER BY o.created_at DESC, o.account_id, oi.symbol;",
+        "options": {}
+      },
+      "id": "4f4a747e-f045-486d-9219-6604baf65524",
+      "name": "Get order book",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        2580,
+        180
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "2",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve items emitted by the Postgres node\nconst items = $input.all().map((item) => item.json);\n\n// Escape HTML special characters for Telegram HTML parse mode\nconst escapeHtml = (str) =>\n  String(str ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;');\n\n// Parse numeric string safely and format with thousand separators\nconst parseNum = (val) => {\n  const num = Number(val);\n  return Number.isFinite(num) ? num : 0;\n};\n\nconst fmtNum = (val, decimals = 0) =>\n  parseNum(val).toLocaleString('en-US', {\n    minimumFractionDigits: decimals,\n    maximumFractionDigits: decimals,\n  });\n\nconst generatedAt = $now.setZone('Asia/Ho_Chi_Minh').toFormat('dd/MM/yyyy HH:mm');\n\n// Handle empty order set\nconst validItems = items.filter((row) => row && row.symbol);\n\nif (validItems.length === 0) {\n  const emptyDate = $now.setZone('Asia/Ho_Chi_Minh').toFormat('yyyy-MM-dd');\n  const emptyMessage = [\n    '<b>DAILY ORDER BOOK REPORT</b>',\n    '<i>No orders recorded for this date.</i>',\n  ].join('\\n');\n\n  return [{ json: { telegram_order_html: emptyMessage } }];\n}\n\n// Extract trade date from the first record\nconst reportDate = validItems[0].trade_date\n  ? String(validItems[0].trade_date).slice(0, 10)\n  : $now.setZone('Asia/Ho_Chi_Minh').toFormat('yyyy-MM-dd');\n\nconst buyOrders = [];\nconst sellOrders = [];\nconst accountSet = new Set();\n\nlet totalBuyAmount = 0;\nlet totalSellAmount = 0;\n\nfor (const row of validItems) {\n  const tradeType = String(row.trade_type || '').toUpperCase().trim();\n  const qty = parseNum(row.quantity);\n  const price = parseNum(row.price);\n  const amount = row.total_amount !== undefined && row.total_amount !== null\n    ? parseNum(row.total_amount)\n    : qty * price;\n\n  if (row.account_id) {\n    accountSet.add(String(row.account_id));\n  }\n\n  if (tradeType === 'BUY') {\n    buyOrders.push({ ...row, _qty: qty, _price: price, _amount: amount });\n    totalBuyAmount += amount;\n  } else {\n    sellOrders.push({ ...row, _qty: qty, _price: price, _amount: amount });\n    totalSellAmount += amount;\n  }\n}\n\n// Render fixed-width table in VND\nconst buildOrderTable = (orderList) => {\n  const header = 'SYMBOL │    QTY │      PRICE │ TOTAL (VND)';\n  const divider = '───────┼────────┼────────────┼────────────';\n\n  const lines = orderList.map((o) => {\n    const symbol = String(o.symbol).padEnd(6, ' ');\n    const qty = fmtNum(o._qty, 0).padStart(6, ' ');\n    const price = fmtNum(o._price, 0).padStart(10, ' ');\n    const total = fmtNum(o._amount, 0).padStart(11, ' ');\n    return `${symbol} │ ${qty} │ ${price} │ ${total}`;\n  });\n\n  return `<pre><code class=\"language-text\">${escapeHtml(header)}\\n${divider}\\n${escapeHtml(lines.join('\\n'))}</code></pre>`;\n};\n\nconst detailBlocks = [];\n\nif (buyOrders.length > 0) {\n  detailBlocks.push(`🟢 <b>BUY orders (${buyOrders.length})</b>\\n${buildOrderTable(buyOrders)}`);\n}\n\nif (sellOrders.length > 0) {\n  detailBlocks.push(`🔴 <b>SELL orders (${sellOrders.length})</b>\\n${buildOrderTable(sellOrders)}`);\n}\n\nconst accountsList = Array.from(accountSet)\n  .map((acc) => `<code>${escapeHtml(acc)}</code>`)\n  .join(', ');\n\nconst finalMessage = [\n  '<b>3. ORDER BOOK</b>',\n  '',\n  '<b>Summary</b>',\n  `• <b>Total Orders:</b> <code>${validItems.length}</code> (<code>${buyOrders.length}</code> BUY • <code>${sellOrders.length}</code> SELL)`,\n  `• <b>Buy Value:</b> <code>${fmtNum(totalBuyAmount, 0)}</code> VND`,\n  `• <b>Sell Value:</b> <code>${fmtNum(totalSellAmount, 0)}</code> VND`,\n  '',\n  '<b>Details</b>',\n  '',\n  detailBlocks.join('\\n\\n'),\n  '',\n  `<i>Account(s): ${accountsList || 'N/A'}</i>`,\n].join('\\n');\n\nreturn [{\n  json: {\n    order_html: finalMessage,\n  },\n}];"
+      },
+      "id": "7bf5061c-ee37-4440-b2a8-2c7241eebb09",
+      "name": "Format2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2780,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_BOT_CHAT_ID }}",
+        "text": "={{ $json.order_html }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "46527d69-35b7-49a6-8220-036f67265cff",
+      "name": "Telegram - Send mess BUY Watchlist1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        2780,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "3",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT *\nFROM n8n_olap.corporate_actions\nWHERE ex_rights_date > addDays(toDate('{{ ($json && $json.trade_date) ? String($json.trade_date).slice(0, 10) : $now.setZone(\"Asia/Ho_Chi_Minh\").toFormat(\"yyyy-MM-dd\") }}'), 1)\nORDER BY ex_rights_date ASC\nFORMAT JSON;",
+        "options": {}
+      },
+      "id": "0e1a76b3-698b-46e2-9f32-d904f471f95d",
+      "name": "Default Analyser1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3220,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "input2"
+      },
+      "id": "64901294-3343-4fd4-b11c-7b82da8cc2e4",
+      "name": "Merge3",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        3020,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve corporate actions rows from previous ClickHouse node output\nconst rawInput = $input.first().json;\nconst rows = Array.isArray(rawInput.data) ? rawInput.data : [];\n\n// Escape HTML special characters required by Telegram HTML parse mode\nconst escapeHtml = (str) =>\n  String(str ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;');\n\nconst generatedAt = $now.setZone('Asia/Ho_Chi_Minh').toFormat('dd/MM/yyyy HH:mm');\n\nif (rows.length === 0) {\n  const emptyHtml = [\n    '📅 <b>CORPORATE ACTIONS CALENDAR</b>',\n    `🕒 <i>Generated ${generatedAt}</i>`,\n    '',\n    '━━━━━━━━━━━━━━━━━━',\n    '<i>No upcoming corporate action events found.</i>',\n  ].join('\\n');\n\n  return [{ json: { corporate_actions_html: emptyHtml } }];\n}\n\n// Deduplicate by symbol + event_type + ex_rights_date, retaining the latest created_at\nconst dedupMap = new Map();\n\nfor (const row of rows) {\n  if (!row || !row.symbol) continue;\n  const symbol = String(row.symbol).trim();\n  const eventType = String(row.event_type || '').trim();\n  const exDate = String(row.ex_rights_date || '').trim();\n  const key = `${symbol}__${eventType}__${exDate}`;\n\n  const existing = dedupMap.get(key);\n  const currentTs = Date.parse(String(row.created_at || '').replace(' ', 'T')) || 0;\n  const existingTs = existing\n    ? Date.parse(String(existing.created_at || '').replace(' ', 'T')) || 0\n    : -1;\n\n  if (!existing || currentTs >= existingTs) {\n    dedupMap.set(key, {\n      symbol,\n      event_type: eventType || 'N/A',\n      description: String(row.description || '').trim(),\n      ex_rights_date: exDate || 'N/A',\n      created_at: row.created_at || '',\n    });\n  }\n}\n\nconst uniqueEvents = Array.from(dedupMap.values()).sort((a, b) => {\n  if (a.ex_rights_date !== b.ex_rights_date) {\n    return a.ex_rights_date.localeCompare(b.ex_rights_date);\n  }\n  return a.symbol.localeCompare(b.symbol);\n});\n\n// Count event types\nlet divCount = 0;\nlet issCount = 0;\n\nfor (const ev of uniqueEvents) {\n  if (ev.event_type === 'DIV') divCount += 1;\n  else if (ev.event_type === 'ISS') issCount += 1;\n}\n\nconst firstDate = uniqueEvents[0]?.ex_rights_date || 'N/A';\nconst lastDate = uniqueEvents[uniqueEvents.length - 1]?.ex_rights_date || 'N/A';\n\n// Group unique events by ex_rights_date\nconst groupedByDate = new Map();\nfor (const ev of uniqueEvents) {\n  if (!groupedByDate.has(ev.ex_rights_date)) {\n    groupedByDate.set(ev.ex_rights_date, []);\n  }\n  groupedByDate.get(ev.ex_rights_date).push(ev);\n}\n\nconst dateSections = [];\n\nfor (const [dateStr, events] of groupedByDate.entries()) {\n  const lines = events.map((ev) => {\n    const prefixPattern = new RegExp(`^${ev.symbol}\\\\s*-\\\\s*`, 'i');\n    const cleanDesc = ev.description.replace(prefixPattern, '');\n\n    return `• <b>${escapeHtml(ev.symbol)}</b> [<code>${escapeHtml(ev.event_type)}</code>] — ${escapeHtml(cleanDesc)}`;\n  });\n\n  dateSections.push(\n    [`📌 <b>Ex-Rights Date: <code>${escapeHtml(dateStr)}</code></b>`, ...lines].join('\\n')\n  );\n}\n\nconst corporateActionsHtml = [\n  '<b>4. CORPORATE ACTIONS CALENDAR</b>',\n  '',\n  '<b>Summary</b>',\n  `• <b>Unique Events:</b> <code>${uniqueEvents.length}</code> (<code>${divCount}</code> DIV • <code>${issCount}</code> ISS)`,\n  `• <b>Date Span:</b> <code>${escapeHtml(firstDate)}</code> → <code>${escapeHtml(lastDate)}</code>`,\n  '',\n  '<b>Upcoming ex-rights events</b>',\n  '',\n  dateSections.join('\\n\\n'),\n].join('\\n');\n\nreturn [\n  {\n    json: {\n      unique_events_count: uniqueEvents.length,\n      corporate_actions_html: corporateActionsHtml,\n    },\n  },\n];"
+      },
+      "id": "4c60f5ed-af60-4173-aaf7-ceb56c4c0571",
+      "name": "Format3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3420,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_BOT_CHAT_ID }}",
+        "text": "={{ $json.corporate_actions_html }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "cd1bec96-2526-4918-beae-022117d3f3ca",
+      "name": "Telegram - Send mess Corporate Actions",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        3420,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "3",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "34435155-1577-40e2-bb9c-9bfe017a9352",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3680,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "triggerAtHour": 14
+            }
+          ]
+        }
+      },
+      "id": "083d482b-f954-4ddf-8f55-5eb5025676bf",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        300,
+        100
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set trade_date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set trade_date": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Send mess Date",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Exchange Indices",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Market Regime",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Exchange Indices": {
+      "main": [
+        [
+          {
+            "node": "Set Exchange Index Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Market Regime": {
+      "main": [
+        [
+          {
+            "node": "Set Market Regime Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Exchange Index Data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Market Regime Data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Send mess Market Overview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Send mess Market Overview": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Default Analyser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Analyser": {
+      "main": [
+        [
+          {
+            "node": "Format1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format1": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Send mess BUY Watchlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Send mess BUY Watchlist": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Get order book",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get order book": {
+      "main": [
+        [
+          {
+            "node": "Format2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format2": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Send mess BUY Watchlist1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Send mess BUY Watchlist1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Default Analyser1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Analyser1": {
+      "main": [
+        [
+          {
+            "node": "Format3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format3": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Send mess Corporate Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set trade_date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Send mess Corporate Actions": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "611de13e-5b1c-496e-9afd-5cfcb2ceeace",
+  "id": "22",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}
