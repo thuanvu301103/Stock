@@ -1,0 +1,11 @@
+$kind: http-request
+url: http://localhost:5678/webhook-test/ssi-registry-order-book
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"selected_trade_date\": \"2026-11-23\" // optional\r
+
+    }"
+order: 16000

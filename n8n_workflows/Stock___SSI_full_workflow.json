@@ -209,7 +209,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1740,
+        1760,
         540
       ]
     },
@@ -321,6 +321,56 @@
         60,
         360
       ]
+    },
+    {
+      "parameters": {
+        "workflowId": "19"
+      },
+      "id": "db1eebef-f5c4-4419-9e7a-fabec27d6023",
+      "name": "Execute Workflow - Stock___SSI_Registry_Order_Book",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        2140,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "=body.selected_trade_date",
+              "value": "={{$json.trade_date || $now.toFormat('yyyy-MM-dd')}}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "63131090-5ce2-4f21-a646-68d67e23bbd9",
+      "name": "Setup Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1940,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "id": "22e6761d-3b5f-4f41-b408-e2df5269d362",
+      "name": "Merge5",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1760,
+        360
+      ]
     }
   ],
   "pinData": {},
@@ -363,6 +413,11 @@
         [
           {
             "node": "Default analyser",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge5",
             "type": "main",
             "index": 0
           }
@@ -482,6 +537,11 @@
             "node": "Respond to Webhook",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 1
           }
         ]
       ]
@@ -559,16 +619,38 @@
           }
         ]
       ]
+    },
+    "Merge5": {
+      "main": [
+        [
+          {
+            "node": "Setup Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Request": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - Stock___SSI_Registry_Order_Book",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
-    "saveManualExecutions": false,
+    "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "294101d2-098d-45ea-a273-2d98d73da376",
+  "versionId": "937395a6-b666-466f-b54d-705d5bea4f9d",
   "id": "11",
   "meta": {
     "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"

@@ -1,0 +1,12 @@
+$kind: http-request
+name: Request OTP
+url: https://api.ssi.com.vn/api/v3/auth/requestOtp
+method: POST
+body:
+  type: json
+  content: |-
+    {
+        "apiKey": "4HSNgiHJpgJijHIgkq9moamEL1vPFolN",
+        "apiSecret": "LocoxiuVFfefehHBGzvbk9IMiD88hYVY"
+    }
+order: 1000

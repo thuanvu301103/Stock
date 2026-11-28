@@ -4,10 +4,17 @@ let
 
     // Filter data
     TargetDate = Date.From(SelectedTradeDate),
+    // Calculate lower bound date to cover at least 60 trading sessions (approx. 90 calendar days)
+    MinDate = Date.AddDays(TargetDate, -90),
     SymbolList = List.Transform(Text.Split(SelectedSymbols, ","), Text.Trim),
     FilteredData = Table.SelectRows(Source, each 
-        List.Contains(SymbolList, [symbol]) and [trade_date] <= TargetDate
+        List.Contains(SymbolList, [symbol]) 
+        and [trade_date] >= MinDate
+        and [trade_date] <= TargetDate
     ),
+    PythonInput = Table.TransformColumns(FilteredData, {
+        {"trade_date", each Date.ToText(Date.From(_), [Format="yyyy-MM-dd", Culture="en-US"]), type text}
+    }),
 
     // Run Python script
     RunPythonScript = Python.Execute("
@@ -21,11 +28,12 @@ total_budget = float(" & Text.From(TotalInvestment) & ")
 df = dataset.copy()
 df.columns = [str(col).strip().lower() for col in df.columns]
 
-date_col = next((c for c in df.columns if 'date' in c), 'trade_date')
+date_col = 'trade_date'
 symbol_col = next((c for c in df.columns if 'symbol' in c), 'symbol')
 price_col = next((c for c in df.columns if 'price' in c or 'close' in c), 'close_price')
-return_col = next((c for c in df.columns if 'expected' in c or 'return' in c), 'expected_return_t2_n20')
+return_col = 'expected_return_t2_n20'
 vol_col = next((c for c in df.columns if 'vol' in c), 'volatility_t2_n20')
+df[date_col] = pd.to_datetime(df[date_col], format='%Y-%m-%d')
 
 # Extract N trading sessions relative to TargetDate
 unique_dates = sorted(df[date_col].unique(), reverse=True)
@@ -102,6 +110,7 @@ if num_assets > 0:
         'symbol': symbols,
         'close_price': prices,
         'expected_return': returns,
+        'volatility': volatilities,
         'optimal_weight': weights,
         'allocated_amount': allocated_amount,
         'suggested_shares': suggested_shares
@@ -111,7 +120,7 @@ else:
         'calculated_for_date', 'symbol', 'close_price', 
         'expected_return', 'optimal_weight', 'allocated_amount', 'suggested_shares'
     ])
-", [dataset=FilteredData]),
+", [dataset=PythonInput]),
 
     ResultTable = RunPythonScript{[Name="result_df"]}[Value]
 in

@@ -5,6 +5,8 @@ services:
     image: postgres:15-alpine
     container_name: postgres
     restart: always
+    ports:
+    - "5432:5432"
     environment:
       POSTGRES_USER: ${DB_USER:-n8n}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-n8n_pass}
@@ -21,6 +23,8 @@ services:
     image: redis:7-alpine
     container_name: redis
     restart: always
+    ports:
+    - "6379:6379"
     command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redis_data:/data
@@ -44,16 +48,6 @@ services:
         soft: 262144
         hard: 262144
 
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: flaresolverr
-    environment:
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-    ports:
-      - "8191:8191"
-    restart: always
-
   n8n:
     build: .
     image: n8n-python-custom
@@ -63,6 +57,8 @@ services:
     ports:
       - "5678:5678"
     environment:
+      NODE_OPTIONS: "--max-old-space-size=3072"
+
       GENERIC_TIMEZONE: ${TIMEZONE:-UTC}
       TZ: ${TIMEZONE:-UTC}
 
@@ -85,9 +81,19 @@ services:
       N8N_BASIC_AUTH_PASSWORD: ${N8N_PASS:-admin@123456}
 
       N8N_BLOCK_ENV_VARS_FROM_EXPRESSIONS: "false"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: false
+      NODE_FUNCTION_ALLOW_EXTERNAL: os
+      NODE_FUNCTION_ALLOW_BUILTIN: crypto
 
       PUID: 1000
       PGID: 1000
+
+      SSI_API_KEY: ${SSI_API_KEY:-ssiapikey}
+      SSI_API_SECRET: ${SSI_API_SECRET:-ssiapisecret}
+      SSI_PRIVATE_KEY: ${SSI_PRIVATE_KEY:-ssiprivatekey}
+      SSI_ACCOUNT_NO: ${SSI_ACCOUNT_NO:-ssiaccountno}
+
+      TELEGRAM_BOT_CHAT_ID: ${TELEGRAM_BOT_CHAT_ID:-chatId}
 
     volumes:
       - ./n8n_data:/home/node/.n8n

@@ -1,0 +1,1029 @@
+{
+  "name": "Stock___SSI_Registry_Order_Book",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ssi-registry-order-book",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b2f76a92-d708-43ec-b7b1-23f63655b96e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        340,
+        1000
+      ],
+      "webhookId": "7813615f-14e7-440e-aef4-77b480db623a"
+    },
+    {
+      "parameters": {
+        "workflowId": "20"
+      },
+      "id": "89bf7225-580f-491b-b3cf-76c7058d8930",
+      "name": "Execute Workflow - SSI Auth",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        920,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "18"
+      },
+      "id": "45b4e522-ca26-4d99-9d0f-adb535c575ba",
+      "name": "Execute Workflow - Optimize Buy Strategy",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3260,
+        1240
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "17"
+      },
+      "id": "71813997-d62c-4091-845c-42969dd4f07e",
+      "name": "Execute Workflow - SSI Trade Orders",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        4200,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "92294f9c-4da4-4ea0-acc6-d6056138fd2f",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        3340,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "21"
+      },
+      "id": "54818ebd-3286-43d2-9796-9f3e3ff49f41",
+      "name": "Execute Workflow - Track Account Balance",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve data from the previous node\nconst inputData = $input.first().json;\n\n// Return the formatted output payload containing the orders array\nreturn [{\n    json: {\n        body: {\n          access_token: inputData.accessToken\n        }\n    }\n}];"
+      },
+      "id": "d8c9c9e8-7d72-4c2b-b000-f240abe49c88",
+      "name": "Format Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const dynamicBuyCashPercentage = 0.15; // 15% of cash to be used for buying stocks daily\n\nfunction executeBuyStrategy(\n    curWCash,\n    curWStock,\n    curWLargeCap,\n    curWMidCap,\n    curTotal,\n    targetWCash,\n    targetWStock,\n    targetWLargeCap,\n    targetWMidCap\n) {\n    // 1. Calculate spendCash\n    const targetBuyCash = curTotal * (targetWStock - curWStock);\n    const minBuyCash = curWCash * curTotal * dynamicBuyCashPercentage;\n    let spendCash = 0;\n\n    if (targetBuyCash > minBuyCash) {\n        spendCash = targetBuyCash;\n    } else {\n        spendCash = minBuyCash;\n    }\n\n    // 2. Allocate spendCash into LargeCap and MidCap based on portfolio-level deficits\n    const targetLargeCapVal = curTotal * targetWLargeCap;\n    const currentLargeCapVal = curTotal * curWLargeCap;\n    const deficitLargeCap = Math.max(0, targetLargeCapVal - currentLargeCapVal);\n\n    const targetMidCapVal = curTotal * targetWMidCap;\n    const currentMidCapVal = curTotal * curWMidCap;\n    const deficitMidCap = Math.max(0, targetMidCapVal - currentMidCapVal);\n\n    const totalDeficit = deficitLargeCap + deficitMidCap;\n\n    let allocateLargeCap = 0;\n    let allocateMidCap = 0;\n\n    if (totalDeficit > 0) {\n        allocateLargeCap = spendCash * (deficitLargeCap / totalDeficit);\n        allocateMidCap = spendCash * (deficitMidCap / totalDeficit);\n    } else {\n        const totalTargetStock = targetWLargeCap + targetWMidCap;\n        if (totalTargetStock > 0) {\n            allocateLargeCap = spendCash * (targetWLargeCap / totalTargetStock);\n            allocateMidCap = spendCash * (targetWMidCap / totalTargetStock);\n        }\n    }\n\n    return {\n        spendCash: spendCash,\n        allocateLargeCap: allocateLargeCap,\n        allocateMidCap: allocateMidCap\n    };\n}\n\nconst inputData = $input.first().json;\n\n// Normalize percentages to decimals and align reference frames outside the function\nconst curWCash = inputData.current.w_cash / 100.0;\nconst curWStock = inputData.current.w_stock / 100.0;\nconst curWLargeCap = inputData.current.w_larg_cap / 100.0;\nconst curWMidCap = inputData.current.w_mid_cap / 100.0;\nconst curTotal = inputData.current.total_balance;\n\nconst targetWCash = inputData.target.w_cash / 100.0;\nconst targetWStock = inputData.target.w_stock / 100.0;\nconst targetWLargeCap = targetWStock * (inputData.target[\"w_vn30/w_stock\"] / 100.0);\nconst targetWMidCap = targetWStock * (inputData.target[\"w_midcap/w_stock\"] / 100.0);\n\nreturn executeBuyStrategy(\n    curWCash,\n    curWStock,\n    curWLargeCap,\n    curWMidCap,\n    curTotal,\n    targetWCash,\n    targetWStock,\n    targetWLargeCap,\n    targetWMidCap\n);"
+      },
+      "id": "2a0030a1-10e7-423a-a166-286fc085a4b4",
+      "name": "Set up Buy Strategy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT allocation\nFROM n8n_olap.fact_market_regime_histories FINAL\nWHERE time = '{{ ($json && $json.body && $json.body.selected_trade_date) ? $json.body.selected_trade_date : new Date().toISOString().split(\"T\")[0] }}'",
+        "options": {}
+      },
+      "id": "2bff9c88-d59b-44fe-a05f-9c483688f8b3",
+      "name": "Get default Target Allocation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        920,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "1bc804b2-5db9-4bb3-976c-1d871b1d6083",
+      "name": "Merge2",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1840,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  let parsedTarget = {};\n  \n  try {\n    const rawData = item.json.data || '';\n    // Remove whitespace and parse stringified JSON into an object\n    parsedTarget = JSON.parse(rawData.trim());\n  } catch (error) {\n    parsedTarget = { error: error.message };\n  }\n\n  return {\n    json: {\n      target: parsedTarget\n    }\n  };\n});"
+      },
+      "id": "a7b8e65c-60b5-4bdd-897a-dd70c292f79d",
+      "name": "Format Request1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n    json: {\n      current: $input.first().json\n    }\n  };"
+      },
+      "id": "1eac8d4a-7719-47fc-b164-3b76f9c143c8",
+      "name": "Format Request2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT \n    symbol as stock_key,\n    trade_date as date_key,\n    sma_20_slope_k1,\n    sma_20_slope_k5,\n    sma_50_slope_k1,\n    sma_50_slope_k5,\n    signal_crossover_sma_20_50,\n    signal_crossover_sma_50_100,\n    expected_return_t2_n20,\n    volatility_t2_n20,\n    rsi_7,\n    rsi_14,\n    signal_volume_outlier,\n    days_since_volume_outlier\nFROM n8n_olap.v_analytics_master_consolidated\nWHERE date_key = '{{ ($json && $json.body && $json.body.selected_trade_date) ? $json.body.selected_trade_date : new Date().toISOString().split(\"T\")[0] }}' \n    AND signal_crossover_sma_50_100 >= 0\n    AND rsi_14 BETWEEN 30 AND 70\n    AND volume >= 50000\n    AND sma_50_slope_k1 >= 0\n    AND sma_20_slope_k1 >= 0\n    AND sma_20_slope_k5 >= 0\n    AND sma_50_slope_k5 >= 0\n    AND volatility_t2_n20 BETWEEN 0.01 AND 0.05\n    AND expected_return_t2_n20 BETWEEN 0.002 AND 0.055\n    AND rsi_7 BETWEEN 40 AND 85\n    AND signal_crossover_sma_20_50 >= 0\n    AND signal_volume_outlier = 0\n    AND close >= 15\n    AND days_since_volume_outlier >= 4\nORDER BY \n    expected_return_t2_n20 DESC,\n    stock_key ASC,\n    date_key ASC,\n    sma_20_slope_k1 ASC,\n    sma_20_slope_k5 ASC,\n    sma_50_slope_k1 ASC,\n    sma_50_slope_k5 ASC,\n    signal_crossover_sma_20_50 ASC,\n    signal_crossover_sma_50_100 ASC,\n    volatility_t2_n20 ASC,\n    rsi_7 ASC,\n    rsi_14 ASC,\n    signal_volume_outlier ASC,\n    days_since_volume_outlier ASC\nLIMIT 501 FORMAT JSON;",
+        "options": {}
+      },
+      "id": "a1379249-a8ff-442e-ba34-a6704a4ad322",
+      "name": "Default Analyser",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        920,
+        1020
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "SELECT stock_key FROM n8n_olap.dim_stock WHERE is_vn30 = 1",
+        "options": {}
+      },
+      "id": "9c3e2450-1fb7-41ef-bf1c-ad730ed5e08d",
+      "name": "Get VN30 Stocks2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        920,
+        1220
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "52e489b4-1b50-45fb-a6bf-fdd0f7a6f748",
+      "name": "Merge3",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1500,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process all incoming items from the n8n workflow execution\nreturn $input.all().map(item => {\n  const rawData = item.json.data || '';\n\n  // Separate the string by newline characters, remove whitespace, and filter empty lines\n  const stockSymbols = rawData\n    .split(/\\r?\\n/)\n    .map(symbol => symbol.trim())\n    .filter(symbol => symbol.length > 0);\n\n  // Return the structured output containing the array of symbols\n  return {\n    json: {\n      vn30_stock_symbols: stockSymbols\n    }\n  };\n});"
+      },
+      "id": "481ec39c-83fe-4321-b3f6-1f6f368f32e1",
+      "name": "Process VN30 Stock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        1220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const dataset = item.json.data || [];\n  const vn30Symbols = new Set(item.json.vn30_stock_symbols || []);\n\n  const largeCapSymbols = [];\n  const midCapSymbols = [];\n\n  dataset.forEach(row => {\n    const symbol = row.stock_key;\n    if (!symbol) return;\n\n    if (vn30Symbols.has(symbol)) {\n      if (!largeCapSymbols.includes(symbol)) {\n        largeCapSymbols.push(symbol);\n      }\n    } else {\n      if (!midCapSymbols.includes(symbol)) {\n        midCapSymbols.push(symbol);\n      }\n    }\n  });\n\n  return {\n    json: {\n      large_cap: largeCapSymbols,\n      mid_cap: midCapSymbols\n    }\n  };\n});"
+      },
+      "id": "c6e39b61-5207-4109-b618-06972f2f32c9",
+      "name": "Split Stock Group",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1740,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "867a0908-e057-45d7-bec0-fae36dadfe33",
+      "name": "Merge4",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2200,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.first().json;\n\nconst results = [];\n\n// Check and add large_cap branch if symbols exist\nif (inputData.large_cap && inputData.large_cap.length > 0) {\n  results.push({\n    json: {\n      total_investment: inputData.allocateLargeCap/1000,\n      selected_symbols: inputData.large_cap\n    }\n  });\n}\n\n// Check and add mid_cap branch if symbols exist\nif (inputData.mid_cap && inputData.mid_cap.length > 0) {\n  results.push({\n    json: {\n      total_investment: inputData.allocateMidCap/1000,\n      selected_symbols: inputData.mid_cap\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "a9c91f4b-5484-49f7-89ff-9148b78d4d1a",
+      "name": "Group to item",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2420,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "selected_trade_date",
+              "value": "={{ ($json && $json.body && $json.body.selected_trade_date) ? $json.body.selected_trade_date : new Date().toISOString().split(\"T\")[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1915553d-b11f-4239-a63b-7911f38acb9c",
+      "name": "Set selected_trade_date",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        920,
+        1440
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "486f2c44-9d84-406c-a3ed-44572a2cb3a3",
+      "name": "Merge5",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2620,
+        1260
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "00f5db7e-bbef-4cc6-9546-a5958a734ba2",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        2820,
+        1260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  return {\n    json: {\n      body: item.json\n    }\n  };\n});"
+      },
+      "id": "9a9cd81c-1697-4669-8b66-2a202ed2a32e",
+      "name": "Format Request3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3060,
+        1240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pass all incoming items directly to the output without modification\nreturn $input.all();"
+      },
+      "id": "ae4fd34b-26db-4669-bdf8-5e632c9fcd45",
+      "name": "No-op",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        580,
+        900
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "3eac83a7-41a4-4043-bb08-10b453f8559f",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        340,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=BEGIN;\n\nWITH upserted_order AS (\n    INSERT INTO orders (account_id, trade_date, trade_type)\n    VALUES ('{{ $env.SSI_ACCOUNT_NO }}', '{{ $json.body.selected_trade_date }}'::DATE, 'BUY')\n    ON CONFLICT (account_id, trade_date, trade_type) DO UPDATE\n    SET created_at = EXCLUDED.created_at\n    RETURNING account_id, trade_date, trade_type\n),\norder_line_items AS (\n    SELECT\n        item.symbol::VARCHAR(20) AS symbol,\n        item.quantity::BIGINT AS quantity,\n        item.price::NUMERIC(18, 2) AS price\n    FROM jsonb_to_recordset('{{ JSON.stringify($json.body.orders || []) }}'::JSONB) AS item(\n        symbol TEXT,\n        quantity BIGINT,\n        price TEXT\n    )\n)\nINSERT INTO order_items (account_id, trade_date, trade_type, symbol, quantity, price)\nSELECT\n    uo.account_id,\n    uo.trade_date,\n    uo.trade_type,\n    oli.symbol,\n    oli.quantity,\n    oli.price::NUMERIC(18, 2)\nFROM upserted_order uo\nCROSS JOIN order_line_items oli\nON CONFLICT (account_id, trade_date, trade_type, symbol) DO UPDATE\nSET\n    quantity = EXCLUDED.quantity,\n    price = EXCLUDED.price;\n\nCOMMIT;",
+        "options": {}
+      },
+      "id": "8106841c-7970-4b73-9aab-302cefa849b7",
+      "name": "Postgres - Save BUY orders",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        3820,
+        660
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "2",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ca474660-f07c-45a0-bafe-034a4351f1de",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        4420,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://clickhouse:8123",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-ClickHouse-User",
+              "value": "n8n"
+            },
+            {
+              "name": "X-ClickHouse-Key",
+              "value": "n8n_pass"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/x-www-form-urlencoded",
+        "body": "=SELECT symbol, trade_date, close * 1000 AS close\nFROM n8n_olap.fact_stock_prices FINAL\nWHERE trade_date = '{{ ($json && $json.selected_trade_date) ? $json.selected_trade_date : new Date().toISOString().split(\"T\")[0] }}'\nAND symbol IN (\n    '{{ $json.holding_symbols.join(\"','\") }}'\n)\nORDER BY symbol\nFORMAT JSON",
+        "options": {}
+      },
+      "id": "d068d0c7-4be8-4a4d-acf9-896ddb3c4d60",
+      "name": "Get Close Prices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2040,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "336e82a3-ef05-4a9d-8a33-3fcef293a8b1",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1600,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n\n  const symbols = Array.isArray(data.stock_list)\n    ? data.stock_list\n        .map(stock => stock.symbol)\n        .filter(symbol => typeof symbol === 'string' && symbol.trim() !== '')\n    : [];\n\n  return {\n    json: {\n      ...data,\n      holding_symbols: symbols\n    }\n  };\n});\n"
+      },
+      "id": "7eb41a8c-0eff-48be-a68e-36117e5f5938",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "cf0360ad-cbc2-4c5d-a68d-d6c1b5b366da",
+      "name": "Merge6",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        2280,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $input.first().json;\n\n// Create a lookup map for closing prices by stock symbol\nconst closeMap = new Map(\n  (input.data || []).map(item => [\n    item.symbol,\n    Number(item.close)\n  ])\n);\n\n// Calculate price changes for each stock in the portfolio\nconst results = (input.stock_list || []).map(stock => {\n  const costPrice = Number(stock.costPrice);\n  const close = closeMap.get(stock.symbol);\n\n  const quantity = Number(stock.quantity || 0);\n  const sellableQuantity = Number(stock.sellableQuantity || 0);\n\n  // Handle stocks with missing closing prices\n  if (close === undefined || !Number.isFinite(close)) {\n    return {\n      symbol: stock.symbol,\n      quantity,\n      sellableQuantity,\n      close: null,\n      costPrice,\n      changePercent: null,\n      status: \"missing_close\"\n    };\n  }\n\n  // Calculate percentage change relative to the cost price\n  const changePercent = costPrice > 0\n    ? ((close - costPrice) / costPrice) * 100\n    : null;\n\n  return {\n    symbol: stock.symbol,\n    quantity,\n    sellableQuantity,\n    close,\n    costPrice,\n    changePercent: changePercent === null\n      ? null\n      : Number(changePercent.toFixed(2)),\n    status: costPrice <= 0\n      ? \"invalid_cost\"\n      : changePercent > 0\n        ? \"profit\"\n        : changePercent < 0\n          ? \"loss\"\n          : \"breakeven\"\n  };\n});\n\n// Return the portfolio price analysis\nreturn [\n  {\n    json: {\n      selected_trade_date: input.selected_trade_date,\n      total_symbols: results.length,\n      matched_symbols: results.filter(item => item.close !== null).length,\n      results\n    }\n  }\n];\n"
+      },
+      "id": "790971d5-0f7c-4cad-8d5a-b00d61ed6b3a",
+      "name": "Gen Holding Stocks Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2500,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $input.first().json;\n\nconst CONFIG = {\n  MIN_CHANGE_PERCENT: 2,\n  MIN_SELLABLE_QUANTITY: 0,\n  PRICE_ROUNDING: \"ROUND\",\n  SELL_RATIO: 1,\n  INCLUDE_ZERO_PRICE: false,\n};\n\nfunction roundPrice(price) {\n  switch (CONFIG.PRICE_ROUNDING) {\n    case \"FLOOR\":\n      return Math.floor(price);\n    case \"CEIL\":\n      return Math.ceil(price);\n    case \"ROUND\":\n    default:\n      return Math.round(price);\n  }\n}\n\nconst orders = (input.results || [])\n  .filter(stock =>\n    stock.changePercent !== null &&\n    Number(stock.changePercent) >= CONFIG.MIN_CHANGE_PERCENT &&\n    Number(stock.sellableQuantity) > CONFIG.MIN_SELLABLE_QUANTITY\n  )\n  .map(stock => {\n    const quantity = Math.floor(\n      Number(stock.sellableQuantity) * CONFIG.SELL_RATIO\n    );\n\n    const price = Number(stock.close).toFixed(0);\n\n    return {\n      symbol: stock.symbol,\n      quantity,\n      price: String(price)\n    };\n  })\n  .filter(order =>\n    order.quantity > 0 &&\n    (CONFIG.INCLUDE_ZERO_PRICE || Number(order.price) > 0)\n  );\n\nreturn [\n  {\n    json: {\n      orders,\n      selected_trade_date: input.selected_trade_date\n    }\n  }\n];\n"
+      },
+      "id": "720cc124-fad4-4dae-a438-65300dc382b1",
+      "name": "Format Sell Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2740,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve data from the previous node\nconst inputData = $input.first().json;\n\n// Extract the result array containing stock details\nconst results = inputData.result || [];\n\n// Transform each stock entry into the required order payload structure\nconst orders = results\n    .map(item => {\n        return {\n            symbol: item.symbol,\n            quantity: Math.round(item.suggested_shares),\n            price: String(Number((item.pivot_s1_plus_1).toFixed(1)*1000))\n        };\n    })\n    .filter(order => order.quantity !== 0);\n\n// Return the formatted output payload containing the orders array\nreturn [{\n    json: {\n        body: {\n          access_token: inputData.accessToken,\n          orders: orders,\n          selected_trade_date: inputData.result[0].calculated_for_date\n        }\n    }\n}];"
+      },
+      "id": "2796d39b-0744-47f5-a7e1-f983836bd86f",
+      "name": "Format Buy Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3580,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=BEGIN;\n\nWITH upserted_order AS (\n    INSERT INTO orders (account_id, trade_date, trade_type)\n    VALUES ('{{ $env.SSI_ACCOUNT_NO }}', '{{ $json.selected_trade_date }}'::DATE, 'SELL')\n    ON CONFLICT (account_id, trade_date, trade_type) DO UPDATE\n    SET created_at = EXCLUDED.created_at\n    RETURNING account_id, trade_date, trade_type\n),\norder_line_items AS (\n    SELECT\n        item.symbol::VARCHAR(20) AS symbol,\n        item.quantity::BIGINT AS quantity,\n        item.price::NUMERIC(18, 2) AS price\n    FROM jsonb_to_recordset('{{ JSON.stringify($json.orders || []) }}'::JSONB) AS item(\n        symbol TEXT,\n        quantity BIGINT,\n        price TEXT\n    )\n)\nINSERT INTO order_items (account_id, trade_date, trade_type, symbol, quantity, price)\nSELECT\n    uo.account_id,\n    uo.trade_date,\n    uo.trade_type,\n    oli.symbol,\n    oli.quantity,\n    oli.price::NUMERIC(18, 2)\nFROM upserted_order uo\nCROSS JOIN order_line_items oli\nON CONFLICT (account_id, trade_date, trade_type, symbol) DO UPDATE\nSET\n    quantity = EXCLUDED.quantity,\n    price = EXCLUDED.price;\n\nCOMMIT;",
+        "options": {}
+      },
+      "id": "7fd190ac-e146-4b42-acce-3a5522cf8910",
+      "name": "Postgres - Save SELL orders",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        2980,
+        360
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "2",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "de3714c2-3803-4244-bbb8-8db94c8e720d",
+      "name": "Merge7",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        4220,
+        740
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "No-op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - Optimize Buy Strategy": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - SSI Auth": {
+      "main": [
+        [
+          {
+            "node": "Format Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Format Buy Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Request": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - Track Account Balance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get default Target Allocation": {
+      "main": [
+        [
+          {
+            "node": "Format Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - Track Account Balance": {
+      "main": [
+        [
+          {
+            "node": "Format Request2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Request2": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Request1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Set up Buy Strategy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Analyser": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get VN30 Stocks2": {
+      "main": [
+        [
+          {
+            "node": "Process VN30 Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process VN30 Stock": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Split Stock Group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set up Buy Strategy": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Stock Group": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "Group to item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group to item": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set selected_trade_date": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge5": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Format Request3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Format Request3": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - Optimize Buy Strategy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No-op": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - SSI Auth",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get default Target Allocation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Default Analyser",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get VN30 Stocks2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set selected_trade_date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "No-op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Save BUY orders": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Get Close Prices",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Close Prices": {
+      "main": [
+        [
+          {
+            "node": "Merge6",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge6": {
+      "main": [
+        [
+          {
+            "node": "Gen Holding Stocks Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gen Holding Stocks Info": {
+      "main": [
+        [
+          {
+            "node": "Format Sell Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Buy Orders": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Save BUY orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sell Orders": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Save SELL orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Save SELL orders": {
+      "main": [
+        [
+          {
+            "node": "Merge7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge7": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 1800
+  },
+  "versionId": "5ffc5e81-23be-4546-ab5b-54c907751ddd",
+  "id": "19",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}

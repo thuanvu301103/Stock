@@ -1,0 +1,81 @@
+$kind: http-request
+description: |-
+  Example result:
+
+  ``` json
+  {
+      "stock_balance": 4388658,
+      "total_share_quantity": 144,
+      "stock_list": [
+          {
+              "symbol": "STB",
+              "quantity": 1,
+              "costPrice": 75000,
+              "holding_value": 75000,
+              "accountNo": "G809361",
+              "sellableQuantity": 1
+          },
+          {
+              "symbol": "HVN",
+              "quantity": 5,
+              "costPrice": 22750,
+              "holding_value": 113750,
+              "accountNo": "G809361",
+              "sellableQuantity": 5
+          }
+      ],
+      "total_symbols": 58,
+      "timestamp": 1795011594242,
+      "cash_balance": 1777395,
+      "stock_value": 4388658,
+      "total_balance": 6166053,
+      "w_cash": 28.83,
+      "w_stock": 71.17,
+      "vn30_stock_symbols": [
+          "ACB",
+          "BCM",
+          "BID",
+          "BVH",
+          "CTG",
+          "FPT",
+          "GAS",
+          "GVR",
+          "HDB",
+          "HPG",
+          "MBB",
+          "MSN",
+          "MWG",
+          "PLX",
+          "POW",
+          "SAB",
+          "SHB",
+          "SSB",
+          "SSI",
+          "STB",
+          "TCB",
+          "TPB",
+          "VCB",
+          "VHM",
+          "VIB",
+          "VIC",
+          "VJC",
+          "VNM",
+          "VPB",
+          "VRE"
+      ],
+      "w_larg_cap": 39.74,
+      "w_mid_cap": 60.26,
+      "vn30_holding_value": 1744013,
+      "non_vn30_holding_value": 2644645
+  }
+
+   ```
+url: http://localhost:5678/webhook/ssi-track-account-balance
+method: GET
+body:
+  type: json
+  content: |-
+    {
+        "access_token": "" // Optional
+    }
+order: 13000

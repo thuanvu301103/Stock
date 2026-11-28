@@ -1,0 +1,14 @@
+$kind: http-request
+name: Get Token
+description: ""
+url: https://api.ssi.com.vn/api/v3/auth/token
+method: POST
+body:
+  type: json
+  content: |-
+    {
+        "apiKey": "4HSNgiHJpgJijHIgkq9moamEL1vPFolN",
+        "apiSecret": "LocoxiuVFfefehHBGzvbk9IMiD88hYVY",
+        "transactionId": "5fa900ed-44bb-4f35-bc12-4a9321bf6c5b"
+    }
+order: 3000

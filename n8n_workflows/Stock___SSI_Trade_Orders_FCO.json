@@ -1,0 +1,530 @@
+{
+  "name": "Stock___SSI_Trade_Orders",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ssi.com.vn/api/v3/auth/requestOtp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "={{ $env.SSI_API_KEY }}"
+            },
+            {
+              "name": "apiSecret",
+              "value": "={{ $env.SSI_API_SECRET }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ae9680e6-8b29-46c5-a547-bd8171d1c787",
+      "name": "Request OTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1960,
+        1300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "seconds"
+      },
+      "id": "55b5d23b-a8c1-4ede-9888-21ec97808ff8",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        2580,
+        1280
+      ],
+      "webhookId": "3663ee2c-c803-475a-a96f-d3b833f11896"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ String($json.code) }}",
+              "value2": "401114"
+            }
+          ]
+        }
+      },
+      "id": "11713f1a-7d2d-4c36-a44b-7326ecee073e",
+      "name": "IF Not Authorized",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        2360,
+        1300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function generateUUIDv4() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nif (!global.__n8n_device_id) {\n  global.__n8n_device_id = generateUUIDv4();\n}\n\nconst currentDeviceId = global.__n8n_device_id;\n\nreturn items.map(item => {\n  return {\n    json: {\n      orders: item.json.body.orders,\n      deviceId: currentDeviceId\n    }\n  };\n});"
+      },
+      "id": "0a33109f-e1ad-4fbf-aa97-8373f1d7b198",
+      "name": "Generate Device Id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ssi-trade-order",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "f8b33af9-823e-4c13-82a5-6a46dbd71660",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        1160
+      ],
+      "webhookId": "68ff0e9c-b59a-4daf-9347-ca0dfb0d431b"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "accountNo",
+              "value": "={{ $env.SSI_ACCOUNT_NO }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a311e496-152c-44a0-b772-0840b144a256",
+      "name": "Set Account No",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        2020,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve data from the single input item\nconst inputData = items[0].json;\nconst orders = inputData.orders || [];\nconst deviceId = inputData.deviceId;\nconst accountNo = inputData.accountNo;\n\nconst newBuyOrders = [];\n\n// Iterate through the orders array and append contextual metadata\nfor (const order of orders) {\n  newBuyOrders.push({\n    ...order,\n    side: order.side || \"B\",\n    type: \"stop_limit\",\n    stopPrice: String(Number(order.price)+100),\n    operator: \"lesser_or_equal\",\n    deviceId: deviceId,\n    accountNo: accountNo\n  });\n}\n\nreturn [{\n  json: {\n    orders: newBuyOrders\n  }\n}];"
+      },
+      "id": "496624cf-9934-45c4-a3b4-258835378792",
+      "name": "Format Orders",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2220,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ssi.com.vn/api/v3/trading/fco/order",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.accessToken }}"
+            },
+            {
+              "name": "X-Signature",
+              "value": "={{ $json.signature }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.bodyString }}",
+        "options": {}
+      },
+      "id": "c0c7d18c-0585-4055-878d-32791a73d3a0",
+      "name": "Place Orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3420,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const currentItem = items[0].json;\n\nconst formatOrdersNodes = $('Format Orders').all();\nconst ordersData = formatOrdersNodes.length > 0 ? formatOrdersNodes[0].json.orders : [];\n\n// Validate that ordersData is an array before mapping\nif (!Array.isArray(ordersData) || ordersData.length === 0) {\n  return [];\n}\n\n// Map each element in ordersData to a separate n8n item object\nreturn ordersData.map((order) => ({\n  json: {\n    ...currentItem,\n    order: order // Or spread \"...order\" directly if you want flat properties\n  }\n}));"
+      },
+      "id": "c5d9e4fe-2c39-4cf8-9e90-6b895735cb85",
+      "name": "No-op",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2580,
+        1140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = items[0].json;\n//const order = inputData.order || [];\nconst order = inputData.order || {};\n\nconst batchRequestTime = Date.now();\n\nfunction generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst today = new Date().toISOString().slice(0, 10).replace(/-/g, '');\nconst batchRequestId = `BUY_${today}_${generateUUID()}`;\n\nconst payload = order; /*{\n  batchRequestId: batchRequestId,\n  batchRequestTime: batchRequestTime,\n  orders: order\n};*/\n\nreturn [{ \n  json: {\n    body: payload,\n    accessToken: inputData.accessToken\n  }\n}];"
+      },
+      "id": "5951c939-0e2a-4155-9a3c-951fbbbf0ef6",
+      "name": "Replay prevent & Idempotency",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3020,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst inputData = items[0].json.body;\nconst accessToken = items[0].json.accessToken;\n\nconst secret = $env.SSI_API_SECRET;\nconst rawKey = ($env.SSI_PRIVATE_KEY || '').trim();\nif (!secret || !rawKey) {\n  throw new Error('Missing env SSI_API_SECRET or SSI_PRIVATE_KEY');\n}\n\n// Accepts PEM (\"-----BEGIN ...\", \\n allowed) or the base64-encoded <RSAKeyValue> XML from the SSI portal\nfunction loadPrivateKey(raw) {\n  if (raw.includes('BEGIN')) {\n    return crypto.createPrivateKey(raw.replace(/\\\\n/g, '\\n'));\n  }\n  const xml = Buffer.from(raw, 'base64').toString('utf8');\n  const get = (tag) => {\n    const m = xml.match(new RegExp('<' + tag + '>([^<]+)</' + tag + '>'));\n    if (!m) throw new Error('RSAKeyValue is missing <' + tag + '>');\n    return Buffer.from(m[1], 'base64').toString('base64url');\n  };\n  return crypto.createPrivateKey({\n    key: {\n      kty: 'RSA',\n      n: get('Modulus'), e: get('Exponent'), d: get('D'),\n      p: get('P'), q: get('Q'), dp: get('DP'), dq: get('DQ'), qi: get('InverseQ'),\n    },\n    format: 'jwk',\n  });\n}\n\n// The exact string signed is the exact string sent (Place Orders sends bodyString as raw body).\nconst bodyString = JSON.stringify(inputData);\n\n// SSI spec: X-Signature = RSA-SHA256( SecretKey + JSON body ), base64\nconst sign = crypto.createSign('RSA-SHA256');\nsign.update(bodyString);\nsign.end();\nconst signature = sign.sign(loadPrivateKey(rawKey), 'hex');\n\nreturn [{ json: { accessToken, bodyString, signature } }];\n"
+      },
+      "id": "8267e9a2-d59f-48ac-aef3-215a453b353f",
+      "name": "Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3220,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ssi.com.vn/api/v3/auth/token",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "={{ $env.SSI_API_KEY }}"
+            },
+            {
+              "name": "apiSecret",
+              "value": "={{ $env.SSI_API_SECRET }}"
+            },
+            {
+              "name": "transactionId",
+              "value": "={{ $('Request OTP').item.json.transactionId }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "2a444f97-7452-4d48-b9f6-e1422ef69586",
+      "name": "Request Tokens",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2160,
+        1300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.access_token != undefined }}",
+              "value2": "={{true}}"
+            }
+          ]
+        }
+      },
+      "id": "2f760a42-9b4e-4b54-a653-3c771154dc46",
+      "name": "IF have Access Token",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "accessToken",
+              "value": "={{ $json.body.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "94d8ed81-bf8f-47f4-9925-2fb0c8008c91",
+      "name": "Set",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        2360,
+        1140
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "cbe2c166-e286-48f9-b720-ace6b138b60e",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "936d8378-f5ca-4b07-af63-3806cc0a5966",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        1140
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Request OTP": {
+      "main": [
+        [
+          {
+            "node": "Request Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Request Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Not Authorized": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No-op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Generate Device Id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF have Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Device Id": {
+      "main": [
+        [
+          {
+            "node": "Set Account No",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Account No": {
+      "main": [
+        [
+          {
+            "node": "Format Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No-op": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replay prevent & Idempotency": {
+      "main": [
+        [
+          {
+            "node": "Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signature": {
+      "main": [
+        [
+          {
+            "node": "Place Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Tokens": {
+      "main": [
+        [
+          {
+            "node": "IF Not Authorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF have Access Token": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Request OTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "No-op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Generate Device Id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF have Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Replay prevent & Idempotency",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Place Orders": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "71f44259-fbbf-4d58-8155-65cbcf900d3f",
+  "id": "17",
+  "meta": {
+    "instanceId": "bc6b2e4416f31e571edef306d7bc64dcd81d5f1d983358ed1c5b622a577e43e1"
+  },
+  "tags": []
+}
